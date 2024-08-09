@@ -1,0 +1,26 @@
+pipeline {
+    agent any
+
+    stages {
+        stage("Сборка") {
+            steps {
+                // Выполнение сборки с помощью Maven, игнорируя ошибки тестов для продолжения пайплайна
+                sh './mvnw -Dmaven.test.failure.ignore=true clean verify'
+            }
+        }
+
+        stage("Отчёты") {
+            steps {
+                // Генерация отчёта Allure, используя результаты из указанной директории
+                allure results: [[path: 'target/allure-results']]
+            }
+        }
+    }
+
+    post {
+        always {
+            // Очистка рабочей директории для удаления всех оставшихся файлов и папок
+            deleteDir()
+        }
+    }
+}

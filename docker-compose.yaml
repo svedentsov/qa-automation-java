@@ -1,0 +1,98 @@
+version: '3.7'
+
+services:
+
+  # --- Сервисы для тестирования ---
+
+  # Сервис для генерации отчетов с помощью Allure
+  allure:
+    container_name: allure
+    image: frankescobar/allure-docker-service:2.17.2
+    ports:
+      - "5050:5050" # Порт для доступа к Allure UI
+    volumes:
+      - "./work/allure-results:/app/allure-results" # Путь к результатам тестов
+      - "./work/allure-reports:/app/default-reports" # Путь к отчетам Allure
+    environment:
+      CHECK_RESULTS_EVERY_SECONDS: 1 # Частота проверки новых результатов (в секундах)
+      KEEP_HISTORY: 1 # Сохранение истории отчетов
+
+  # Сервис для управления браузерами с помощью Selenoid
+  selenoid:
+    container_name: selenoid
+    image: aerokube/selenoid:1.11.2
+    network_mode: bridge
+    ports:
+      - "4444:4444" # Порт для доступа к Selenoid
+    volumes:
+      - "./init/selenoid:/etc/selenoid" # Конфигурация браузеров
+      - "./work/selenoid/logs:/opt/selenoid/logs" # Логи Selenoid
+      - "./work/selenoid/video:/opt/selenoid/video" # Видео с тестов
+    environment:
+      - OVERRIDE_VIDEO_OUTPUT_DIR=work/selenoid/video # Переопределение пути для видео
+    command: [
+      "-conf",
+      "/etc/selenoid/browsers.json",
+      "-video-output-dir",
+      "/opt/selenoid/video",
+      "-log-output-dir",
+      "/opt/selenoid/logs",
+      "-service-startup-timeout", "3m0s", # Таймаут для старта сервиса
+      "-session-attempt-timeout", "3m0s", # Таймаут для попытки сессии
+      "-session-delete-timeout", "3m0s", # Таймаут для удаления сессии
+      "-timeout", "5m0s" # Общий таймаут сессий
+    ]
+
+  # UI для управления Selenoid
+  selenoid-ui:
+    container_name: selenoid-ui
+    image: aerokube/selenoid-ui:1.10.11
+    network_mode: bridge
+    ports:
+      - "8888:8080" # Порт для доступа к Selenoid UI
+    depends_on:
+      - selenoid # Зависимость от сервиса Selenoid
+    links:
+      - selenoid
+    command: [ "--selenoid-uri","http://selenoid:4444" ] # URL для доступа к Selenoid
+
+  # --- Сервис для CI/CD ---
+
+  # Сервис Jenkins для автоматизации CI/CD процессов
+  jenkins:
+    container_name: jenkins
+    image: jenkins/jenkins:2.453-jdk21
+    network_mode: bridge
+    ports:
+      - "8000:8080" # Порт для доступа к Jenkins UI
+    volumes:
+      - "./work/jenkins:/var/jenkins_home" # Путь к данным Jenkins
+
+  # --- Базы данных ---
+
+  # Сервис базы данных PostgreSQL
+  postgres:
+    container_name: postgres
+    image: postgres:12-alpine
+    ports:
+      - '5432:5432' # Порт для доступа к PostgreSQL
+    volumes:
+      - "./work/postgres:/var/lib/postgres/data" # Путь к данным базы данных
+    environment:
+      - POSTGRES_DB=app_db # Название базы данных
+      - POSTGRES_USER=user # Имя пользователя
+      - POSTGRES_PASSWORD=pass # Пароль пользователя
+
+  # Сервис базы данных MySQL
+  mysql:
+    container_name: mysql
+    image: mysql:8.3.0
+    ports:
+      - '3306:3306' # Порт для доступа к MySQL
+    volumes:
+      - "./work/mysql:/var/lib/mysql" # Путь к данным базы данных
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes # Генерация случайного пароля для root пользователя
+      - MYSQL_DATABASE=app # Название базы данных
+      - MYSQL_USER=app # Имя пользователя
+      - MYSQL_PASSWORD=9mREsvXDs9Gk89Ef # Пароль пользователя

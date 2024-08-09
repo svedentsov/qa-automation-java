@@ -1,0 +1,153 @@
+buildscript {
+    ext {
+        avroVersion = '1.11.1'
+        allureVersion = '2.27.0'
+        assertjVersion = '3.25.3'
+        aspectjVersion = '1.9.22'
+        awaitilityVersion = '4.2.0'
+        commonsBeanutilsVersion = '1.9.4'
+        commonsIoVersion = '2.15.1'
+        configVersion = '1.4.1'
+        confluentVersion = '5.1.1'
+        gsonVersion = '2.10.1'
+        jacksonDatatypeVersion = '2.17.2'
+        jacksonVersion = '2.12.5'
+        javafakerVersion = '1.0.2'
+        jaywayVersion = '2.9.0'
+        junitVersion = '5.10.1'
+        kafkaClientsVersion = '2.1.1'
+        lombokVersion = '1.18.32'
+        okhttp3Version = '3.14.9'
+        ownerVersion = '1.0.12'
+        retrofitVersion = '2.11.0'
+        restAssuredVersion = '5.4.0'
+        selenideVersion = '7.0.4'
+        slf4jVersion = '2.0.9'
+        zip4jVersion = '2.11.5'
+    }
+}
+
+plugins { // Плагины, используемые в проекте
+    id 'java' // Плагин для работы с Java проектами
+    id 'io.qameta.allure' version '2.11.2' // Подключение плагина Allure для генерации отчетов
+}
+
+group = 'org.example' // Группа проекта
+version = '1.0-SNAPSHOT' // Версия проекта
+
+allure { // Конфигурация плагина Allure
+    version = allureVersion // Версия Allure для генерации отчетов
+    useJUnit5 {
+        version = allureVersion // Версия Allure для интеграции с JUnit5
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://packages.confluent.io/maven"
+    }
+}
+
+dependencies { // Зависимости проекта
+    // Логирование
+    implementation "org.slf4j:slf4j-api:${slf4jVersion}"
+
+    // JUnit
+    implementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+
+    // Allure
+    implementation "io.qameta.allure:allure-java-commons:${allureVersion}"
+    implementation "io.qameta.allure:allure-rest-assured:${allureVersion}"
+    implementation "io.qameta.allure:allure-attachments:${allureVersion}"
+    implementation "io.qameta.allure:allure-jsonunit:${allureVersion}"
+    implementation("io.qameta.allure:allure-junit5:${allureVersion}") {
+        exclude group: "org.junit.jupiter" // Исключаем JUnit, чтобы избежать конфликта версий
+    }
+    implementation("io.qameta.allure:allure-selenide:${allureVersion}") {
+        exclude group: 'com.codeborne' // Исключаем Selenide, чтобы использовать специфичную версию
+    }
+
+    // Тестирование
+    implementation "org.assertj:assertj-core:${assertjVersion}"
+    implementation "org.awaitility:awaitility:${awaitilityVersion}"
+
+    // Инструменты сборки и аннотации
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    compileOnly "org.projectlombok:lombok:${lombokVersion}"
+
+    // Веб-тестирование
+    implementation "com.codeborne:selenide:${selenideVersion}"
+
+    // REST и HTTP-клиенты
+    implementation "io.rest-assured:rest-assured:${restAssuredVersion}"
+    implementation "com.squareup.retrofit2:retrofit:${retrofitVersion}"
+    implementation "com.squareup.retrofit2:converter-jackson:${retrofitVersion}"
+    implementation "com.squareup.okhttp3:logging-interceptor:${okhttp3Version}"
+    implementation "com.squareup.okhttp3:okhttp-urlconnection:${okhttp3Version}"
+
+    // Kafka
+    implementation "org.apache.avro:avro:${avroVersion}"
+    implementation "org.apache.avro:avro-tools:${avroVersion}"
+    testImplementation "org.apache.kafka:kafka-clients:${kafkaClientsVersion}"
+    testImplementation "org.apache.kafka:kafka-clients:${kafkaClientsVersion}:test"
+    testImplementation "org.apache.kafka:kafka_2.11:${kafkaClientsVersion}:test"
+    implementation "io.confluent:kafka-avro-serializer:${confluentVersion}"
+    implementation "io.confluent:kafka-schema-registry:${confluentVersion}"
+    implementation "io.confluent:kafka-schema-registry:${confluentVersion}:tests"
+    testImplementation "io.confluent:kafka-avro-serializer:${confluentVersion}"
+    testImplementation "io.confluent:kafka-streams-avro-serde:${confluentVersion}"
+
+    // Утилиты и вспомогательные библиотеки
+    implementation "com.github.javafaker:javafaker:${javafakerVersion}"
+    implementation "commons-io:commons-io:${commonsIoVersion}"
+    implementation "commons-beanutils:commons-beanutils:${commonsBeanutilsVersion}"
+    implementation "com.fasterxml.jackson.core:jackson-databind:${jacksonVersion}"
+    implementation "com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${jacksonDatatypeVersion}"
+    implementation "org.aeonbits.owner:owner:${ownerVersion}"
+    implementation "com.google.code.gson:gson:${gsonVersion}"
+    implementation "net.lingala.zip4j:zip4j:${zip4jVersion}"
+    implementation "com.jayway.jsonpath:json-path:${jaywayVersion}"
+    implementation "com.typesafe:config:${configVersion}"
+    implementation "org.aspectj:aspectjweaver:${aspectjVersion}"
+}
+
+test { // Настройки для выполнения тестов
+    useJUnitPlatform() // Использование JUnit Platform для запуска тестов
+    testLogging {
+        lifecycle {
+            events "started", "skipped", "failed", "standard_error", "standard_out"
+            exceptionFormat "short" // Формат вывода кратких сведений об ошибках
+        }
+    }
+}
+
+tasks {
+    compileJava {
+        options.encoding = "UTF-8" // Настройка кодировки для компиляции Java исходников
+    }
+    compileTestJava {
+        options.encoding = "UTF-8" // Настройка кодировки для компиляции Java тестов
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8' // Задание кодировки UTF-8 для компиляции исходного кода
+    sourceCompatibility = JavaVersion.VERSION_21 // Задание версии исходного кода
+    targetCompatibility = JavaVersion.VERSION_21 // Задание версии байт-кода
+}
+
+tasks.withType(Test) {
+    systemProperties(System.getProperties()) // Задание системных свойств для запуска тестов
+    useJUnitPlatform() // Использование JUnit Platform для запуска тестов
+
+    if (System.getProperty("threads") != null) { // проверка, задано ли свойство threads
+        systemProperties += [
+                'junit.jupiter.execution.parallel.enabled'                 : true,
+                'junit.jupiter.execution.parallel.mode.default'            : 'concurrent',
+                'junit.jupiter.execution.parallel.mode.classes.default'    : 'concurrent',
+                'junit.jupiter.execution.parallel.config.strategy'         : 'fixed',
+                'junit.jupiter.execution.parallel.config.fixed.parallelism': System.getProperty("threads").toInteger()
+        ]
+    }
+}
