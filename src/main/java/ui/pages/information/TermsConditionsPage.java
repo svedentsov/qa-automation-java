@@ -1,4 +1,6 @@
 package ui.pages.information;
 
-public class TermsConditionsPage  {
+import ui.pages.AbstractPage;
+
+public class TermsConditionsPage extends AbstractPage<TermsConditionsPage> {
 }

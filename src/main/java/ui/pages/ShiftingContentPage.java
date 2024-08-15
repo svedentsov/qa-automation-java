@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class ShiftingContentPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/shifting_content")
+public class ShiftingContentPage extends AbstractPage<ShiftingContentPage> {
 }

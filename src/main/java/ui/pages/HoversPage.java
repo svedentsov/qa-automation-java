@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class HoversPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/hovers")
+public class HoversPage extends AbstractPage<HoversPage> {
 }

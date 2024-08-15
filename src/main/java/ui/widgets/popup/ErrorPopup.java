@@ -1,7 +1,8 @@
-package ui.widgets;
+package ui.widgets.popup;
 
 import com.codeborne.selenide.Condition;
-import ui.pages.UIRouter;
+import core.widgets.Widget;
+import ui.helper.PageManager;
 import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Selenide.$;
@@ -11,17 +12,21 @@ import static com.codeborne.selenide.Selenide.$;
  * Этот класс предоставляет методы для взаимодействия с всплывающим окном,
  * такие как закрытие окна, получение текста сообщения об ошибке, и проверка текста.
  */
-public class PopupError extends UIRouter {
+public class ErrorPopup extends Widget<ErrorPopup> {
 
     private final By closer = By.cssSelector(".uk-alert-close");
     private final By text = By.cssSelector(".uk-alert p");
 
+    public ErrorPopup(By locator) {
+        super(locator);
+    }
+
     /**
      * Закрывает всплывающее окно с сообщением об ошибке.
      *
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
+     * @return экземпляр {@link PageManager}, представляющий текущую страницу или компонент.
      */
-    public UIRouter close() {
+    public ErrorPopup close() {
         $(closer).click();
         return this;
     }
@@ -53,9 +58,9 @@ public class PopupError extends UIRouter {
      * Проверяет, содержит ли всплывающее окно сообщение об ошибке с ожидаемым текстом.
      *
      * @param expected ожидаемый текст сообщения об ошибке.
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
+     * @return экземпляр {@link PageManager}, представляющий текущую страницу или компонент.
      */
-    public UIRouter checkText(String expected) {
+    public ErrorPopup checkText(String expected) {
         $(text).shouldHave(Condition.text(expected));
         return this;
     }

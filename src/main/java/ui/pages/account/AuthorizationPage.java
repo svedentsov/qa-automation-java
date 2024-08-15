@@ -1,4 +1,6 @@
 package ui.pages.account;
 
-public class AuthorizationPage {
+import ui.pages.AbstractPage;
+
+public class AuthorizationPage extends AbstractPage<AuthorizationPage> {
 }

@@ -1,4 +1,4 @@
-package core.annotation;
+package core.annotations;
 
 import io.qameta.allure.LabelAnnotation;
 
@@ -8,7 +8,8 @@ import java.lang.annotation.*;
 @Inherited
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.METHOD, ElementType.TYPE})
-@LabelAnnotation(name = "msrv")
-public @interface Microservice {
+@Repeatable(JiraIssues.class)
+@LabelAnnotation(name = "jira")
+public @interface JiraIssue {
     String value();
 }

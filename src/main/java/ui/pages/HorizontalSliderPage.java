@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class HorizontalSliderPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/horizontal_slider")
+public class HorizontalSliderPage extends AbstractPage<HorizontalSliderPage> {
 }

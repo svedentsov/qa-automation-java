@@ -1,4 +1,6 @@
 package ui.pages.customerservice;
 
-public class GiftCertificatePage {
+import ui.pages.AbstractPage;
+
+public class GiftCertificatePage extends AbstractPage<GiftCertificatePage> {
 }

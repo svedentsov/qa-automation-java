@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class LargeDeepDomPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/large")
+public class LargeDeepDomPage extends AbstractPage<LargeDeepDomPage> {
 }

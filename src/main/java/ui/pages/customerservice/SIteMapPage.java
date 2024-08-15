@@ -1,4 +1,6 @@
 package ui.pages.customerservice;
 
-public class SIteMapPage {
+import ui.pages.AbstractPage;
+
+public class SIteMapPage extends AbstractPage<SIteMapPage> {
 }

@@ -1,4 +1,6 @@
 package ui.pages.customerservice;
 
-public class BrandPage {
+import ui.pages.AbstractPage;
+
+public class BrandPage extends AbstractPage<BrandPage> {
 }

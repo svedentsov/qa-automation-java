@@ -1,4 +1,6 @@
 package ui.pages.account;
 
-public class RegistrationPage {
+import ui.pages.AbstractPage;
+
+public class RegistrationPage extends AbstractPage<RegistrationPage> {
 }

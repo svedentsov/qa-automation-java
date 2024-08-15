@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class RedirectLinkPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/redirector")
+public class RedirectLinkPage extends AbstractPage<RedirectLinkPage> {
 }

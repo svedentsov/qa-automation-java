@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class NestedFramesPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/nested_frames")
+public class NestedFramesPage extends AbstractPage<NestedFramesPage> {
 }

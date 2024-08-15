@@ -2,7 +2,7 @@ package ui.widgets;
 
 import com.codeborne.selenide.CollectionCondition;
 import com.codeborne.selenide.Condition;
-import ui.pages.UIRouter;
+import core.widgets.Widget;
 import org.openqa.selenium.By;
 
 import java.util.ArrayList;
@@ -12,18 +12,19 @@ import static com.codeborne.selenide.Selenide.$$;
 /**
  * Класс предоставляет методы для проверки наличия, отсутствия и взаимодействия с вариантами.
  */
-public class Variants extends UIRouter {
+public class Variants extends Widget<Variants> {
 
-    private final By variant = By.cssSelector(".uk-card");
+    public Variants() {
+        super(By.cssSelector(".uk-card"));
+    }
 
     /**
      * Проверяет, что вариант с указанным заголовком присутствует.
      *
      * @param title заголовок варианта
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter checkVariantIsPresent(String title) {
-        $$(variant).filterBy(Condition.text(title)).shouldBe(CollectionCondition.size(1));
+    public Variants checkVariantIsPresent(String title) {
+        $$(locator).filterBy(Condition.text(title)).shouldBe(CollectionCondition.size(1));
         return this;
     }
 
@@ -31,10 +32,9 @@ public class Variants extends UIRouter {
      * Проверяет, что все варианты из списка присутствуют.
      *
      * @param list список заголовков вариантов
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter checkAllVariantsArePresent(ArrayList<String> list) {
-        list.forEach(title -> $$(variant).filterBy(Condition.text(title)).shouldBe(CollectionCondition.size(1)));
+    public Variants checkAllVariantsArePresent(ArrayList<String> list) {
+        list.forEach(title -> $$(locator).filterBy(Condition.text(title)).shouldBe(CollectionCondition.size(1)));
         return this;
     }
 
@@ -42,20 +42,17 @@ public class Variants extends UIRouter {
      * Проверяет, что вариант с указанным заголовком отсутствует.
      *
      * @param title заголовок варианта
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter checkVariantIsNotPresent(String title) {
-        $$(variant).filterBy(Condition.text(title)).shouldBe(CollectionCondition.empty);
+    public Variants checkVariantIsNotPresent(String title) {
+        $$(locator).filterBy(Condition.text(title)).shouldBe(CollectionCondition.empty);
         return this;
     }
 
     /**
      * Проверяет, что варианты отсутствуют.
-     *
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter checkVariantsEmpty() {
-        $$(variant).shouldBe(CollectionCondition.empty);
+    public Variants checkVariantsEmpty() {
+        $$(locator).shouldBe(CollectionCondition.empty);
         return this;
     }
 
@@ -63,10 +60,9 @@ public class Variants extends UIRouter {
      * Проверяет количество вариантов.
      *
      * @param count ожидаемое количество вариантов
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter checkVariantsCount(int count) {
-        $$(variant).shouldBe(CollectionCondition.size(count));
+    public Variants checkVariantsCount(int count) {
+        $$(locator).shouldBe(CollectionCondition.size(count));
         return this;
     }
 
@@ -74,10 +70,9 @@ public class Variants extends UIRouter {
      * Наводит курсор на вариант с указанным заголовком.
      *
      * @param title заголовок варианта
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter hoverVariant(String title) {
-        $$(variant).filterBy(Condition.text(title)).first().hover();
+    public Variants hoverVariant(String title) {
+        $$(locator).filterBy(Condition.text(title)).first().hover();
         return this;
     }
 }

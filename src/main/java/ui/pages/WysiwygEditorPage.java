@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class WysiwygEditorPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/tinymce")
+public class WysiwygEditorPage extends AbstractPage<WysiwygEditorPage> {
 }

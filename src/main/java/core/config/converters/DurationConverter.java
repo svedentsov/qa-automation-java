@@ -1,5 +1,7 @@
-package core.utils;
+package core.config.converters;
 
+import core.utils.StreamUtils;
+import core.utils.StrUtil;
 import lombok.AllArgsConstructor;
 import org.aeonbits.owner.Converter;
 
@@ -22,7 +24,7 @@ public class DurationConverter implements Converter<Duration> {
      */
     @Override
     public Duration convert(Method method, String text) {
-        int numericPart = StringUtil.getNumberFromStr(text);
+        int numericPart = StrUtil.getNumberFromStr(text);
 
         return StreamUtils.getFirstInOptional(DurationTags.values(), tag -> text.endsWith(tag.strValue))
                 .map(tag -> Duration.of(numericPart, tag.chronoUnitValue))
@@ -42,6 +44,6 @@ public class DurationConverter implements Converter<Duration> {
         HOURS(".hour", ChronoUnit.HOURS);
 
         private final String strValue; // Строковое представление тега.
-        private final ChronoUnit chronoUnitValue;  // Хронологическая единица, соответствующая тегу.
+        private final ChronoUnit chronoUnitValue; // Хронологическая единица, соответствующая тегу.
     }
 }

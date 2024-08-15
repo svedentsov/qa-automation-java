@@ -4,6 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.experimental.Accessors;
 
+/**
+ * Перечисление, представляющее элементы меню.
+ * Каждый элемент содержит отображаемое имя, которое используется для идентификации на пользовательском интерфейсе.
+ */
 @Getter
 @Accessors(fluent = true)
 @AllArgsConstructor
@@ -53,5 +57,8 @@ public enum MenuItems {
     TYPOS("Typos"),
     WYSIWYG_EDITOR("WYSIWYG Editor");
 
+    /**
+     * Отображаемое имя элемента меню.
+     */
     private final String displayName;
 }

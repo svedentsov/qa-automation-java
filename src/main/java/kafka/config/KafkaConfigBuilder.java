@@ -43,6 +43,11 @@ public class KafkaConfigBuilder {
         return props;
     }
 
+    /**
+     * Создает конфигурацию продюсера по умолчанию.
+     *
+     * @return конфигурация продюсера по умолчанию
+     */
     private static Properties createDefaultProducerConfig() {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers());
@@ -50,6 +55,11 @@ public class KafkaConfigBuilder {
         return props;
     }
 
+    /**
+     * Создает конфигурацию консюмера по умолчанию.
+     *
+     * @return конфигурация консюмера по умолчанию
+     */
     private static Properties createDefaultConsumerConfig() {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers());
@@ -58,6 +68,11 @@ public class KafkaConfigBuilder {
         return props;
     }
 
+    /**
+     * Настраивает SSL параметры для конфигурации Kafka.
+     *
+     * @param props объект Properties, в который добавляются SSL параметры
+     */
     private static void configureSSL(Properties props) {
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.sslTruststoreLocation());
@@ -68,6 +83,12 @@ public class KafkaConfigBuilder {
         props.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, config.sslEndpointIdentificationAlgorithm());
     }
 
+    /**
+     * Настраивает конфигурацию продюсера для определённого топика.
+     *
+     * @param props объект Properties, содержащий конфигурацию продюсера
+     * @param topic имя топика Kafka
+     */
     private static void customizeProducerConfig(Properties props, String topic) {
         if ("special-topic".equals(topic)) {
             log.info("Настройка конфигурации продюсера для специального топика");
@@ -78,6 +99,12 @@ public class KafkaConfigBuilder {
         }
     }
 
+    /**
+     * Настраивает конфигурацию консюмера для определённого топика.
+     *
+     * @param props объект Properties, содержащий конфигурацию консюмера
+     * @param topic имя топика Kafka
+     */
     private static void customizeConsumerConfig(Properties props, String topic) {
         if ("special-topic".equals(topic)) {
             log.info("Настройка конфигурации консюмера для специального топика");

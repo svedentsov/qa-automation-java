@@ -1,7 +1,7 @@
 package rest.petstore;
 
 import common.RestTest;
-import core.annotation.*;
+import core.annotations.*;
 import io.qameta.allure.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;

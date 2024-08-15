@@ -1,7 +1,7 @@
 package ui.widgets;
 
-import ui.pages.UIRouter;
 import com.codeborne.selenide.Condition;
+import core.widgets.Widget;
 import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Selenide.$;
@@ -10,9 +10,7 @@ import static com.codeborne.selenide.Selenide.$;
  * Класс предоставляет методы для выбора варианта из выпадающего списка,
  * проверки текста элемента списка и выполнения дополнительных действий.
  */
-public class Select extends UIRouter {
-
-    private final By locator;
+public class Select extends Widget<Select> {
 
     /**
      * Конструирует экземпляр DropdownList с указанным локатором.
@@ -20,16 +18,15 @@ public class Select extends UIRouter {
      * @param locator локатор элемента выпадающего списка типа {@link By}
      */
     public Select(By locator) {
-        this.locator = locator;
+        super(locator);
     }
 
     /**
      * Выбирает указанный вариант из выпадающего списка.
      *
      * @param variant текст варианта, который нужно выбрать
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter choose(String variant) {
+    public Select choose(String variant) {
         $(locator).selectOption(variant);
         return this;
     }
@@ -38,9 +35,8 @@ public class Select extends UIRouter {
      * Проверяет, содержит ли элемент выпадающего списка ожидаемый текст.
      *
      * @param expected ожидаемый текст элемента выпадающего списка
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter checkText(String expected) {
+    public Select checkText(String expected) {
         $(locator).shouldHave(Condition.text(expected));
         return this;
     }
@@ -49,9 +45,8 @@ public class Select extends UIRouter {
      * Проверяет, что текущий выбранный вариант соответствует ожидаемому значению.
      *
      * @param expected ожидаемое значение текущего выбранного варианта
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter checkSelectedValue(String expected) {
+    public Select checkSelectedValue(String expected) {
         $(locator).shouldHave(Condition.selectedText(expected));
         return this;
     }

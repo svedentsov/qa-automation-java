@@ -16,7 +16,7 @@ public class SortableDataTablesSteps extends BaseSteps {
      */
     @Step("Проверить наличие сущности в таблице")
     public SortableDataTablesSteps checkEntityIsPresentUsersTable(String columnName, String entityName) {
-        ui.sortableDataTablesPage().TABLE_1.checkEntityIsPresent(columnName, entityName);
+        pages.sortableDataTablesPage().TABLE_1.checkEntityIsPresent(columnName, entityName);
         return this;
     }
 
@@ -29,7 +29,7 @@ public class SortableDataTablesSteps extends BaseSteps {
      */
     @Step("Проверить отсутствие сущности в таблице")
     public SortableDataTablesSteps checkEntityIsNotPresentUsersTable(String columnName, String entityName) {
-        ui.sortableDataTablesPage().TABLE_1.checkEntityIsNotPresent(columnName, entityName);
+        pages.sortableDataTablesPage().TABLE_1.checkEntityIsNotPresent(columnName, entityName);
         return this;
     }
 
@@ -44,7 +44,7 @@ public class SortableDataTablesSteps extends BaseSteps {
      */
     @Step("Проверить информацию из поля в таблице")
     public SortableDataTablesSteps checkInfoFromFieldUsersTable(String columnName, String entityName, String requiredColumnName, String expectedText) {
-        ui.sortableDataTablesPage().TABLE_1.checkInfoFromField(columnName, entityName, requiredColumnName, expectedText);
+        pages.sortableDataTablesPage().TABLE_1.checkInfoFromField(columnName, entityName, requiredColumnName, expectedText);
         return this;
     }
 }

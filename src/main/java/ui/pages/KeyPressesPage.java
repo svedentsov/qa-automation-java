@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class KeyPressesPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/key_presses")
+public class KeyPressesPage extends AbstractPage<KeyPressesPage> {
 }

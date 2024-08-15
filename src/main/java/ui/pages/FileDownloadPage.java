@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class FileDownloadPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/download")
+public class FileDownloadPage extends AbstractPage<FileDownloadPage> {
 }

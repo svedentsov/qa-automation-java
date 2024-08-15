@@ -1,6 +1,11 @@
 package ui.widgets;
 
-import ui.pages.UIRouter;
+import core.widgets.Widget;
+import org.openqa.selenium.By;
 
-public class DateInput extends UIRouter {
+public class DateInput extends Widget<DateInput> {
+
+    public DateInput(By locator) {
+        super(locator);
+    }
 }

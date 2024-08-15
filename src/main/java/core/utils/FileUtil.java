@@ -27,88 +27,87 @@ public class FileUtil {
     /**
      * Читает содержимое файла по указанному пути.
      *
-     * @param filePath Путь к файлу.
-     * @return Содержимое файла в виде строки.
-     * @throws IllegalStateException Если возникает ошибка ввода-вывода.
+     * @param filePath путь к файлу
+     * @return содержимое файла в виде строки
+     * @throws UncheckedIOException если возникает ошибка ввода-вывода
      */
     public static String readFile(String filePath) {
         try {
             return _readFile(filePath);
         } catch (IOException e) {
-            throw new IllegalStateException("Error occurred while reading from file " + filePath, e);
+            throw new UncheckedIOException("Произошла ошибка при чтении файла " + filePath, e);
         }
     }
 
     /**
      * Читает содержимое файла по указанному пути.
      *
-     * @param path Путь к файлу.
-     * @return Содержимое файла в виде строки.
-     * @throws IllegalStateException Если возникает ошибка ввода-вывода.
+     * @param path путь к файлу
+     * @return содержимое файла в виде строки
+     * @throws UncheckedIOException если возникает ошибка ввода-вывода
      */
     public static String readFile(Path path) {
         try {
             return Files.readString(path, UTF_8);
         } catch (IOException e) {
-            throw new IllegalStateException("Error occurred while reading from file " + path, e);
+            throw new UncheckedIOException("Произошла ошибка при чтении файла " + path, e);
         }
     }
 
     /**
      * Читает содержимое файла из входного потока.
      *
-     * @param is Входной поток данных.
-     * @return Содержимое файла в виде строки.
-     * @throws RuntimeException Если возникает ошибка ввода-вывода.
+     * @param is входной поток данных
+     * @return содержимое файла в виде строки
+     * @throws UncheckedIOException если возникает ошибка ввода-вывода
      */
     public static String readFile(InputStream is) {
-        try {
-            BufferedReader br = new BufferedReader(new InputStreamReader(is));
-            String line;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, UTF_8))) {
             StringBuilder sb = new StringBuilder();
+            String line;
             while ((line = br.readLine()) != null) {
                 sb.append(line).append("\n");
             }
             return sb.toString();
         } catch (IOException e) {
-            throw new RuntimeException("Error occurred while reading from InputStream " + e.getMessage(), e);
+            throw new UncheckedIOException("Произошла ошибка при чтении из InputStream", e);
         }
     }
 
     /**
      * Записывает текст в файл.
      *
-     * @param file Файл для записи.
-     * @param text Текст для записи.
+     * @param file файл для записи
+     * @param text текст для записи
      */
     public static void writeToFile(File file, String text) {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(file))) {
-            writer.print(text);
+        try {
+            Files.writeString(file.toPath(), text, UTF_8);
         } catch (IOException e) {
-            log.warn("Error occurred while writing into file " + file.getName(), e);
+            log.warn("Произошла ошибка при записи в файл " + file.getName(), e);
         }
     }
 
     /**
      * Создает файл.
      *
-     * @param file Файл для создания.
-     * @return true, если файл был успешно создан; false, если файл уже существует.
-     * @throws IllegalStateException Если возникает ошибка ввода-вывода при создании файла.
+     * @param file файл для создания
+     * @return true, если файл был успешно создан; false, если файл уже существует
+     * @throws UncheckedIOException если возникает ошибка ввода-вывода при создании файла
      */
     public static boolean createFile(File file) {
         try {
             return file.createNewFile();
         } catch (IOException e) {
-            throw new IllegalStateException("Error occurred while creating file " + file.getName(), e);
+            throw new UncheckedIOException("Произошла ошибка при создании файла " + file.getName(), e);
         }
     }
 
     /**
      * Создает или заменяет файл вместе с деревом каталогов.
      *
-     * @param path Путь к файлу.
-     * @throws IllegalStateException Если возникает ошибка ввода-вывода при создании файла.
+     * @param path путь к файлу
+     * @throws UncheckedIOException если возникает ошибка ввода-вывода при создании файла
      */
     public static void createReplaceFileWithDirTree(Path path) {
         try {
@@ -116,14 +115,14 @@ public class FileUtil {
             Files.deleteIfExists(path);
             Files.createFile(path);
         } catch (IOException e) {
-            throw new IllegalStateException("Error occurred while creating file " + path.toFile().getName(), e);
+            throw new UncheckedIOException("Произошла ошибка при создании файла " + path.toFile().getName(), e);
         }
     }
 
     /**
      * Создает или заменяет файлы вместе с деревом каталогов.
      *
-     * @param files Список файлов.
+     * @param files список файлов
      */
     public static void createReplaceFileWithDirTree(List<File> files) {
         files.forEach(file -> createReplaceFileWithDirTree(file.toPath()));
@@ -132,9 +131,9 @@ public class FileUtil {
     /**
      * Читает содержимое CSV-файла по указанному пути.
      *
-     * @param filePath Путь к CSV-файлу.
-     * @return Список строк из CSV-файла (без строк, содержащих комментарии).
-     * @throws IllegalStateException Если возникает ошибка ввода-вывода.
+     * @param filePath путь к CSV-файлу
+     * @return список строк из CSV-файла (без строк, содержащих комментарии)
+     * @throws UncheckedIOException если возникает ошибка ввода-вывода
      */
     public static List<String> readCsvFile(String filePath) {
         List<String> content = new ArrayList<>();
@@ -142,14 +141,14 @@ public class FileUtil {
             String line;
             while ((line = br.readLine()) != null) {
                 if (!line.contains("//")) {
-                    content.add(String.join(StringUtil.COMMA, line));
+                    content.add(String.join(StrUtil.COMMA, line));
                 }
             }
             if (content.isEmpty()) {
-                throw new IllegalStateException("File is empty!");
+                throw new IllegalStateException("Файл пуст!");
             }
         } catch (IOException e) {
-            throw new IllegalStateException("Error occurred while reading file " + filePath, e);
+            throw new UncheckedIOException("Произошла ошибка при чтении файла " + filePath, e);
         }
         return content;
     }
@@ -157,17 +156,17 @@ public class FileUtil {
     /**
      * Читает содержимое файла по указанному пути и возвращает его в виде строки.
      *
-     * @param pathToResource Путь к ресурсу.
-     * @return Содержимое файла в виде строки.
-     * @throws IllegalStateException Если возникает ошибка ввода-вывода.
+     * @param pathToResource путь к ресурсу
+     * @return содержимое файла в виде строки
+     * @throws UncheckedIOException если возникает ошибка ввода-вывода
      */
     public static String readFileFormatted(String pathToResource) {
         var file = new File(Objects.requireNonNull(FileUtil.class.getClassLoader().getResource(pathToResource)).getFile());
         Path path = Paths.get(file.getAbsolutePath());
-        try (Stream<String> lines = Files.lines(path)) {
+        try (Stream<String> lines = Files.lines(path, UTF_8)) {
             return lines.collect(Collectors.joining("\n"));
         } catch (IOException e) {
-            throw new IllegalStateException("Error occurred while reading from file " + path, e);
+            throw new UncheckedIOException("Произошла ошибка при чтении файла " + path, e);
         }
     }
 
@@ -175,25 +174,21 @@ public class FileUtil {
      * Читает содержимое файла по указанному пути и возвращает его в виде строки.
      * Приватный метод для реализации чтения файла с использованием FileReader и BufferedReader.
      *
-     * @param filePath Путь к файлу.
-     * @return Содержимое файла в виде строки.
-     * @throws IOException Если возникает ошибка ввода-вывода.
+     * @param filePath путь к файлу
+     * @return содержимое файла в виде строки
+     * @throws IOException если возникает ошибка ввода-вывода
      */
     private static String _readFile(String filePath) throws IOException {
-        String fileOutput;
         StringBuilder stringBuilder = new StringBuilder();
 
-        try (Reader reader = new FileReader(new File(filePath));
+        try (Reader reader = new FileReader(new File(filePath), UTF_8);
              BufferedReader buffered = new BufferedReader(reader)) {
 
             String line;
             while ((line = buffered.readLine()) != null) {
                 stringBuilder.append(line);
-                stringBuilder.append(StringUtil.EMPTY);
             }
-
-            fileOutput = stringBuilder.toString();
         }
-        return fileOutput;
+        return stringBuilder.toString();
     }
 }

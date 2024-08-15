@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class DigestAuthPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/digest_auth")
+public class DigestAuthPage extends AbstractPage<DigestAuthPage> {
 }

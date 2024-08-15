@@ -1,6 +1,6 @@
 package core.config;
 
-import core.utils.DurationConverter;
+import core.config.converters.DurationConverter;
 import org.aeonbits.owner.Config;
 
 import java.time.Duration;

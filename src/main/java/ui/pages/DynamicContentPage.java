@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class DynamicContentPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/dynamic_content")
+public class DynamicContentPage extends AbstractPage<DynamicContentPage> {
 }

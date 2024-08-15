@@ -1,7 +1,7 @@
 package ui.widgets;
 
 import com.codeborne.selenide.Condition;
-import ui.pages.UIRouter;
+import core.widgets.Widget;
 import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Selenide.$;
@@ -9,9 +9,7 @@ import static com.codeborne.selenide.Selenide.$;
 /**
  * Класс предоставляет методы для чтения текста из строки и проверки ее содержимого.
  */
-public class Text extends UIRouter {
-
-    private final By locator;
+public class Text extends Widget<Text> {
 
     /**
      * Конструирует экземпляр LineRead с указанным локатором.
@@ -19,7 +17,7 @@ public class Text extends UIRouter {
      * @param locator локатор элемента строки типа {@link By}
      */
     public Text(By locator) {
-        this.locator = locator;
+        super(locator);
     }
 
     /**
@@ -35,29 +33,24 @@ public class Text extends UIRouter {
      * Проверяет, содержит ли элемент строки ожидаемый текст.
      *
      * @param expected ожидаемый текст элемента строки
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter checkText(String expected) {
+    public Text checkText(String expected) {
         $(locator).shouldHave(Condition.text(expected));
         return this;
     }
 
     /**
      * Проверяет, что элемент строки отображается.
-     *
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter shouldBeVisible() {
+    public Text shouldBeVisible() {
         $(locator).shouldBe(Condition.visible);
         return this;
     }
 
     /**
      * Проверяет, что элемент строки скрыт.
-     *
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter shouldBeHidden() {
+    public Text shouldBeHidden() {
         $(locator).shouldBe(Condition.hidden);
         return this;
     }
@@ -67,9 +60,8 @@ public class Text extends UIRouter {
      *
      * @param attribute имя атрибута
      * @param value     ожидаемое значение атрибута
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter shouldHaveAttribute(String attribute, String value) {
+    public Text shouldHaveAttribute(String attribute, String value) {
         $(locator).shouldHave(Condition.attribute(attribute, value));
         return this;
     }
@@ -78,9 +70,8 @@ public class Text extends UIRouter {
      * Проверяет, что элемент строки имеет атрибут "value" со значением.
      *
      * @param value ожидаемое значение атрибута "value"
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter shouldHaveValue(String value) {
+    public Text shouldHaveValue(String value) {
         $(locator).shouldHave(Condition.value(value));
         return this;
     }
@@ -89,9 +80,8 @@ public class Text extends UIRouter {
      * Проверяет, что элемент строки содержит указанный текст.
      *
      * @param text ожидаемый текст в элементе строки
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter shouldContainText(String text) {
+    public Text shouldContainText(String text) {
         $(locator).shouldHave(Condition.text(text));
         return this;
     }
@@ -100,9 +90,8 @@ public class Text extends UIRouter {
      * Проверяет, что элемент строки содержит только указанный текст и никакой другой.
      *
      * @param text ожидаемый текст в элементе строки
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент
      */
-    public UIRouter shouldHaveExactText(String text) {
+    public Text shouldHaveExactText(String text) {
         $(locator).shouldHave(Condition.exactText(text));
         return this;
     }

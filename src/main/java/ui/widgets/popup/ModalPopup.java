@@ -1,7 +1,7 @@
-package ui.widgets;
+package ui.widgets.popup;
 
 import com.codeborne.selenide.Condition;
-import ui.pages.UIRouter;
+import core.widgets.Widget;
 import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Selenide.$;
@@ -10,17 +10,19 @@ import static com.codeborne.selenide.Selenide.$;
  * Представляет модальное всплывающее окно на веб-странице.
  * Этот класс предоставляет методы для взаимодействия и выполнения действий с модальным окном.
  */
-public class PopupModal extends UIRouter {
+public class ModalPopup extends Widget<ModalPopup> {
 
     private final By closer = By.cssSelector(".uk-modal-close");
     private final By text = By.cssSelector(".uk-modal-body");
 
+    public ModalPopup(By locator) {
+        super(locator);
+    }
+
     /**
      * Закрывает модальное окно, нажимая на элемент закрытия.
-     *
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
      */
-    public UIRouter close() {
+    public ModalPopup close() {
         $(closer).click();
         return this;
     }
@@ -29,9 +31,8 @@ public class PopupModal extends UIRouter {
      * Проверяет, содержит ли текст модального окна ожидаемый текст.
      *
      * @param expected ожидаемый текст в модальном окне.
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
      */
-    public UIRouter checkText(String expected) {
+    public ModalPopup checkText(String expected) {
         $(text).shouldHave(Condition.text(expected));
         return this;
     }

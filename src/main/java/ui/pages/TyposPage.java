@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class TyposPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/typos")
+public class TyposPage extends AbstractPage<TyposPage> {
 }

@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class MultipleWindowsPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/windows")
+public class MultipleWindowsPage extends AbstractPage<MultipleWindowsPage> {
 }

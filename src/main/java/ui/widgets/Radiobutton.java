@@ -1,6 +1,11 @@
 package ui.widgets;
 
-import ui.pages.UIRouter;
+import core.widgets.Widget;
+import org.openqa.selenium.By;
 
-public class Radiobutton extends UIRouter {
+public class Radiobutton extends Widget<Radiobutton> {
+
+    public Radiobutton(By locator) {
+        super(locator);
+    }
 }

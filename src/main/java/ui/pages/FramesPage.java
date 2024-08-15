@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class FramesPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/frames")
+public class FramesPage extends AbstractPage<FramesPage> {
 }

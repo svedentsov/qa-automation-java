@@ -1,4 +1,6 @@
 package ui.pages.information;
 
-public class DeliveryInfoPage {
+import ui.pages.AbstractPage;
+
+public class DeliveryInfoPage extends AbstractPage<DeliveryInfoPage> {
 }

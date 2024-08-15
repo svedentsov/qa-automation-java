@@ -1,6 +1,11 @@
 package ui.widgets;
 
-import ui.pages.UIRouter;
+import core.widgets.Widget;
+import org.openqa.selenium.By;
 
-public class Accordion extends UIRouter {
+public class Accordion extends Widget<Accordion> {
+    
+    public Accordion(By locator) {
+        super(locator);
+    }
 }

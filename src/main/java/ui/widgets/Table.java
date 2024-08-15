@@ -4,7 +4,7 @@ import com.codeborne.selenide.CollectionCondition;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
-import ui.pages.UIRouter;
+import core.widgets.Widget;
 import org.openqa.selenium.By;
 
 import java.util.stream.IntStream;
@@ -14,9 +14,8 @@ import static com.codeborne.selenide.Selenide.$;
 /**
  * Класс предоставляет методы для взаимодействия с таблицами.
  */
-public class Table extends UIRouter {
+public class Table extends Widget<Table> {
 
-    private final By table;
     private final By headers = By.tagName("th");
     private final By rows = By.tagName("tr");
     private final By fields = By.tagName("td");
@@ -27,7 +26,7 @@ public class Table extends UIRouter {
      * @param tableLocator локатор By для элемента таблицы
      */
     public Table(By tableLocator) {
-        this.table = tableLocator;
+        super(tableLocator);
     }
 
     /**
@@ -38,7 +37,7 @@ public class Table extends UIRouter {
      */
     public int getNumberOfColumn(String columnName) {
         ensureTableIsNotEmpty();
-        ElementsCollection headerColumns = $(table).$$(headers);
+        ElementsCollection headerColumns = $(locator).$$(headers);
         return IntStream.range(0, headerColumns.size())
                 .filter(i -> headerColumns.get(i).getText().equalsIgnoreCase(columnName))
                 .findFirst()
@@ -50,10 +49,9 @@ public class Table extends UIRouter {
      *
      * @param columnName название столбца.
      * @param entityName название сущности для проверк.
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
      */
-    public UIRouter checkEntityIsPresent(String columnName, String entityName) {
-        $(table).$x(getCellXPath(columnName, entityName)).should(Condition.exist);
+    public Table checkEntityIsPresent(String columnName, String entityName) {
+        $(locator).$x(getCellXPath(columnName, entityName)).should(Condition.exist);
         return this;
     }
 
@@ -62,14 +60,13 @@ public class Table extends UIRouter {
      *
      * @param columnName название столбца.
      * @param entityName название сущности для проверки.
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
      */
-    public UIRouter checkEntityIsNotPresent(String columnName, String entityName) {
+    public Table checkEntityIsNotPresent(String columnName, String entityName) {
         ensureTableIsNotEmpty();
 
         String cellXPath = getCellXPath(columnName, entityName);
         try {
-            $(table).$x(cellXPath).shouldNot(Condition.exist);
+            $(locator).$x(cellXPath).shouldNot(Condition.exist);
         } catch (org.openqa.selenium.NoSuchElementException ignored) {
             // Игнорируем NoSuchElementException, так как это ожидаемо, если элемент не найден
         }
@@ -86,7 +83,7 @@ public class Table extends UIRouter {
      * @return информация из указанного поля.
      */
     public String getInfoFromField(String columnName, String entityName, String requiredColumn) {
-        return $(table).$x(getCellXPath(columnName, entityName) + "/../td[position()=" + getNumberOfColumn(requiredColumn) + "]").getText();
+        return $(locator).$x(getCellXPath(columnName, entityName) + "/../td[position()=" + getNumberOfColumn(requiredColumn) + "]").getText();
     }
 
     /**
@@ -96,14 +93,14 @@ public class Table extends UIRouter {
      * @param entityName     название сущности.
      * @param requiredColumn название столбца, из которого извлекается информация.
      * @param expected       ожидаемое значение.
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
      */
-    public UIRouter checkInfoFromField(String columnName, String entityName, String requiredColumn, String expected) {
-        SelenideElement required = $(table).$x(getCellXPath(columnName, entityName) + "/../td[position()=" + getNumberOfColumn(requiredColumn) + "]");
-        if (expected.isEmpty())
+    public Table checkInfoFromField(String columnName, String entityName, String requiredColumn, String expected) {
+        SelenideElement required = $(locator).$x(getCellXPath(columnName, entityName) + "/../td[position()=" + getNumberOfColumn(requiredColumn) + "]");
+        if (expected.isEmpty()) {
             required.shouldHave(Condition.exactText(""));
-        else
+        } else {
             required.shouldHave(Condition.text(expected));
+        }
         return this;
     }
 
@@ -111,11 +108,10 @@ public class Table extends UIRouter {
      * Выбирает строку таблицы по её номеру.
      *
      * @param rowNumber номер строки в таблице (начиная с 1).
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
      */
-    public UIRouter selectRowByNumber(int rowNumber) {
+    public Table selectRowByNumber(int rowNumber) {
         ensureTableIsNotEmpty();
-        ElementsCollection tableRows = $(table).$$(rows);
+        ElementsCollection tableRows = $(locator).$$(rows);
         if (rowNumber > 0 && rowNumber <= tableRows.size()) {
             tableRows.get(rowNumber - 1).click();
         }
@@ -127,12 +123,11 @@ public class Table extends UIRouter {
      *
      * @param columnName название столбца, содержащего сущность.
      * @param entityName название сущности.
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
      */
-    public UIRouter selectRowByName(String columnName, String entityName) {
+    public Table selectRowByName(String columnName, String entityName) {
         ensureTableIsNotEmpty();
         String cellXPath = getCellXPath(columnName, entityName);
-        $(table).$x(cellXPath + "/../td[1]").click(); // Предполагаем, что первая ячейка в строке содержит информацию для выбора строки
+        $(locator).$x(cellXPath + "/../td[1]").click(); // Предполагаем, что первая ячейка в строке содержит информацию для выбора строки
         return this;
     }
 
@@ -140,11 +135,10 @@ public class Table extends UIRouter {
      * Проверяет соответствие заголовков таблицы ожидаемым значениям.
      *
      * @param expectedHeaders массив строк с ожидаемыми значениями заголовков.
-     * @return экземпляр {@link UIRouter}, представляющий текущую страницу или компонент.
      */
-    public UIRouter checkTableHeaders(String... expectedHeaders) {
+    public Table checkTableHeaders(String... expectedHeaders) {
         ensureTableIsNotEmpty();
-        ElementsCollection actualHeaders = $(table).$$(headers);
+        ElementsCollection actualHeaders = $(locator).$$(headers);
         IntStream.range(0, expectedHeaders.length).forEach(i -> actualHeaders.get(i).shouldHave(Condition.exactText(expectedHeaders[i])));
         return this;
     }
@@ -153,8 +147,9 @@ public class Table extends UIRouter {
      * Проверяет, что таблица не пуста.
      * Если таблица пуста, генерирует исключение.
      */
-    private void ensureTableIsNotEmpty() {
-        $(table).$$(rows).shouldBe(CollectionCondition.sizeGreaterThan(0));
+    private Table ensureTableIsNotEmpty() {
+        $(locator).$$(rows).shouldBe(CollectionCondition.sizeGreaterThan(0));
+        return this;
     }
 
     /**

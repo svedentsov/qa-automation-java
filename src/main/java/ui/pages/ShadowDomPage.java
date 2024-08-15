@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class ShadowDomPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/shadowdom")
+public class ShadowDomPage extends AbstractPage<ShadowDomPage> {
 }

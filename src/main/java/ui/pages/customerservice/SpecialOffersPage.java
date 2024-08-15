@@ -1,4 +1,6 @@
 package ui.pages.customerservice;
 
-public class SpecialOffersPage {
+import ui.pages.AbstractPage;
+
+public class SpecialOffersPage extends AbstractPage<SpecialOffersPage> {
 }

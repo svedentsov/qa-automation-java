@@ -1,4 +1,6 @@
 package ui.pages.information;
 
-public class PrivacyPolicyPage {
+import ui.pages.AbstractPage;
+
+public class PrivacyPolicyPage extends AbstractPage<PrivacyPolicyPage> {
 }

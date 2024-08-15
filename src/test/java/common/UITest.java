@@ -58,14 +58,4 @@ public class UITest extends BaseTest {
                 .checkEntityIsNotPresentUsersTable("First Name", "Jasons")
                 .checkInfoFromFieldUsersTable("Last Name", "Bach", "Web Site", "http://www.frank.com");
     }
-
-    @Test
-    public void dropdownTest() {
-        open("https://the-internet.herokuapp.com");
-        theInternet.welcomePageSteps()
-                .dropdownClick();
-        theInternet.dropdownSteps()
-
-                ;
-    }
 }

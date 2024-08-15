@@ -4,7 +4,7 @@ buildscript {
         allureVersion = '2.27.0'
         assertjVersion = '3.25.3'
         aspectjVersion = '1.9.22'
-        awaitilityVersion = '4.2.0'
+        awaitilityVersion = '3.1.3'
         commonsBeanutilsVersion = '1.9.4'
         commonsIoVersion = '2.15.1'
         configVersion = '1.4.1'

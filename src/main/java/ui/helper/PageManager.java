@@ -1,11 +1,23 @@
-package ui.pages;
+package ui.helper;
 
 import com.codeborne.selenide.Selenide;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import ui.pages.*;
+
+import java.util.Optional;
 
 /**
  * Базовый роутер для навигации между страницами веб-приложения.
  */
-public class UIRouter {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+public class PageManager {
+
+    private static PageManager PageManager;
+
+    public static synchronized PageManager getPageManager() {
+        return Optional.ofNullable(PageManager).orElseGet(() -> PageManager = new PageManager());
+    }
 
     /**
      * Возвращает страницу "A/B Testing".

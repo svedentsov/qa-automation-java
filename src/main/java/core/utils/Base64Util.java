@@ -1,9 +1,7 @@
 package core.utils;
 
-import lombok.SneakyThrows;
 import lombok.experimental.UtilityClass;
 
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -16,40 +14,34 @@ public class Base64Util {
     /**
      * Кодирует строку в формате Base64.
      *
-     * @param value Строка для кодирования.
-     * @return Закодированная строка в формате Base64.
-     * @throws UnsupportedEncodingException Если кодировка не поддерживается.
+     * @param value строка для кодирования
+     * @return закодированная строка в формате Base64
      */
-    @SneakyThrows(UnsupportedEncodingException.class)
-    public static String encode(String value) {
-        return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8.toString()));
+    public static String encode(final String value) {
+        return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
      * Декодирует строку из формата Base64.
      *
-     * @param value Закодированная строка в формате Base64.
-     * @return Декодированная строка.
-     * @throws UnsupportedEncodingException Если кодировка не поддерживается.
+     * @param value закодированная строка в формате Base64
+     * @return декодированная строка
      */
-    @SneakyThrows(UnsupportedEncodingException.class)
-    public static String decode(String value) {
+    public static String decode(final String value) {
         byte[] decodedValue = Base64.getDecoder().decode(value);
-        return new String(decodedValue, StandardCharsets.UTF_8.toString());
+        return new String(decodedValue, StandardCharsets.UTF_8);
     }
 
     /**
      * Кодирует авторизационный токен с использованием формата Base64.
      *
-     * @param accountId Идентификатор учетной записи.
-     * @param publicKey Публичный ключ.
-     * @param signature Сигнатура.
-     * @return Закодированный авторизационный токен в формате Base64.
-     * @throws UnsupportedEncodingException Если кодировка не поддерживается.
+     * @param accountId идентификатор учетной записи
+     * @param publicKey публичный ключ
+     * @param signature сигнатура
+     * @return закодированный авторизационный токен в формате Base64
      */
-    @SneakyThrows
-    public static String encodeAuthToken(String accountId, String publicKey, String signature) {
+    public static String encodeAuthToken(final String accountId, final String publicKey, final String signature) {
         String input = String.format("%s|%s|%s", accountId, publicKey, signature);
-        return Base64.getEncoder().encodeToString(input.getBytes(StandardCharsets.UTF_8.toString()));
+        return Base64.getEncoder().encodeToString(input.getBytes(StandardCharsets.UTF_8));
     }
 }

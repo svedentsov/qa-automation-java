@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Утилитарный класс для работы с JavaBeans.
+ * Вспомогательный класс для работы с объектами JavaBean, включая копирование свойств, создание объектов и работу с полями.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -22,27 +22,29 @@ public class BeanTools {
     /**
      * Копирует свойства из одного объекта в другой.
      *
-     * @param dest Целевой объект, в который будут скопированы свойства.
-     * @param orig Исходный объект, свойства которого будут скопированы.
+     * @param dest объект, в который будут скопированы свойства
+     * @param orig объект, из которого будут скопированы свойства
+     * @throws IllegalStateException если произошла ошибка доступа или ошибка вызова метода
      */
     public static void copyProperties(Object dest, Object orig) {
         try {
             BeanUtils.copyProperties(dest, orig);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("IllegalAccessException при копировании свойств объекта", e);
+            throw new IllegalStateException("Ошибка IllegalAccessException при копировании полей объекта", e);
         } catch (InvocationTargetException e) {
-            throw new IllegalStateException("InvocationTargetException при копировании свойств объекта", e);
+            throw new IllegalStateException("Ошибка InvocationTargetException при копировании полей объекта", e);
         }
     }
 
     /**
-     * Преобразует объект из одного типа в другой.
+     * Конвертирует один объект в другой, создавая новый экземпляр целевого типа.
      *
-     * @param from Объект, который будет преобразован.
-     * @param to   Класс, в который будет преобразован объект.
-     * @param <T>  Тип результирующего объекта.
-     * @param <F>  Тип исходного объекта.
-     * @return Новый объект типа {@code T}, содержащий скопированные свойства из исходного объекта.
+     * @param <T>  тип целевого объекта
+     * @param <F>  тип исходного объекта
+     * @param from исходный объект, который необходимо конвертировать
+     * @param to   класс целевого объекта
+     * @return новый объект целевого типа с копированными свойствами
+     * @throws IllegalStateException если произошла ошибка при создании объекта или копировании свойств
      */
     public static <T, F> T convert(F from, Class<T> to) {
         T t;
@@ -50,109 +52,104 @@ public class BeanTools {
             t = to.getDeclaredConstructor().newInstance();
             BeanTools.copyProperties(t, from);
         } catch (Exception e) {
-            throw new IllegalStateException(e);
+            throw new IllegalStateException("Ошибка при конвертации объекта: " + e.getMessage(), e);
         }
 
         return t;
     }
 
     /**
-     * Проверяет, содержит ли объект указанное поле.
+     * Проверяет, содержит ли объект поле с указанным именем.
      *
-     * @param object    Объект, в котором проверяется наличие поля.
-     * @param fieldName Название поля.
-     * @return {@code true}, если объект содержит указанное поле, иначе {@code false}.
+     * @param object    объект для проверки
+     * @param fieldName имя поля
+     * @return true, если поле с таким именем существует, иначе false
      */
-    public static boolean isObjectContainField(Object object, String fieldName) {
-        boolean result = false;
-        if (object != null) {
-            result = Arrays.stream(object.getClass().getDeclaredFields())
-                    .anyMatch(f -> f.getName().equals(fieldName));
+    public static boolean doesObjectContainField(Object object, String fieldName) {
+        if (object == null) {
+            return false;
         }
-        return result;
+        return Arrays.stream(object.getClass().getDeclaredFields())
+                .anyMatch(f -> f.getName().equals(fieldName));
     }
 
     /**
-     * Получает значение поля объекта.
+     * Возвращает значение поля объекта в виде строки.
      *
-     * @param field  Поле, значение которого требуется получить.
-     * @param object Объект, у которого требуется получить значение поля.
-     * @return Значение поля объекта или {@code null}, если не удалось получить значение.
+     * @param field  поле, значение которого нужно получить
+     * @param object объект, содержащий поле
+     * @return значение поля в виде строки, или null в случае ошибки
      */
-    public static String getFieldValue(Field field, Object object) {
-        String result = null;
-        field.setAccessible(true); //NOSONAR
+    public static String getFieldValueAsString(Field field, Object object) {
+        field.setAccessible(true);
         try {
-            result = (String) field.get(object);
+            return (String) field.get(object);
         } catch (IllegalAccessException e) {
-            log.trace("Не удалось получить значение поля {}\t{}", field, e.getMessage());
+            log.trace("Не удалось получить значение поля {}: {}", field.getName(), e.getMessage());
+            return null;
         }
-
-        return result;
     }
 
     /**
-     * Получает значение поля объекта.
+     * Возвращает значение поля объекта.
      *
-     * @param field  Поле, значение которого требуется получить.
-     * @param object Объект, у которого требуется получить значение поля.
-     * @return Значение поля объекта или {@code null}, если не удалось получить значение.
+     * @param field  поле, значение которого нужно получить
+     * @param object объект, содержащий поле
+     * @return значение поля или null в случае ошибки
      */
-    public static Object getField(Field field, Object object) {
-        field.setAccessible(true); //NOSONAR
-        Object result = null;
+    public static Object getFieldValue(Field field, Object object) {
+        field.setAccessible(true);
         try {
-            result = field.get(object);
+            return field.get(object);
         } catch (IllegalAccessException e) {
-            // log.trace("Could not get field {}\t{}", field, e.getMessage());
+            log.trace("Не удалось получить поле {}: {}", field.getName(), e.getMessage());
+            return null;
         }
-
-        return result;
     }
 
     /**
-     * Получает поле объекта по его имени.
+     * Возвращает объект Field по его имени.
      *
-     * @param fieldName Имя поля.
-     * @param object    Объект, у которого требуется получить поле.
-     * @return Поле объекта или {@code null}, если поле не найдено.
+     * @param fieldName имя поля
+     * @param object    объект, содержащий поле
+     * @return объект Field или null в случае отсутствия поля
      */
-    public static Field getField(String fieldName, Object object) {
-        Field field = null;
+    public static Field getFieldByName(String fieldName, Object object) {
         try {
-            field = object.getClass().getDeclaredField(fieldName);
+            return object.getClass().getDeclaredField(fieldName);
         } catch (NoSuchFieldException e) {
-            // log.trace("Could not get field {}\t{}", fieldName, e.getMessage());
+            log.trace("Не удалось найти поле {}: {}", fieldName, e.getMessage());
+            return null;
         }
-
-        return field;
     }
 
     /**
-     * Создает объект заданного класса с использованием указанного конструктора.
+     * Создает новый объект с использованием указанного класса и конструктора с параметром.
      *
-     * @param objectClass          Класс объекта, который требуется создать.
-     * @param constructorClass     Класс параметра конструктора.
-     * @param constructorParameter Параметр конструктора.
-     * @param <T>                  Тип объекта.
-     * @param <C>                  Тип параметра конструктора.
-     * @return Созданный объект.
+     * @param <T>                  тип создаваемого объекта
+     * @param <C>                  тип параметра конструктора
+     * @param objectClass          класс создаваемого объекта
+     * @param constructorClass     класс параметра конструктора
+     * @param constructorParameter параметр конструктора
+     * @return созданный объект
+     * @throws IllegalArgumentException если не удается создать объект
      */
-    public static <T, C> T createObject(Class<T> objectClass, Class<C> constructorClass, C constructorParameter) {
+    public static <T, C> T createObjectWithConstructorParam(Class<T> objectClass, Class<C> constructorClass, C constructorParameter) {
         try {
             return objectClass.getDeclaredConstructor(constructorClass).newInstance(constructorParameter);
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException |
                  NoSuchMethodException e) {
-            throw new IllegalArgumentException("Невозможно создать объект класса " + objectClass + "\n" + e.getMessage(), e);
+            throw new IllegalArgumentException("Невозможно создать объект класса " + objectClass + ": " + e.getMessage(), e);
         }
     }
 
     /**
-     * Создает объект заданного класса.
+     * Создает новый объект с использованием указанного класса и конструктора без параметров.
      *
-     * @param objectClass Класс объекта, который требуется создать.
-     * @param <T>         Тип объекта.
-     * @return Созданный объект.
+     * @param <T>         тип создаваемого объекта
+     * @param objectClass класс создаваемого объекта
+     * @return созданный объект
+     * @throws IllegalArgumentException если не удается создать объект
      */
     public static <T> T createObject(Class<T> objectClass) {
         try {
@@ -164,53 +161,51 @@ public class BeanTools {
     }
 
     /**
-     * Получает значение поля объекта в виде объекта типа {@code Optional}.
+     * Возвращает значение поля объекта, обернутое в Optional.
      *
-     * @param field  Поле, значение которого требуется получить.
-     * @param object Объект, у которого требуется получить значение поля.
-     * @return Значение поля объекта в виде объекта {@code Optional}.
+     * @param field  поле, значение которого нужно получить
+     * @param object объект, содержащий поле
+     * @return Optional с объектом, содержащим значение поля
      */
-    public static Optional getFieldValueObject(Field field, Object object) {
-        Object result = null;
-        field.setAccessible(true); //NOSONAR
+    public static Optional<Object> getFieldValueAsOptional(Field field, Object object) {
+        field.setAccessible(true);
         try {
-            result = field.get(object);
+            return Optional.ofNullable(field.get(object));
         } catch (IllegalAccessException e) {
-            log.trace("Не удалось получить значение поля {}\t{}", field, e.getMessage());
+            log.trace("Не удалось получить значение поля {}: {}", field.getName(), e.getMessage());
+            return Optional.empty();
         }
-
-        return Optional.ofNullable(result);
     }
 
     /**
-     * Получает вложенный объект по его имени.
+     * Возвращает внутренний объект, представленный полем с указанным именем, обернутый в Optional.
      *
-     * @param object    Объект, у которого требуется получить вложенный объект.
-     * @param fieldName Имя поля, содержащего вложенный объект.
-     * @return Объект типа {@code Optional}, содержащий вложенный объект, если он существует.
+     * @param object    объект, содержащий поле
+     * @param fieldName имя поля
+     * @return Optional с объектом, содержащим внутренний объект
      */
-    public static Optional getInnerObject(Object object, String fieldName) {
-        if (isObjectContainField(object, fieldName)) {
-            Field field = getField(fieldName, object);
-            return Optional.ofNullable(getField(field, object));
+    public static Optional<Object> getInnerObject(Object object, String fieldName) {
+        if (doesObjectContainField(object, fieldName)) {
+            Field field = getFieldByName(fieldName, object);
+            return Optional.ofNullable(getFieldValue(field, object));
         }
         return Optional.empty();
     }
 
     /**
-     * Получает статические константы заданного класса.
+     * Возвращает список статических констант указанного класса.
      *
-     * @param clazz Класс, чьи статические константы требуется получить.
-     * @param <T>   Тип статических констант.
-     * @return Список статических констант заданного класса.
+     * @param <T>   тип констант
+     * @param clazz класс, содержащий константы
+     * @return список статических констант
      */
     public static <T> List<T> getStaticConstants(Class<T> clazz) {
         Field[] declaredFields = clazz.getDeclaredFields();
         List<T> results = new ArrayList<>();
 
-        for (var x : declaredFields) {
-            if (x.getType() == clazz) {
-                T obj = convertFieldToObject(x);
+        for (var field : declaredFields) {
+            if (field.getType() == clazz) {
+                T obj = convertStaticFieldToObject(field);
                 results.add(obj);
             }
         }
@@ -219,17 +214,18 @@ public class BeanTools {
     }
 
     /**
-     * Преобразует поле в объект.
+     * Конвертирует статическое поле в объект.
      *
-     * @param x   Поле, которое требуется преобразовать в объект.
-     * @param <T> Тип объекта.
-     * @return Объект, полученный из поля.
+     * @param <T>   тип объекта
+     * @param field поле, которое нужно конвертировать
+     * @return объект, представляющий значение поля
+     * @throws IllegalStateException если произошла ошибка доступа к полю
      */
-    private static <T> T convertFieldToObject(Field x) {
+    private static <T> T convertStaticFieldToObject(Field field) {
         try {
-            return (T) x.get(null);
+            return (T) field.get(null);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("Невозможно преобразовать поле в объект ", e);
+            throw new IllegalStateException("Не удалось конвертировать поле в объект", e);
         }
     }
 }

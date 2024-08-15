@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class AbTestPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/abtest")
+public class AbTestPage extends AbstractPage<AbTestPage> {
 }

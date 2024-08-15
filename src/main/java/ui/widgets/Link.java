@@ -1,6 +1,11 @@
 package ui.widgets;
 
-import ui.pages.UIRouter;
+import core.widgets.Widget;
+import org.openqa.selenium.By;
 
-public class Link extends UIRouter {
+public class Link extends Widget<Link> {
+
+    public Link(By locator) {
+        super(locator);
+    }
 }

@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class ForgotPasswordPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/forgot_password")
+public class ForgotPasswordPage extends AbstractPage<ForgotPasswordPage> {
 }

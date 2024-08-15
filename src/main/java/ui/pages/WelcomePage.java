@@ -1,5 +1,6 @@
 package ui.pages;
 
+import core.annotations.Url;
 import org.openqa.selenium.By;
 import ui.widgets.Button;
 
@@ -9,8 +10,8 @@ import static ui.enums.MenuItems.*;
  * Класс для представления страницы приветствия веб-приложения.
  * Содержит кнопки для навигации к различным страницам.
  */
-public class WelcomePage {
-
+@Url(pattern = ".*/#")
+public class WelcomePage extends AbstractPage<WelcomePage> {
     public Button AB_TEST_LINK = new Button(By.linkText(AB_TEST.displayName()));
     public Button ADD_REMOVE_ELEMENTS_LINK = new Button(By.linkText(ADD_REMOVE_ELEMENTS.displayName()));
     public Button BASIC_AUTH_LINK = new Button(By.linkText(BASIC_AUTH.displayName()));

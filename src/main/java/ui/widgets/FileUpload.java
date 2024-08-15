@@ -1,6 +1,11 @@
 package ui.widgets;
 
-import ui.pages.UIRouter;
+import core.widgets.Widget;
+import org.openqa.selenium.By;
 
-public class FileUpload extends UIRouter {
+public class FileUpload extends Widget<FileUpload> {
+
+    public FileUpload(By locator) {
+        super(locator);
+    }
 }

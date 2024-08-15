@@ -47,7 +47,7 @@ public final class JsonParser {
         /*
          * Escaping equals sign is not necessary
          */
-        return json.replace(EQUALS_UTF_CODE, StringUtil.EQUAL_SIGN);
+        return json.replace(EQUALS_UTF_CODE, StrUtil.EQUAL_SIGN);
     }
 
     /**

@@ -1,4 +1,7 @@
 package ui.pages;
 
-public class InfiniteScrollPage {
+import core.annotations.Url;
+
+@Url(pattern = ".*/infinite_scroll")
+public class InfiniteScrollPage extends AbstractPage<InfiniteScrollPage> {
 }
