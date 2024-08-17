@@ -21,9 +21,9 @@ public class InputsGenerator {
     /**
      * Получает случайное значение из перечисления.
      *
-     * @param clazz Класс перечисления
-     * @param <T>   Тип перечисления
-     * @return Случайное значение из перечисления
+     * @param clazz класс перечисления
+     * @param <T>   тип перечисления
+     * @return случайное значение из перечисления
      */
     public static <T extends Enum<?>> T getRandomFromEnum(Class<T> clazz) {
         int x = random.nextInt(clazz.getEnumConstants().length);
@@ -33,9 +33,9 @@ public class InputsGenerator {
     /**
      * Получает случайный элемент из списка.
      *
-     * @param givenList Список
-     * @param <T>       Тип элементов списка
-     * @return Случайный элемент из списка
+     * @param givenList список
+     * @param <T>       тип элементов списка
+     * @return случайный элемент из списка
      */
     public static <T> T getRandomFromList(List<T> givenList) {
         return givenList.get(random.nextInt(givenList.size()));
@@ -44,7 +44,7 @@ public class InputsGenerator {
     /**
      * Получает случайное булево значение.
      *
-     * @return Случайное булево значение
+     * @return случайное булево значение
      */
     public static boolean getRandomBool() {
         return random.nextBoolean();
@@ -53,7 +53,7 @@ public class InputsGenerator {
     /**
      * Генерирует строку из кириллических символов с пробелами с длиной по умолчанию.
      *
-     * @return Строка из кириллических символов с пробелами с длиной по умолчанию
+     * @return строка из кириллических символов с пробелами с длиной по умолчанию
      */
     public static String getCyrillicStrWithSpaces() {
         return getCyrillicStrWithSpaces(defaultLength);
@@ -62,7 +62,7 @@ public class InputsGenerator {
     /**
      * Генерирует строку из латинских символов с пробелами с длиной по умолчанию.
      *
-     * @return Строка из латинских символов с пробелами с длиной по умолчанию
+     * @return строка из латинских символов с пробелами с длиной по умолчанию
      */
     public static String getLatinStrWithSpaces() {
         return getLatinStrWithSpaces(defaultLength);
@@ -71,7 +71,7 @@ public class InputsGenerator {
     /**
      * Генерирует строку из специальных символов с пробелами с длиной по умолчанию.
      *
-     * @return Строка из специальных символов с пробелами с длиной по умолчанию
+     * @return строка из специальных символов с пробелами с длиной по умолчанию
      */
     public static String getSpecCharStrWithSpaces() {
         return getSpecCharStrWithSpaces(defaultLength);
@@ -80,7 +80,7 @@ public class InputsGenerator {
     /**
      * Получает инъекцию JavaScript.
      *
-     * @return Инъекция JavaScript
+     * @return инъекция JavaScript
      */
     public static String getJSInjection() {
         return "alert( 'HI' );";
@@ -89,7 +89,7 @@ public class InputsGenerator {
     /**
      * Получает инъекцию SQL.
      *
-     * @return Инъекция SQL
+     * @return инъекция SQL
      */
     public static String getSQLInjection() {
         return "ы'); DROP TABLE Person;--";
@@ -98,7 +98,7 @@ public class InputsGenerator {
     /**
      * Генерирует случайный адрес электронной почты.
      *
-     * @return Случайный адрес электронной почты
+     * @return случайный адрес электронной почты
      */
     public static String getRandomEmail() {
         return getShortLatinStr() + "@" + getShortLatinStr() + ".ru";
@@ -107,7 +107,7 @@ public class InputsGenerator {
     /**
      * Генерирует случайный IP-адрес.
      *
-     * @return Случайный IP-адрес
+     * @return случайный IP-адрес
      */
     public static String getRandomIP() {
         return "" + getRandomIntInRange(1, 254) + "." + getRandomIntInRange(0, 255) + "." + getRandomIntInRange(0, 255) + "." + getRandomIntInRange(0, 255);
@@ -116,7 +116,7 @@ public class InputsGenerator {
     /**
      * Генерирует случайный IP-адрес с портом.
      *
-     * @return Случайный IP-адрес с портом
+     * @return случайный IP-адрес с портом
      */
     public static String getRandomIPWithPort() {
         return getRandomIP() + ":" + getRandomIntInRange(1, 65535);
@@ -125,7 +125,7 @@ public class InputsGenerator {
     /**
      * Генерирует случайное значение широты.
      *
-     * @return Случайное значение широты
+     * @return случайное значение широты
      */
     public static String getLatitude() {
         return removeTrailingZeroes("59" + "." + getRandomIntInRange(50000, 62000));
@@ -134,7 +134,7 @@ public class InputsGenerator {
     /**
      * Генерирует случайное значение долготы.
      *
-     * @return Случайное значение долготы
+     * @return случайное значение долготы
      */
     public static String getLongitude() {
         return removeTrailingZeroes("30" + "." + getRandomIntInRange(19000, 40000));
@@ -143,8 +143,8 @@ public class InputsGenerator {
     /**
      * Удаляет ведущие нули из строки.
      *
-     * @param s Исходная строка
-     * @return Строка без ведущих нулей
+     * @param s исходная строка
+     * @return строка без ведущих нулей
      */
     private static String removeLeadingZeroes(String s) {
         return StringUtils.stripStart(s, "0");
@@ -153,8 +153,8 @@ public class InputsGenerator {
     /**
      * Удаляет завершающие нули из строки.
      *
-     * @param s Исходная строка
-     * @return Строка без завершающих нулей
+     * @param s исходная строка
+     * @return строка без завершающих нулей
      */
     private static String removeTrailingZeroes(String s) {
         return StringUtils.stripEnd(s, "0");
@@ -163,9 +163,9 @@ public class InputsGenerator {
     /**
      * Генерирует случайное целое число в заданном диапазоне.
      *
-     * @param min Минимальное значение
-     * @param max Максимальное значение
-     * @return Случайное целое число
+     * @param min минимальное значение
+     * @param max максимальное значение
+     * @return случайное целое число
      */
     public static int getRandomIntInRange(int min, int max) {
         if (min > max)
@@ -178,9 +178,9 @@ public class InputsGenerator {
     /**
      * Генерирует случайное длинное целое число в заданном диапазоне.
      *
-     * @param min Минимальное значение
-     * @param max Максимальное значение
-     * @return Случайное длинное целое число
+     * @param min минимальное значение
+     * @param max максимальное значение
+     * @return случайное длинное целое число
      */
     public static Long getRandomLongInRange(int min, int max) {
         if (min > max)
@@ -193,7 +193,7 @@ public class InputsGenerator {
     /**
      * Получает инъекцию HTML.
      *
-     * @return Инъекция HTML
+     * @return инъекция HTML
      */
     public static String getHTMLInjection() {
         return "<table border='1'>" +
@@ -210,7 +210,7 @@ public class InputsGenerator {
     /**
      * Получает временную метку.
      *
-     * @return Временная метка
+     * @return временная метка
      */
     public static String getTimestamp() {
         return (new SimpleDateFormat("YYMMddHHmmss")).format(new Date());
@@ -219,9 +219,9 @@ public class InputsGenerator {
     /**
      * Преобразует число в строку.
      *
-     * @param from Начальное значение диапазона чисел
-     * @param to   Конечное значение диапазона чисел
-     * @return Строковое представление числа
+     * @param from начальное значение диапазона чисел
+     * @param to   конечное значение диапазона чисел
+     * @return строковое представление числа
      */
     public static String getNumAsStr(int from, int to) {
         return Integer.toString(random.nextInt((to - from) + 1) + from);
@@ -230,8 +230,8 @@ public class InputsGenerator {
     /**
      * Генерирует строку из латинских символов без пробелов заданной длины.
      *
-     * @param count Длина строки
-     * @return Строка из латинских символов без пробелов заданной длины
+     * @param count длина строки
+     * @return строка из латинских символов без пробелов заданной длины
      */
     public static String getLatinStrWithoutSpaces(int count) {
         return RandomStringUtils.random(count, latChars);
@@ -240,7 +240,7 @@ public class InputsGenerator {
     /**
      * Генерирует короткую строку из латинских символов без пробелов.
      *
-     * @return Короткая строка из латинских символов без пробелов
+     * @return короткая строка из латинских символов без пробелов
      */
     public static String getShortLatinStr() {
         return getLatinStrWithoutSpaces(shortStringLength);
@@ -249,7 +249,7 @@ public class InputsGenerator {
     /**
      * Генерирует строку из латинских символов без пробелов с длиной по-умолчанию.
      *
-     * @return Строка из латинских символов без пробелов с длиной по-умолчанию
+     * @return строка из латинских символов без пробелов с длиной по-умолчанию
      */
     public static String getLatinStrWithoutSpaces() {
         return RandomStringUtils.random(defaultLength);
@@ -258,8 +258,8 @@ public class InputsGenerator {
     /**
      * Генерирует строку из латинских символов с пробелами заданной длины
      *
-     * @param length Длина строки
-     * @return Строка из латинских символов с пробелами заданной длины
+     * @param length длина строки
+     * @return строка из латинских символов с пробелами заданной длины
      */
     public static String getLatinStrWithSpaces(int length) {
         return RandomStringUtils.random(length, latChars + space).replace(" ", " ").trim();
@@ -268,8 +268,8 @@ public class InputsGenerator {
     /**
      * Генерирует строку из русских символов без пробелов заданной длины.
      *
-     * @param count Длина строки
-     * @return Строка из русских символов без пробелов заданной длины
+     * @param count длина строки
+     * @return строка из русских символов без пробелов заданной длины
      */
     public static String getCyrillicStrWithoutSpaces(int count) {
         return RandomStringUtils.random(count, ruChars);
@@ -278,7 +278,7 @@ public class InputsGenerator {
     /**
      * Генерирует короткую строку из русских символов без пробелов.
      *
-     * @return Короткая строка из русских символов без пробелов
+     * @return короткая строка из русских символов без пробелов
      */
     public static String getShortCyrillicStr() {
         return getCyrillicStrWithoutSpaces(shortStringLength);
@@ -287,7 +287,7 @@ public class InputsGenerator {
     /**
      * Генерирует строку из русских символов без пробелов с длиной по-умолчанию.
      *
-     * @return Строка из русских символов без пробелов заданной длины
+     * @return строка из русских символов без пробелов заданной длины
      */
     public static String getCyrillicStrWithoutSpaces() {
         return getCyrillicStrWithoutSpaces(defaultLength);
@@ -296,8 +296,8 @@ public class InputsGenerator {
     /**
      * Генерирует строку из кириллических символов с пробелами заданной длины.
      *
-     * @param length Длина строки
-     * @return Строка из кириллических символов с пробелами заданной длины
+     * @param length длина строки
+     * @return строка из кириллических символов с пробелами заданной длины
      */
     public static String getCyrillicStrWithSpaces(int length) {
         return RandomStringUtils.random(length, ruChars + space).replace(" ", " ").trim();
@@ -306,9 +306,9 @@ public class InputsGenerator {
     /**
      * Генерирует строку из латинских символов с пробелами заданной длины с фиксированным текстом.
      *
-     * @param count    Длина строки
-     * @param testName Фиксированный текст
-     * @return Строка из латинских символов с пробелами заданной длины с фиксированным текстом
+     * @param count    длина строки
+     * @param testName фиксированный текст
+     * @return строка из латинских символов с пробелами заданной длины с фиксированным текстом
      */
     public static String getLatinStrWithSpacesAndTestName(int count, String testName) {
         return (testName.replace(" ", " ").trim() + " " + RandomStringUtils.random(count, latChars).replace(" ", "").trim());
@@ -317,8 +317,8 @@ public class InputsGenerator {
     /**
      * Генерирует строку из специальных символов с пробелами заданной длины.
      *
-     * @param count Длина строки
-     * @return Строка из специальных символов с пробелами заданной длины
+     * @param count длина строки
+     * @return строка из специальных символов с пробелами заданной длины
      */
     public static String getSpecCharStrWithSpaces(int count) {
         return RandomStringUtils.random(count, specChars);

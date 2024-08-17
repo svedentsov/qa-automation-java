@@ -8,6 +8,9 @@ import java.lang.annotation.*;
 
 import static io.qameta.allure.SeverityLevel.BLOCKER;
 import static io.qameta.allure.SeverityLevel.CRITICAL;
+import static java.lang.annotation.ElementType.METHOD;
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Класс для тестирования различных меток в Allure.
@@ -94,8 +97,8 @@ public class AllureLabelsTests {
      */
     @Documented
     @Inherited
-    @Retention(RetentionPolicy.RUNTIME)
-    @Target({ElementType.METHOD, ElementType.TYPE})
+    @Retention(RUNTIME)
+    @Target({METHOD, TYPE})
     @LabelAnnotation(name = "custom")
     public @interface CustomLabel {
         String value();

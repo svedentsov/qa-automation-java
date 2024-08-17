@@ -2,11 +2,13 @@ package ui.widgets;
 
 import com.codeborne.selenide.CollectionCondition;
 import com.codeborne.selenide.Condition;
-import core.widgets.Widget;
+import ui.helper.Widget;
 import org.openqa.selenium.By;
 
 import java.util.ArrayList;
 
+import static com.codeborne.selenide.CollectionCondition.*;
+import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$$;
 
 /**
@@ -24,7 +26,7 @@ public class Variants extends Widget<Variants> {
      * @param title заголовок варианта
      */
     public Variants checkVariantIsPresent(String title) {
-        $$(locator).filterBy(Condition.text(title)).shouldBe(CollectionCondition.size(1));
+        $$(locator).filterBy(text(title)).shouldBe(size(1));
         return this;
     }
 
@@ -34,7 +36,7 @@ public class Variants extends Widget<Variants> {
      * @param list список заголовков вариантов
      */
     public Variants checkAllVariantsArePresent(ArrayList<String> list) {
-        list.forEach(title -> $$(locator).filterBy(Condition.text(title)).shouldBe(CollectionCondition.size(1)));
+        list.forEach(title -> $$(locator).filterBy(text(title)).shouldBe(size(1)));
         return this;
     }
 
@@ -44,7 +46,7 @@ public class Variants extends Widget<Variants> {
      * @param title заголовок варианта
      */
     public Variants checkVariantIsNotPresent(String title) {
-        $$(locator).filterBy(Condition.text(title)).shouldBe(CollectionCondition.empty);
+        $$(locator).filterBy(text(title)).shouldBe(empty);
         return this;
     }
 
@@ -52,7 +54,7 @@ public class Variants extends Widget<Variants> {
      * Проверяет, что варианты отсутствуют.
      */
     public Variants checkVariantsEmpty() {
-        $$(locator).shouldBe(CollectionCondition.empty);
+        $$(locator).shouldBe(empty);
         return this;
     }
 
@@ -62,7 +64,7 @@ public class Variants extends Widget<Variants> {
      * @param count ожидаемое количество вариантов
      */
     public Variants checkVariantsCount(int count) {
-        $$(locator).shouldBe(CollectionCondition.size(count));
+        $$(locator).shouldBe(size(count));
         return this;
     }
 
@@ -72,7 +74,7 @@ public class Variants extends Widget<Variants> {
      * @param title заголовок варианта
      */
     public Variants hoverVariant(String title) {
-        $$(locator).filterBy(Condition.text(title)).first().hover();
+        $$(locator).filterBy(text(title)).first().hover();
         return this;
     }
 }

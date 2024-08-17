@@ -2,17 +2,18 @@ package core.config;
 
 import org.aeonbits.owner.Config;
 
-import static org.aeonbits.owner.Config.*;
+import static org.aeonbits.owner.Config.LoadPolicy;
+import static org.aeonbits.owner.Config.LoadType.MERGE;
+import static org.aeonbits.owner.Config.Sources;
 
 /**
  * Интерфейс для конфигурации приложения, используемый для доступа к параметрам,
  * загружаемым из системных свойств и файла конфигурации.
  */
-@LoadPolicy(LoadType.MERGE)
+@LoadPolicy(MERGE)
 @Sources({
         "system:properties",
-        "classpath:config/config.properties"
-})
+        "classpath:config/config.properties"})
 public interface AppConfig extends Config {
 
     /**

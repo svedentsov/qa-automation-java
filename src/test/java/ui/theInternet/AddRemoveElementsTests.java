@@ -1,6 +1,6 @@
 package ui.theInternet;
 
-import common.BaseTest;
+import common.UITest;
 import core.annotations.Layer;
 import io.qameta.allure.Feature;
 import io.qameta.allure.Story;
@@ -11,20 +11,21 @@ import org.junit.jupiter.api.Test;
 import static com.codeborne.selenide.Selenide.open;
 
 @Layer("UI")
-@Feature("Add/Remove Elements Tests")
-@DisplayName("Тесты для страницы 'Add/Remove Elements'")
-public class AddRemoveElementsTests extends BaseTest {
+@Feature("Тестирование функций Add/Remove")
+@DisplayName("Тесты страницы 'Add/Remove Elements'")
+public class AddRemoveElementsTests extends UITest {
 
     @BeforeEach
     public void setUp() {
         open("https://the-internet.herokuapp.com");
-        theInternet.welcomePageSteps().addRemoveElementsClick();
+        theInternet.welcomePageSteps()
+                .addRemoveElementsClick();
     }
 
     @Test
     @Story("Проверка текста сообщения")
     @DisplayName("Проверка отображения и содержания текста сообщения")
-    public void testMessageTextIsDisplayedAndCorrect() {
+    public void messageTextIsDisplayedAndCorrect() {
         // Arrange
         theInternet.addRemoveElementsSteps()
                 .clickAddButton();
@@ -38,7 +39,7 @@ public class AddRemoveElementsTests extends BaseTest {
     @Test
     @Story("Добавление кнопки 'Удалить'")
     @DisplayName("Добавление одной кнопки 'Удалить'")
-    public void testAddSingleDeleteButton() {
+    public void addSingleDeleteButton() {
         // Act
         theInternet.addRemoveElementsSteps()
                 .clickAddButton();
@@ -52,7 +53,7 @@ public class AddRemoveElementsTests extends BaseTest {
     @Test
     @Story("Удаление кнопки 'Удалить'")
     @DisplayName("Удаление одной кнопки 'Удалить'")
-    public void testRemoveSingleDeleteButton() {
+    public void removeSingleDeleteButton() {
         // Arrange
         theInternet.addRemoveElementsSteps()
                 .clickAddButton();
@@ -70,7 +71,7 @@ public class AddRemoveElementsTests extends BaseTest {
     @Test
     @Story("Добавление нескольких кнопок 'Удалить'")
     @DisplayName("Добавление нескольких кнопок 'Удалить'")
-    public void testAddMultipleDeleteButtons() {
+    public void addMultipleDeleteButtons() {
         // Act
         theInternet.addRemoveElementsSteps()
                 .addDeleteButtons(3);
@@ -83,7 +84,7 @@ public class AddRemoveElementsTests extends BaseTest {
     @Test
     @Story("Удаление всех кнопок 'Удалить'")
     @DisplayName("Удаление всех добавленных кнопок 'Удалить'")
-    public void testRemoveAllDeleteButtons() {
+    public void removeAllDeleteButtons() {
         // Arrange
         theInternet.addRemoveElementsSteps()
                 .addDeleteButtons(3);
@@ -100,7 +101,7 @@ public class AddRemoveElementsTests extends BaseTest {
     @Test
     @Story("Частичное удаление кнопок 'Удалить'")
     @DisplayName("Удаление нескольких из добавленных кнопок 'Удалить'")
-    public void testRemoveSomeOfMultipleDeleteButtons() {
+    public void removeSomeOfMultipleDeleteButtons() {
         // Arrange
         theInternet.addRemoveElementsSteps()
                 .addDeleteButtons(5);

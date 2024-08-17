@@ -1,8 +1,11 @@
 package core.config;
 
 import org.aeonbits.owner.Config;
+import org.aeonbits.owner.Config.LoadPolicy;
 
-@Config.LoadPolicy(Config.LoadType.MERGE)
+import static org.aeonbits.owner.Config.LoadType.MERGE;
+
+@LoadPolicy(MERGE)
 public interface GlobalSystemProperties extends Config {
 
     @DefaultValue("${size}")

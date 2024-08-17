@@ -44,18 +44,4 @@ public class UITest extends BaseTest {
             AttachmentHelper.attachVideo();
         }
     }
-
-    /**
-     * Пример теста, который открывает сайт и выполняет несколько проверок на странице.
-     */
-    @Test
-    public void sortableDataTablesTest() {
-        open("https://the-internet.herokuapp.com");
-        theInternet.welcomePageSteps()
-                .sortableDataTablesClick();
-        theInternet.sortableDataTablesSteps()
-                .checkEntityIsPresentUsersTable("Last Name", "Conway")
-                .checkEntityIsNotPresentUsersTable("First Name", "Jasons")
-                .checkInfoFromFieldUsersTable("Last Name", "Bach", "Web Site", "http://www.frank.com");
-    }
 }

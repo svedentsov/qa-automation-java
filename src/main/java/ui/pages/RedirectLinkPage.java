@@ -1,7 +1,14 @@
 package ui.pages;
 
 import core.annotations.Url;
+import org.openqa.selenium.By;
+import ui.widgets.Link;
 
+/**
+ * Класс предоставляет элементы страницы Redirect Link.
+ * Содержит ссылку для перенаправления на другую страницу.
+ */
 @Url(pattern = ".*/redirector")
 public class RedirectLinkPage extends AbstractPage<RedirectLinkPage> {
+    public Link REDIRECT_LINK = new Link(By.id("redirect"));
 }

@@ -1,6 +1,6 @@
 package ui.widgets;
 
-import core.widgets.Widget;
+import ui.helper.Widget;
 import org.openqa.selenium.By;
 
 public class Link extends Widget<Link> {

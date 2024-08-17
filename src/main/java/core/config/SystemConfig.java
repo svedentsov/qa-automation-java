@@ -2,19 +2,19 @@ package core.config;
 
 import org.aeonbits.owner.Config;
 import org.aeonbits.owner.Config.LoadPolicy;
-import org.aeonbits.owner.Config.LoadType;
 import org.aeonbits.owner.Config.Sources;
+
+import static org.aeonbits.owner.Config.LoadType.MERGE;
 
 /**
  * Интерфейс для системной конфигурации, который предоставляет доступ
  * к настройкам браузера и удалённого драйвера, загружаемым из различных источников.
  */
-@LoadPolicy(LoadType.MERGE)
+@LoadPolicy(MERGE)
 @Sources({
         "system:properties",
         "classpath:config/local.properties",
-        "classpath:config/remote.properties"
-})
+        "classpath:config/remote.properties"})
 public interface SystemConfig extends Config {
 
     /**

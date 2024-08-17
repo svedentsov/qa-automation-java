@@ -7,7 +7,7 @@ import java.util.stream.IntStream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Класс AddRemoveElementsSteps предоставляет шаги для взаимодействия с элементами на странице добавления и удаления.
+ * Класс предоставляет шаги для взаимодействия с элементами на странице добавления и удаления.
  */
 public class AddRemoveElementsSteps extends BaseSteps {
 
@@ -19,8 +19,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      */
     @Step("Проверить, что текст заголовка соответствует '{expectedText}'")
     public AddRemoveElementsSteps verifyTitleText(String expectedText) {
-        pages.addRemoveElementsPage().TITLE_TEXT.checkText(expectedText);
-        pages.addRemoveElementsPage().open();
+        ui.addRemoveElementsPage().TITLE_TEXT.checkText(expectedText);
         return this;
     }
 
@@ -31,7 +30,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      */
     @Step("Проверить, что текст заголовка отображается")
     public AddRemoveElementsSteps verifyTitleTextIsVisible() {
-        pages.addRemoveElementsPage().TITLE_TEXT.shouldBeVisible();
+        ui.addRemoveElementsPage().TITLE_TEXT.shouldBeVisible();
         return this;
     }
 
@@ -42,7 +41,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      */
     @Step("Добавить новую кнопку 'Удалить'")
     public AddRemoveElementsSteps clickAddButton() {
-        pages.addRemoveElementsPage().ADD_BUTTON.click();
+        ui.addRemoveElementsPage().ADD_BUTTON.click();
         return this;
     }
 
@@ -53,7 +52,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      */
     @Step("Удалить кнопку 'Удалить'")
     public AddRemoveElementsSteps clickDeleteButton() {
-        pages.addRemoveElementsPage().REMOVE_BUTTON.click();
+        ui.addRemoveElementsPage().REMOVE_BUTTON.click();
         return this;
     }
 
@@ -64,7 +63,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      */
     @Step("Проверить, что кнопка 'Удалить' присутствует")
     public AddRemoveElementsSteps checkDeleteButtonIsExist() {
-        pages.addRemoveElementsPage().REMOVE_BUTTON.shouldExist();
+        ui.addRemoveElementsPage().REMOVE_BUTTON.shouldExist();
         return this;
     }
 
@@ -75,7 +74,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      */
     @Step("Проверить, что кнопка 'Удалить' отсутствует")
     public AddRemoveElementsSteps checkDeleteButtonIsNotExist() {
-        pages.addRemoveElementsPage().REMOVE_BUTTON.shouldNotExist();
+        ui.addRemoveElementsPage().REMOVE_BUTTON.shouldNotExist();
         return this;
     }
 
@@ -111,7 +110,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      */
     @Step("Проверить, что количество кнопок 'Удалить' равно '{expectedCount}'")
     public AddRemoveElementsSteps verifyNumberOfDeleteButtons(int expectedCount) {
-        int actualCount = pages.addRemoveElementsPage().REMOVE_BUTTON.getElementCount();
+        int actualCount = ui.addRemoveElementsPage().REMOVE_BUTTON.getElementCount();
         assertEquals(expectedCount, actualCount, "Количество кнопок 'Удалить' не совпадает с ожидаемым");
         return this;
     }

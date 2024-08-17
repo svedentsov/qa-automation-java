@@ -1,9 +1,8 @@
 package ui.widgets.popup;
 
 import com.codeborne.selenide.Condition;
-import core.widgets.Widget;
-import ui.helper.PageManager;
 import org.openqa.selenium.By;
+import ui.helper.Widget;
 
 import static com.codeborne.selenide.Selenide.$;
 
@@ -24,7 +23,7 @@ public class ErrorPopup extends Widget<ErrorPopup> {
     /**
      * Закрывает всплывающее окно с сообщением об ошибке.
      *
-     * @return экземпляр {@link PageManager}, представляющий текущую страницу или компонент.
+     * @return экземпляр {@link ErrorPopup}, представляющий текущую страницу или компонент.
      */
     public ErrorPopup close() {
         $(closer).click();
@@ -58,7 +57,7 @@ public class ErrorPopup extends Widget<ErrorPopup> {
      * Проверяет, содержит ли всплывающее окно сообщение об ошибке с ожидаемым текстом.
      *
      * @param expected ожидаемый текст сообщения об ошибке.
-     * @return экземпляр {@link PageManager}, представляющий текущую страницу или компонент.
+     * @return экземпляр {@link ErrorPopup}, представляющий текущую страницу или компонент.
      */
     public ErrorPopup checkText(String expected) {
         $(text).shouldHave(Condition.text(expected));

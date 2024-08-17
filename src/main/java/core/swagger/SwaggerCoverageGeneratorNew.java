@@ -14,10 +14,8 @@ import java.util.zip.ZipException;
 
 /**
  * Генератор отчета о покрытии Swagger.
- * <p>
  * Этот класс обеспечивает скачивание, распаковку и использование инструмента swagger-coverage
  * для генерации отчета о покрытии на основе указанного Swagger файла и конфигурации.
- * </p>
  */
 @Slf4j
 public class SwaggerCoverageGeneratorNew {
@@ -31,16 +29,13 @@ public class SwaggerCoverageGeneratorNew {
     private static final String COVERAGE_OUTPUT_PATH = "./swagger-coverage-output";
 
     /**
-     * Генерирует отчет о покрытии Swagger.
-     * <p>
-     * Метод выполняет следующие шаги:
+     * Генерирует отчет о покрытии Swagger. Метод выполняет следующие шаги:
      * <ul>
      * <li>Проверяет наличие директории для хранения файлов отчета и создает её при необходимости.</li>
      * <li>Скачивает и распаковывает инструмент swagger-coverage.</li>
      * <li>Скачивает Swagger файл.</li>
      * <li>Генерирует отчет о покрытии с использованием скачанных файлов.</li>
      * </ul>
-     * </p>
      */
     public static void generate() {
         try {

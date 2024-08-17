@@ -1,18 +1,18 @@
 package ui.widgets;
 
-import com.codeborne.selenide.CollectionCondition;
 import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
-import core.widgets.Widget;
 import org.openqa.selenium.By;
+import ui.helper.Widget;
 
 import java.util.stream.IntStream;
 
+import static com.codeborne.selenide.CollectionCondition.sizeGreaterThan;
 import static com.codeborne.selenide.Selenide.$;
 
 /**
- * Класс предоставляет методы для взаимодействия с таблицами.
+ * Класс предоставляет методы для взаимодействия с таблицами, позволяя проверять наличие записей, получать информацию из полей таблицы и выбирать строки.
  */
 public class Table extends Widget<Table> {
 
@@ -23,10 +23,10 @@ public class Table extends Widget<Table> {
     /**
      * Конструирует объект Table с указанным локатором таблицы.
      *
-     * @param tableLocator локатор By для элемента таблицы
+     * @param locator локатор By для элемента таблицы
      */
-    public Table(By tableLocator) {
-        super(tableLocator);
+    public Table(By locator) {
+        super(locator);
     }
 
     /**
@@ -45,26 +45,28 @@ public class Table extends Widget<Table> {
     }
 
     /**
-     * Проверяет, присутствует ли указанная сущность в указанном столбце таблицы.
+     * Проверяет наличие записи в указанном столбце таблицы.
      *
-     * @param columnName название столбца.
-     * @param entityName название сущности для проверк.
+     * @param columnName название столбца
+     * @param recordName название записи для проверки
+     * @return текущий объект Table для цепочки вызовов
      */
-    public Table checkEntityIsPresent(String columnName, String entityName) {
-        $(locator).$x(getCellXPath(columnName, entityName)).should(Condition.exist);
+    public Table checkRecordIsPresent(String columnName, String recordName) {
+        $(locator).$x(getCellXPath(columnName, recordName)).should(Condition.exist);
         return this;
     }
 
     /**
-     * Проверяет, отсутствует ли указанная сущность в указанном столбце таблицы.
+     * Проверяет отсутствие записи в указанном столбце таблицы.
      *
-     * @param columnName название столбца.
-     * @param entityName название сущности для проверки.
+     * @param columnName название столбца
+     * @param recordName название записи для проверки
+     * @return текущий объект Table для цепочки вызовов
      */
-    public Table checkEntityIsNotPresent(String columnName, String entityName) {
+    public Table checkRecordIsNotPresent(String columnName, String recordName) {
         ensureTableIsNotEmpty();
 
-        String cellXPath = getCellXPath(columnName, entityName);
+        String cellXPath = getCellXPath(columnName, recordName);
         try {
             $(locator).$x(cellXPath).shouldNot(Condition.exist);
         } catch (org.openqa.selenium.NoSuchElementException ignored) {
@@ -73,29 +75,29 @@ public class Table extends Widget<Table> {
         return this;
     }
 
-
     /**
-     * Получает информацию из указанного поля таблицы для указанной сущности.
+     * Получает информацию из указанного поля таблицы для записи.
      *
-     * @param columnName     название столбца, содержащего сущность.
-     * @param entityName     название сущности.
-     * @param requiredColumn название столбца, из которого извлекается информация.
-     * @return информация из указанного поля.
+     * @param columnName     название столбца, содержащего запись
+     * @param recordName     название записи
+     * @param requiredColumn название столбца, из которого извлекается информация
+     * @return информация из указанного поля
      */
-    public String getInfoFromField(String columnName, String entityName, String requiredColumn) {
-        return $(locator).$x(getCellXPath(columnName, entityName) + "/../td[position()=" + getNumberOfColumn(requiredColumn) + "]").getText();
+    public String getInfoFromField(String columnName, String recordName, String requiredColumn) {
+        return $(locator).$x(getCellXPath(columnName, recordName) + "/../td[position()=" + getNumberOfColumn(requiredColumn) + "]").getText();
     }
 
     /**
-     * Проверяет, соответствует ли информация из указанного поля таблицы для указанной сущности ожидаемому значению.
+     * Проверяет, соответствует ли информация из указанного поля таблицы ожидаемому значению.
      *
-     * @param columnName     название столбца, содержащего сущность.
-     * @param entityName     название сущности.
-     * @param requiredColumn название столбца, из которого извлекается информация.
-     * @param expected       ожидаемое значение.
+     * @param columnName     название столбца, содержащего запись
+     * @param recordName     название записи
+     * @param requiredColumn название столбца, из которого извлекается информация
+     * @param expected       ожидаемое значение
+     * @return текущий объект Table для цепочки вызовов
      */
-    public Table checkInfoFromField(String columnName, String entityName, String requiredColumn, String expected) {
-        SelenideElement required = $(locator).$x(getCellXPath(columnName, entityName) + "/../td[position()=" + getNumberOfColumn(requiredColumn) + "]");
+    public Table checkInfoFromField(String columnName, String recordName, String requiredColumn, String expected) {
+        SelenideElement required = $(locator).$x(getCellXPath(columnName, recordName) + "/../td[position()=" + getNumberOfColumn(requiredColumn) + "]");
         if (expected.isEmpty()) {
             required.shouldHave(Condition.exactText(""));
         } else {
@@ -107,7 +109,8 @@ public class Table extends Widget<Table> {
     /**
      * Выбирает строку таблицы по её номеру.
      *
-     * @param rowNumber номер строки в таблице (начиная с 1).
+     * @param rowNumber номер строки в таблице (начиная с 1)
+     * @return текущий объект Table для цепочки вызовов
      */
     public Table selectRowByNumber(int rowNumber) {
         ensureTableIsNotEmpty();
@@ -119,22 +122,24 @@ public class Table extends Widget<Table> {
     }
 
     /**
-     * Выбирает строку таблицы по имени сущности в указанном столбце.
+     * Выбирает строку таблицы по названию записи в указанном столбце.
      *
-     * @param columnName название столбца, содержащего сущность.
-     * @param entityName название сущности.
+     * @param columnName название столбца, содержащего запись
+     * @param recordName название записи
+     * @return текущий объект Table для цепочки вызовов
      */
-    public Table selectRowByName(String columnName, String entityName) {
+    public Table selectRowByName(String columnName, String recordName) {
         ensureTableIsNotEmpty();
-        String cellXPath = getCellXPath(columnName, entityName);
+        String cellXPath = getCellXPath(columnName, recordName);
         $(locator).$x(cellXPath + "/../td[1]").click(); // Предполагаем, что первая ячейка в строке содержит информацию для выбора строки
         return this;
     }
 
     /**
-     * Проверяет соответствие заголовков таблицы ожидаемым значениям.
+     * Проверяет, соответствуют ли заголовки таблицы ожидаемым значениям.
      *
-     * @param expectedHeaders массив строк с ожидаемыми значениями заголовков.
+     * @param expectedHeaders массив строк с ожидаемыми значениями заголовков
+     * @return текущий объект Table для цепочки вызовов
      */
     public Table checkTableHeaders(String... expectedHeaders) {
         ensureTableIsNotEmpty();
@@ -144,22 +149,23 @@ public class Table extends Widget<Table> {
     }
 
     /**
-     * Проверяет, что таблица не пуста.
-     * Если таблица пуста, генерирует исключение.
+     * Проверяет, что таблица не пуста. Если таблица пуста, генерирует исключение.
+     *
+     * @return текущий объект Table для цепочки вызовов
      */
     private Table ensureTableIsNotEmpty() {
-        $(locator).$$(rows).shouldBe(CollectionCondition.sizeGreaterThan(0));
+        $(locator).$$(rows).shouldBe(sizeGreaterThan(0));
         return this;
     }
 
     /**
-     * Возвращает XPath выражение для ячейки таблицы с указанным именем столбца и сущности.
+     * Возвращает XPath выражение для ячейки таблицы с указанным именем столбца и записи.
      *
-     * @param columnName название столбца.
-     * @param entityName название сущности.
-     * @return XPath выражение для ячейки таблицы.
+     * @param columnName название столбца
+     * @param recordName название записи
+     * @return XPath выражение для ячейки таблицы
      */
-    private String getCellXPath(String columnName, String entityName) {
-        return ".//td[position()=" + getNumberOfColumn(columnName) + " and normalize-space(.)='" + entityName + "']";
+    private String getCellXPath(String columnName, String recordName) {
+        return ".//td[position()=" + getNumberOfColumn(columnName) + " and normalize-space(.)='" + recordName + "']";
     }
 }

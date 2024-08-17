@@ -6,12 +6,13 @@ import org.aeonbits.owner.Config;
 import java.time.Duration;
 
 import static org.aeonbits.owner.Config.*;
+import static org.aeonbits.owner.Config.LoadType.MERGE;
 
 /**
  * Интерфейс для конфигурации таймаутов, предоставляющий доступ
  * к настройкам времени ожидания, загружаемым из файла свойств.
  */
-@LoadPolicy(LoadType.MERGE)
+@LoadPolicy(MERGE)
 @Sources("file:src/main/resources/properties/timeout.properties")
 public interface TimeoutConfig extends Config {
 

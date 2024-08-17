@@ -2,15 +2,15 @@ package core.config;
 
 import org.aeonbits.owner.Config;
 import org.aeonbits.owner.Config.LoadPolicy;
-import org.aeonbits.owner.Config.LoadType;
 import org.aeonbits.owner.Config.Sources;
 
-@LoadPolicy(LoadType.MERGE)
+import static org.aeonbits.owner.Config.LoadType.MERGE;
+
+@LoadPolicy(MERGE)
 @Sources({
         "system:properties",
         "classpath:config/local.properties",
-        "classpath:config/remote.properties"
-})
+        "classpath:config/remote.properties"})
 public interface ProjectConfig extends Config {
 
     @Key("browser.name")

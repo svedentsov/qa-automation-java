@@ -2,6 +2,8 @@ package ui;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
+import rest.helper.RestManager;
+import ui.helper.UiManager;
 import ui.steps.*;
 
 import java.util.Optional;
@@ -13,6 +15,8 @@ import java.util.Optional;
 public class AppTheInternet {
 
     private static AppTheInternet appTheInternet;
+    private UiManager uiManager;
+
     private AbTestSteps abTestSteps;
     private AddRemoveElementsSteps addRemoveElementsSteps;
     private BasicAuthSteps basicAuthSteps;
@@ -61,6 +65,10 @@ public class AppTheInternet {
      */
     public synchronized static AppTheInternet getTheInternet() {
         return Optional.ofNullable(appTheInternet).orElseGet(() -> appTheInternet = new AppTheInternet());
+    }
+
+    public UiManager ui() {
+        return Optional.ofNullable(uiManager).orElseGet(() -> uiManager = UiManager.getUiManager());
     }
 
     /**

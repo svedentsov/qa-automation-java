@@ -4,6 +4,10 @@ import core.annotations.Url;
 import org.openqa.selenium.By;
 import ui.widgets.Button;
 
+/**
+ * Класс предоставляет элементы страницы File Upload.
+ * Содержит элементы для загрузки файлов и отображения загруженных файлов.
+ */
 @Url(pattern = ".*/upload")
 public class FileUploadPage extends AbstractPage<FileUploadPage> {
     public Button UPLOAD_INPUT = new Button(By.xpath("//input[@id='file-upload']"));

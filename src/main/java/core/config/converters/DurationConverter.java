@@ -1,7 +1,7 @@
 package core.config.converters;
 
-import core.utils.StreamUtils;
 import core.utils.StrUtil;
+import core.utils.StreamUtils;
 import lombok.AllArgsConstructor;
 import org.aeonbits.owner.Converter;
 
@@ -17,10 +17,10 @@ public class DurationConverter implements Converter<Duration> {
     /**
      * Преобразует строку в объект типа Duration.
      *
-     * @param method Метод, для которого выполняется преобразование.
-     * @param text   Входная строка для преобразования.
-     * @return Объект типа Duration, представляющий время, указанное во входной строке.
-     * @throws IllegalStateException если не удалось определить единицу времени для указанной строки.
+     * @param method метод, для которого выполняется преобразование
+     * @param text   входная строка для преобразования
+     * @return объект типа Duration, представляющий время, указанное во входной строке
+     * @throws IllegalStateException если не удалось определить единицу времени для указанной строки
      */
     @Override
     public Duration convert(Method method, String text) {

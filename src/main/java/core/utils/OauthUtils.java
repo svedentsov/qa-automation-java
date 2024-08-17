@@ -14,7 +14,7 @@ public class OauthUtils {
     /**
      * Генерирует случайную строку для использования в аутентификации OAuth.
      *
-     * @return Строка, представляющая собой случайный код (code verifier).
+     * @return строка, представляющая собой случайный код (code verifier)
      */
     @Nonnull
     public static String codeVerifier() {
@@ -28,8 +28,8 @@ public class OauthUtils {
      * Вычисляет код вызова (code challenge) на основе предоставленного кода (code verifier)
      * в соответствии с протоколом аутентификации OAuth.
      *
-     * @param codeVerifier Строка, представляющая собой код (code verifier).
-     * @return Строка, представляющая собой код вызова (code challenge).
+     * @param codeVerifier строка, представляющая собой код (code verifier)
+     * @return строка, представляющая собой код вызова (code challenge)
      */
     @Nonnull
     public static String codeChallenge(String codeVerifier) {

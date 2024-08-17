@@ -2,11 +2,15 @@ package core.config;
 
 import core.config.converters.DurationConverter;
 import org.aeonbits.owner.Config;
+import org.aeonbits.owner.Config.Sources;
 
 import java.time.Duration;
 
-@Config.Sources("file:src/main/resources/properties/timeout.properties")
-@Config.LoadPolicy(Config.LoadType.MERGE)
+import static org.aeonbits.owner.Config.*;
+import static org.aeonbits.owner.Config.LoadType.MERGE;
+
+@Sources("file:src/main/resources/properties/timeout.properties")
+@LoadPolicy(MERGE)
 public interface AppTimeoutConfig extends Config {
 
     @Key("webdriver.wait.timeout")

@@ -1,10 +1,10 @@
 package ui.widgets;
 
 import com.codeborne.selenide.Condition;
-import core.widgets.Widget;
+import ui.helper.Widget;
 import org.openqa.selenium.By;
-import ui.helper.PageManager;
 
+import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Selenide.$;
 
 /**
@@ -33,10 +33,10 @@ public class Button extends Widget<Button> {
     /**
      * Проверяет, содержит ли кнопка ожидаемый текст.
      *
-     * @param expected ожидаемый текст кнопки.
+     * @param expected ожидаемый текст кнопки
      */
     public Button checkText(String expected) {
-        $(locator).shouldHave(Condition.text(expected));
+        $(locator).shouldHave(text(expected));
         return this;
     }
 }

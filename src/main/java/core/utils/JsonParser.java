@@ -30,8 +30,8 @@ public final class JsonParser {
     /**
      * Преобразует объект в JSON-строку.
      *
-     * @param obj Объект для сериализации в JSON.
-     * @return JSON-строка.
+     * @param obj объект для сериализации в JSON
+     * @return JSON-строка
      */
     public static String toJson(Object obj) {
         return toJson(obj, true);
@@ -53,8 +53,8 @@ public final class JsonParser {
     /**
      * Преобразует объект в красиво отформатированную JSON-строку.
      *
-     * @param obj Объект для сериализации в JSON.
-     * @return Красиво отформатированная JSON-строка.
+     * @param obj объект для сериализации в JSON
+     * @return красиво отформатированная JSON-строка
      */
     public static String toPrintingFullJson(Object obj) {
         return printingFullGson.toJson(obj);
@@ -63,8 +63,8 @@ public final class JsonParser {
     /**
      * Преобразует объект в красиво отформатированную JSON-строку.
      *
-     * @param obj Объект для сериализации в JSON.
-     * @return Красиво отформатированная JSON-строка.
+     * @param obj объект для сериализации в JSON
+     * @return красиво отформатированная JSON-строка
      */
     public static String toPrettyPrintingJson(Object obj) {
         return prettyPrintingGson.toJson(obj);
@@ -73,11 +73,11 @@ public final class JsonParser {
     /**
      * Парсит JSON-строку в объект указанного типа.
      *
-     * @param json JSON-строка для десериализации.
-     * @param type Тип объекта для десериализации.
-     * @param <T>  Тип объекта.
-     * @return Десериализованный объект.
-     * @deprecated Используйте метод {@link #fromJsonViaJackson(String, Class)} вместо этого.
+     * @param json JSON-строка для десериализации
+     * @param type тип объекта для десериализации
+     * @param <T>  тип объекта
+     * @return десериализованный объект
+     * @deprecated Используйте метод {@link #fromJsonViaJackson(String, Class)} вместо этого
      */
     @Deprecated
     public static <T> T fromJson(String json, Class<T> type) {
@@ -87,11 +87,11 @@ public final class JsonParser {
     /**
      * Преобразует объект в POJO (Plain Old Java Object) указанного типа.
      *
-     * @param object Исходный объект.
-     * @param clazz  Тип объекта для десериализации.
-     * @param <T>    Тип объекта.
-     * @return Десериализованный объект.
-     * @deprecated Используйте метод {@link #fromJsonViaJackson(String, Class)} вместо этого.
+     * @param object исходный объект
+     * @param clazz  тип объекта для десериализации
+     * @param <T>    тип объекта
+     * @return десериализованный объект
+     * @deprecated Используйте метод {@link #fromJsonViaJackson(String, Class)} вместо этого
      */
     @Deprecated
     public static <T> T toPojo(Object object, Class<T> clazz) {
@@ -102,8 +102,8 @@ public final class JsonParser {
     /**
      * Преобразует объект в Map.
      *
-     * @param object Объект для сериализации в JSON и десериализации в Map.
-     * @return Map, представляющая объект в виде ключ-значение.
+     * @param object объект для сериализации в JSON и десериализации в Map.
+     * @return Map, представляющая объект в виде ключ-значение
      */
     public static Map toMap(Object object) {
         String json = toJson(object);
@@ -113,11 +113,11 @@ public final class JsonParser {
     /**
      * Парсит JSON-строку в объект указанного типа.
      *
-     * @param json JSON-строка для десериализации.
-     * @param type Тип объекта для десериализации.
-     * @param <T>  Тип объекта.
-     * @return Десериализованный объект.
-     * @deprecated Используйте метод {@link #fromJsonViaJackson(String, Class)} вместо этого.
+     * @param json JSON-строка для десериализации
+     * @param type тип объекта для десериализации
+     * @param <T>  тип объекта
+     * @return десериализованный объект
+     * @deprecated Используйте метод {@link #fromJsonViaJackson(String, Class)} вместо этого
      */
     @Deprecated
     public static <T> T fromJson(String json, Type type) {
@@ -127,8 +127,8 @@ public final class JsonParser {
     /**
      * Проверяет, является ли переданная строка валидной JSON-строкой.
      *
-     * @param json Строка для проверки.
-     * @return {@code true}, если строка является валидной JSON, в противном случае {@code false}.
+     * @param json строка для проверки
+     * @return {@code true}, если строка является валидной JSON, в противном случае {@code false}
      */
     public static boolean isJson(String json) {
         try {
@@ -142,8 +142,8 @@ public final class JsonParser {
     /**
      * Получает объект типа {@link JsonObject} из объекта.
      *
-     * @param src Исходный объект.
-     * @return Объект типа {@link JsonObject}.
+     * @param src исходный объект
+     * @return объект типа {@link JsonObject}
      */
     public static JsonObject getJsonObject(Object src) {
         return (JsonObject) getJsonElement(gson.toJson(src));
@@ -152,8 +152,8 @@ public final class JsonParser {
     /**
      * Получает объект типа {@link JsonElement} из JSON-строки.
      *
-     * @param json JSON-строка.
-     * @return Объект типа {@link JsonElement}.
+     * @param json JSON-строка
+     * @return объект типа {@link JsonElement}
      */
     public static JsonElement getJsonElement(String json) {
         return jsonParser.parse(json);
@@ -162,9 +162,9 @@ public final class JsonParser {
     /**
      * Преобразует объект в JSON-строку с использованием ObjectMapper из библиотеки Jackson.
      *
-     * @param object Объект для сериализации в JSON.
-     * @return JSON-строка.
-     * @throws RuntimeException если произошла ошибка во время сериализации.
+     * @param object объект для сериализации в JSON
+     * @return JSON-строка
+     * @throws RuntimeException если произошла ошибка во время сериализации
      */
     @SneakyThrows
     public static String toJsonViaJackson(Object object) {
@@ -174,10 +174,10 @@ public final class JsonParser {
     /**
      * Преобразует объект в JSON-строку с использованием ObjectMapper из библиотеки Jackson.
      *
-     * @param object     Объект для сериализации в JSON.
-     * @param ignoreNull Флаг для игнорирования null-значений.
-     * @return JSON-строка.
-     * @throws RuntimeException если произошла ошибка во время сериализации.
+     * @param object     объект для сериализации в JSON
+     * @param ignoreNull флаг для игнорирования null-значений
+     * @return JSON-строка
+     * @throws RuntimeException если произошла ошибка во время сериализации
      */
     @SneakyThrows
     public static String toJsonViaJackson(Object object, boolean ignoreNull) {
@@ -190,11 +190,11 @@ public final class JsonParser {
     /**
      * Парсит JSON-строку в объект указанного типа с использованием ObjectMapper из библиотеки Jackson.
      *
-     * @param json JSON-строка для десериализации.
-     * @param type Тип объекта для десериализации.
-     * @param <T>  Тип объекта.
-     * @return Десериализованный объект.
-     * @throws RuntimeException если произошла ошибка во время десериализации.
+     * @param json JSON-строка для десериализации
+     * @param type тип объекта для десериализации
+     * @param <T>  тип объекта
+     * @return десериализованный объект
+     * @throws RuntimeException если произошла ошибка во время десериализации
      */
     @SneakyThrows
     public static <T> T fromJsonViaJackson(String json, Class<T> type) {

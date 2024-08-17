@@ -1,6 +1,6 @@
 package ui.widgets.popup;
 
-import core.widgets.Widget;
+import ui.helper.Widget;
 import org.openqa.selenium.By;
 
 public class CookiesPopup extends Widget<CookiesPopup> {

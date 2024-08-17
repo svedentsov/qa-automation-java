@@ -1,12 +1,12 @@
 package ui.pages;
 
 import com.codeborne.selenide.Selenide;
-import core.UrlController;
+import ui.helper.UrlController;
 import core.annotations.Url;
-import core.browser.BrowserActions;
+import ui.helper.BrowserActions;
 import lombok.Getter;
 import org.openqa.selenium.By;
-import ui.helper.PageManager;
+import ui.helper.UiManager;
 import ui.widgets.popup.ErrorPopup;
 import ui.widgets.popup.ModalPopup;
 
@@ -24,7 +24,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 public abstract class AbstractPage<T extends AbstractPage<T>> {
 
     protected BrowserActions browserActions = new BrowserActions();
-    protected PageManager pages = PageManager.getPageManager();
+    protected UiManager ui = UiManager.getUiManager();
     protected ModalPopup modalPopup = new ModalPopup(By.xpath(""));
     protected ErrorPopup errorPopup = new ErrorPopup(By.xpath(""));
 

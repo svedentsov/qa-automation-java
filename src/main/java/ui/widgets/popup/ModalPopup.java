@@ -1,7 +1,7 @@
 package ui.widgets.popup;
 
 import com.codeborne.selenide.Condition;
-import core.widgets.Widget;
+import ui.helper.Widget;
 import org.openqa.selenium.By;
 
 import static com.codeborne.selenide.Selenide.$;

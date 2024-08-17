@@ -1,11 +1,11 @@
 package docs;
 
 import io.qameta.allure.Step;
-import io.qameta.allure.model.Status;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
+import static io.qameta.allure.model.Status.FAILED;
 
 /**
  * Класс для быстрых тестов JUnit 5 с использованием Allure.
@@ -19,7 +19,7 @@ public class JUnit5QuickStartTests {
     @DisplayName("allureSimpleTest displayName")
     public void allureSimpleTest() {
         step("Простой шаг");
-        step("Простой шаг со статусом", Status.FAILED);
+        step("Простой шаг со статусом", FAILED);
         step("Простой шаг с использованием лямбда-выражения", () -> {
             step("Простой шаг внутри лямбда-шаг");
         });

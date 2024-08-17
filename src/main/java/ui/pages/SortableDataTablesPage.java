@@ -5,7 +5,7 @@ import org.openqa.selenium.By;
 import ui.widgets.Table;
 
 /**
- * Класс для представления страницы "Sortable Data Tables".
+ * Класс представляет элементы страницы "Sortable Data Tables".
  * Содержит таблицы, которые можно сортировать.
  */
 @Url(pattern = ".*/tables")

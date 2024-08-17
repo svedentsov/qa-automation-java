@@ -70,7 +70,7 @@ public class KafkaMatcher {
      * @param expectedKey ожидаемый ключ
      * @return условие {@link KeyEqualCondition}
      */
-    public static KeyEqualCondition keyEquals(@NonNull String expectedKey) {
+    public static Condition keyEquals(@NonNull String expectedKey) {
         return new KeyEqualCondition(expectedKey);
     }
 
