@@ -1,6 +1,5 @@
 package ui.theInternet;
 
-import common.BaseTest;
 import common.UITest;
 import core.annotations.Layer;
 import io.qameta.allure.Feature;
@@ -11,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import static com.codeborne.selenide.Selenide.open;
 
-@Layer("UI")
-@Feature("Тестирование таблиц данных")
+@Layer("ui")
+@Feature("Тестирование функциональности сортируемых таблиц")
 @DisplayName("Тесты страницы 'Sortable Data Tables'")
 public class SortableDataTablesTests extends UITest {
 
@@ -24,8 +23,8 @@ public class SortableDataTablesTests extends UITest {
     }
 
     @Test
-    @Story("Проверка наличия записи")
-    @DisplayName("Проверка наличия записи в таблице данных")
+    @Story("Проверка наличия записи в таблице")
+    @DisplayName("Проверка наличия записи по фамилии и имени")
     public void checkRecordPresenceInTable() {
         // Act, Assert
         theInternet.sortableDataTablesSteps()
@@ -34,8 +33,8 @@ public class SortableDataTablesTests extends UITest {
     }
 
     @Test
-    @Story("Проверка отсутствия записи")
-    @DisplayName("Проверка отсутствия записи в таблице данных")
+    @Story("Проверка отсутствия записи в таблице")
+    @DisplayName("Проверка отсутствия записи по фамилии и имени")
     public void checkRecordAbsenceInTable() {
         // Act, Assert
         theInternet.sortableDataTablesSteps()
@@ -44,8 +43,8 @@ public class SortableDataTablesTests extends UITest {
     }
 
     @Test
-    @Story("Проверка данных записи")
-    @DisplayName("Проверка правильности данных в записи таблицы")
+    @Story("Проверка информации в таблице")
+    @DisplayName("Проверка информации по фамилии и имени")
     public void checkInfoInRecord() {
         // Act, Assert
         theInternet.sortableDataTablesSteps()

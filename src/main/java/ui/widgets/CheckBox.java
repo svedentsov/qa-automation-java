@@ -1,12 +1,9 @@
 package ui.widgets;
 
-import com.codeborne.selenide.Condition;
-import ui.helper.Widget;
 import org.openqa.selenium.By;
+import ui.helper.Widget;
 
 import static com.codeborne.selenide.Condition.*;
-import static com.codeborne.selenide.Condition.not;
-import static com.codeborne.selenide.Condition.selected;
 import static com.codeborne.selenide.Selenide.$;
 
 /**

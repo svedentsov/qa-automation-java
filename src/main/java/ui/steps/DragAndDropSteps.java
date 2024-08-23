@@ -16,9 +16,9 @@ public class DragAndDropSteps extends BaseSteps {
      * @return экземпляр {@link DragAndDropSteps} для использования в цепочке вызовов
      */
     @Step("Проверить исходное состояние контейнеров: A = '{initialTextA}', B = '{initialTextB}'")
-    public DragAndDropSteps verifyInitialState(String initialTextA, String initialTextB) {
-        verifyContainerAText(initialTextA);
-        verifyContainerBText(initialTextB);
+    public DragAndDropSteps checkInitialState(String initialTextA, String initialTextB) {
+        checkContainerAText(initialTextA);
+        checkContainerBText(initialTextB);
         return this;
     }
 
@@ -53,7 +53,7 @@ public class DragAndDropSteps extends BaseSteps {
      * @return экземпляр {@link DragAndDropSteps} для использования в цепочке вызовов
      */
     @Step("Проверить, что контейнер A содержит текст '{expectedText}'")
-    public DragAndDropSteps verifyContainerAText(String expectedText) {
+    public DragAndDropSteps checkContainerAText(String expectedText) {
         ui.dragAndDropPage().A_CONTAINER_BUTTON.checkText(expectedText);
         return this;
     }
@@ -65,7 +65,7 @@ public class DragAndDropSteps extends BaseSteps {
      * @return экземпляр {@link DragAndDropSteps} для использования в цепочке вызовов
      */
     @Step("Проверить, что контейнер B содержит текст '{expectedText}'")
-    public DragAndDropSteps verifyContainerBText(String expectedText) {
+    public DragAndDropSteps checkContainerBText(String expectedText) {
         ui.dragAndDropPage().B_CONTAINER_BUTTON.checkText(expectedText);
         return this;
     }
@@ -78,9 +78,9 @@ public class DragAndDropSteps extends BaseSteps {
      * @return экземпляр {@link DragAndDropSteps} для использования в цепочке вызовов
      */
     @Step("Проверить, что после перетаскивания контейнера A в контейнер B, текст поменялся местами: A = '{expectedTextA}', B = '{expectedTextB}'")
-    public DragAndDropSteps verifyTextAfterDragAndDrop(String expectedTextA, String expectedTextB) {
-        verifyContainerAText(expectedTextA);
-        verifyContainerBText(expectedTextB);
+    public DragAndDropSteps checkTextAfterDragAndDrop(String expectedTextA, String expectedTextB) {
+        checkContainerAText(expectedTextA);
+        checkContainerBText(expectedTextB);
         return this;
     }
 }

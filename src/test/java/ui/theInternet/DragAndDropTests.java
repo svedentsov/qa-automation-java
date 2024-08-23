@@ -10,8 +10,8 @@ import org.junit.jupiter.api.Test;
 
 import static com.codeborne.selenide.Selenide.open;
 
-@Layer("UI")
-@Feature("Тестирование функции Drag and Drop")
+@Layer("ui")
+@Feature("Тестирование функциональности перетаскивания")
 @DisplayName("Тесты страницы 'Drag and Drop'")
 public class DragAndDropTests extends UITest {
 
@@ -24,11 +24,11 @@ public class DragAndDropTests extends UITest {
 
     @Test
     @Story("Перемещение контейнера A в контейнер B")
-    @DisplayName("Перемещение контейнера A в контейнер B с проверкой обновленного текста")
+    @DisplayName("Проверка результата перетаскивания элемента A в контейнер B")
     public void dragContainerAtoBAndVerifyText() {
         // Arrange
         theInternet.dragAndDropSteps()
-                .verifyInitialState("A", "B");
+                .checkInitialState("A", "B");
 
         // Act
         theInternet.dragAndDropSteps()
@@ -36,17 +36,17 @@ public class DragAndDropTests extends UITest {
 
         // Assert
         theInternet.dragAndDropSteps()
-                .verifyContainerAText("B")
-                .verifyContainerBText("A");
+                .checkContainerAText("B")
+                .checkContainerBText("A");
     }
 
     @Test
     @Story("Перемещение контейнера B в контейнер A")
-    @DisplayName("Перемещение контейнера B в контейнер A с проверкой обновленного текста")
+    @DisplayName("Проверка результата перемещения элемента B в элемента A")
     public void dragContainerBtoAAndVerifyText() {
         // Arrange
         theInternet.dragAndDropSteps()
-                .verifyInitialState("A", "B");
+                .checkInitialState("A", "B");
 
         // Act
         theInternet.dragAndDropSteps()
@@ -54,6 +54,6 @@ public class DragAndDropTests extends UITest {
 
         // Assert
         theInternet.dragAndDropSteps()
-                .verifyTextAfterDragAndDrop("B", "A");
+                .checkTextAfterDragAndDrop("B", "A");
     }
 }

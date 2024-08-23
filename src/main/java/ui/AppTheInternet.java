@@ -21,6 +21,7 @@ public class AppTheInternet {
     private AddRemoveElementsSteps addRemoveElementsSteps;
     private BasicAuthSteps basicAuthSteps;
     private BrokenImagesSteps brokenImagesSteps;
+    private ChallengingDomSteps challengingDomSteps;
     private CheckboxesSteps checkboxesSteps;
     private ContextMenuSteps contextMenuSteps;
     private DigestAuthSteps digestAuthSteps;
@@ -105,6 +106,10 @@ public class AppTheInternet {
      */
     public BrokenImagesSteps brokenImagesSteps() {
         return Optional.ofNullable(brokenImagesSteps).orElseGet(() -> brokenImagesSteps = new BrokenImagesSteps());
+    }
+
+    public ChallengingDomSteps challengingDomSteps() {
+        return Optional.ofNullable(challengingDomSteps).orElseGet(() -> challengingDomSteps = new ChallengingDomSteps());
     }
 
     /**

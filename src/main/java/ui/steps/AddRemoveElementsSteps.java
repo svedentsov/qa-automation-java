@@ -18,7 +18,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      * @return экземпляр {@link AddRemoveElementsSteps} для использования в цепочке вызовов
      */
     @Step("Проверить, что текст заголовка соответствует '{expectedText}'")
-    public AddRemoveElementsSteps verifyTitleText(String expectedText) {
+    public AddRemoveElementsSteps checkTitleText(String expectedText) {
         ui.addRemoveElementsPage().TITLE_TEXT.checkText(expectedText);
         return this;
     }
@@ -29,7 +29,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      * @return экземпляр {@link AddRemoveElementsSteps} для использования в цепочке вызовов
      */
     @Step("Проверить, что текст заголовка отображается")
-    public AddRemoveElementsSteps verifyTitleTextIsVisible() {
+    public AddRemoveElementsSteps checkTitleTextIsVisible() {
         ui.addRemoveElementsPage().TITLE_TEXT.shouldBeVisible();
         return this;
     }
@@ -39,8 +39,8 @@ public class AddRemoveElementsSteps extends BaseSteps {
      *
      * @return экземпляр {@link AddRemoveElementsSteps} для использования в цепочке вызовов
      */
-    @Step("Добавить новую кнопку 'Удалить'")
-    public AddRemoveElementsSteps clickAddButton() {
+    @Step("Добавить кнопку 'Удалить'")
+    public AddRemoveElementsSteps addDeleteButton() {
         ui.addRemoveElementsPage().ADD_BUTTON.click();
         return this;
     }
@@ -84,9 +84,9 @@ public class AddRemoveElementsSteps extends BaseSteps {
      * @param count количество кнопок для добавления
      * @return экземпляр {@link AddRemoveElementsSteps} для использования в цепочке вызовов
      */
-    @Step("Добавить '{count}' кнопок(и) 'Удалить'")
+    @Step("Добавить кнопку 'Удалить' {count} раз")
     public AddRemoveElementsSteps addDeleteButtons(int count) {
-        IntStream.range(0, count).forEach(i -> clickAddButton());
+        IntStream.range(0, count).forEach(i -> addDeleteButton());
         return this;
     }
 
@@ -109,7 +109,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      * @return экземпляр {@link AddRemoveElementsSteps} для использования в цепочке вызовов
      */
     @Step("Проверить, что количество кнопок 'Удалить' равно '{expectedCount}'")
-    public AddRemoveElementsSteps verifyNumberOfDeleteButtons(int expectedCount) {
+    public AddRemoveElementsSteps checkNumberOfDeleteButtons(int expectedCount) {
         int actualCount = ui.addRemoveElementsPage().REMOVE_BUTTON.getElementCount();
         assertEquals(expectedCount, actualCount, "Количество кнопок 'Удалить' не совпадает с ожидаемым");
         return this;

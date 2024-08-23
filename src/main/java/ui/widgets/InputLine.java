@@ -1,6 +1,5 @@
 package ui.widgets;
 
-import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.WebDriverRunner;
 import ui.helper.Widget;
 import org.openqa.selenium.By;
@@ -101,10 +100,10 @@ public class InputLine extends Widget<InputLine> {
      * @param text текст для ввода
      * @return экземпляр {@link UiManager}, представляющий текущую страницу или компонент
      */
-    public InputLine fillWithEnter(String text) {
+    public UiManager fillWithEnter(String text) {
         $(locator).sendKeys(text);
         $(locator).pressEnter();
-        return this;
+        return ui;
     }
 
     /**

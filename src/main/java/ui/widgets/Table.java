@@ -12,7 +12,8 @@ import static com.codeborne.selenide.CollectionCondition.sizeGreaterThan;
 import static com.codeborne.selenide.Selenide.$;
 
 /**
- * Класс предоставляет методы для взаимодействия с таблицами, позволяя проверять наличие записей, получать информацию из полей таблицы и выбирать строки.
+ * Класс предоставляет методы для взаимодействия с таблицами, позволяя проверять наличие записей,
+ * получать информацию из полей таблицы и выбирать строки.
  */
 public class Table extends Widget<Table> {
 

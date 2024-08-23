@@ -1,6 +1,5 @@
 package ui.widgets;
 
-import com.codeborne.selenide.Condition;
 import org.openqa.selenium.By;
 import ui.helper.Widget;
 

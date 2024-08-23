@@ -1,6 +1,7 @@
 package ui.helper;
 
 import com.codeborne.selenide.Configuration;
+import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.WebDriverRunner;
 import core.utils.DateUtil;
@@ -143,6 +144,14 @@ public class Widget<T extends Widget<T>> {
      */
     public int getElementCount() {
         return $$(locator).size();
+    }
+
+    public ElementsCollection getElement() {
+        return $$(locator);
+    }
+
+    public ElementsCollection getAllElements() {
+        return $$(locator);
     }
 
     /**
