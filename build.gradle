@@ -24,6 +24,9 @@ buildscript {
         selenideVersion = '7.0.4'
         slf4jVersion = '2.0.9'
         zip4jVersion = '2.11.5'
+        hibernateVersion = '5.6.15.Final'
+        postgresDriverVersion = '42.3.1'
+        mysqlDriverVersion = '8.0.30'
     }
 }
 
@@ -50,6 +53,15 @@ repositories {
 }
 
 dependencies { // Зависимости проекта
+
+    // Hibernate
+    implementation "org.hibernate:hibernate-core:${hibernateVersion}"
+    implementation "org.hibernate:hibernate-c3p0:${hibernateVersion}"
+
+    // Драйверы базы данных
+    implementation "org.postgresql:postgresql:${postgresDriverVersion}"
+    implementation "mysql:mysql-connector-java:${mysqlDriverVersion}"
+
     // Логирование
     implementation "org.slf4j:slf4j-api:${slf4jVersion}"
 

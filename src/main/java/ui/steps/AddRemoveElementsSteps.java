@@ -110,7 +110,7 @@ public class AddRemoveElementsSteps extends BaseSteps {
      */
     @Step("Проверить, что количество кнопок 'Удалить' равно '{expectedCount}'")
     public AddRemoveElementsSteps checkNumberOfDeleteButtons(int expectedCount) {
-        int actualCount = ui.addRemoveElementsPage().REMOVE_BUTTON.getElementCount();
+        int actualCount = ui.addRemoveElementsPage().REMOVE_BUTTON.getElementsCount();
         assertEquals(expectedCount, actualCount, "Количество кнопок 'Удалить' не совпадает с ожидаемым");
         return this;
     }

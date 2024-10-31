@@ -7,9 +7,6 @@ import io.qameta.allure.Feature;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Тесты для страницы "Broken Images".
- */
 @Layer("ui")
 @Feature("Тестирование страницы с изображениями")
 @DisplayName("Тесты страницы 'Broken Images'")

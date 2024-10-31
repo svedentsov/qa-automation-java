@@ -137,21 +137,17 @@ public class Widget<T extends Widget<T>> {
         return $(locator).is(hidden);
     }
 
+    public ElementsCollection getAllElements() {
+        return $$(locator);
+    }
+
     /**
      * Возвращает количество элементов, найденных по локатору.
      *
      * @return количество элементов
      */
-    public int getElementCount() {
+    public int getElementsCount() {
         return $$(locator).size();
-    }
-
-    public ElementsCollection getElement() {
-        return $$(locator);
-    }
-
-    public ElementsCollection getAllElements() {
-        return $$(locator);
     }
 
     /**

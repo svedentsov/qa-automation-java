@@ -84,7 +84,7 @@ public class ChallengingDomSteps extends BaseSteps {
      */
     @Step("Проверить количество таблиц на странице")
     public ChallengingDomSteps checkTableCount(int expectedCount) {
-        ElementsCollection tables = ui.challengingDomPage().TABLE.getElement();
+        ElementsCollection tables = ui.challengingDomPage().TABLE.getAllElements();
         tables.shouldHave(size(expectedCount));
         return this;
     }
