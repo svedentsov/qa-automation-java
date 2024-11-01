@@ -1,7 +1,9 @@
 package db.steps;
 
 import db.entity.MyEntity;
+import db.enums.DatabaseType;
 import db.helper.DbExecutor;
+import db.factory.SessionFactoryProvider;
 import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.SessionFactory;
@@ -19,12 +21,15 @@ import java.util.concurrent.CompletableFuture;
 public class DbSteps {
 
     private final SessionFactory sessionFactory;
+    private final SessionFactory sessionFactoryDb1;
 
     /**
      * Конструктор класса DbSteps.
      * Инициализирует SessionFactory для работы с базой данных.
      */
     public DbSteps() {
+        sessionFactoryDb1 = SessionFactoryProvider.getSessionFactory(DatabaseType.DB1);
+
         // Настройка Hibernate и создание SessionFactory
         Configuration configuration = new Configuration().configure();
 

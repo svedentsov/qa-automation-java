@@ -1,5 +1,6 @@
 package db.helper;
 
+import db.executor.DataAccessException;
 import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.*;
@@ -27,6 +28,8 @@ import java.util.function.Function;
 @Slf4j
 public class DbExecutor<T> {
 
+    private static final int DEFAULT_BATCH_SIZE = 50;
+
     private final SessionFactory sessionFactory;
     private final Class<T> entityClass;
     private final Map<String, Object> parameters = new HashMap<>();
@@ -47,9 +50,6 @@ public class DbExecutor<T> {
     private String cacheRegion;
     private FlushMode flushMode;
     private int isolationLevel = Connection.TRANSACTION_READ_COMMITTED;
-    private boolean useScrollableResults;
-
-    private static final int DEFAULT_BATCH_SIZE = 50;
 
     /**
      * Класс для представления условий сортировки.
@@ -81,7 +81,7 @@ public class DbExecutor<T> {
         this.entityClass = Objects.requireNonNull(entityClass, "Класс сущности не должен быть null");
     }
 
-    // Методы настройки параметров запроса
+    // Методы конфигурации для запроса
 
     /**
      * Устанавливает HQL запрос для выполнения.
@@ -285,19 +285,6 @@ public class DbExecutor<T> {
     }
 
     /**
-     * Устанавливает использование ScrollableResults для запросов.
-     *
-     * @param useScrollableResults если true, будет использоваться ScrollableResults
-     * @return текущий экземпляр DbExecutor для цепочки вызовов
-     */
-    public DbExecutor<T> useScrollableResults(boolean useScrollableResults) {
-        this.useScrollableResults = useScrollableResults;
-        return this;
-    }
-
-    // CRUD операции
-
-    /**
      * Сохраняет сущность в базе данных.
      *
      * @param entity сущность для сохранения
@@ -392,8 +379,6 @@ public class DbExecutor<T> {
             return null;
         });
     }
-
-    // Методы выполнения запросов
 
     /**
      * Выполняет HQL запрос и возвращает список результатов.
@@ -518,8 +503,6 @@ public class DbExecutor<T> {
         });
     }
 
-    // Вспомогательные методы
-
     /**
      * Выполняет функцию внутри транзакции, обеспечивая корректное управление сессией и транзакцией.
      *
@@ -640,22 +623,5 @@ public class DbExecutor<T> {
      */
     public <R> CompletableFuture<R> executeAsync(Function<Session, R> action) {
         return CompletableFuture.supplyAsync(() -> executeInTransaction(action));
-    }
-
-    // Исключения
-
-    /**
-     * Исключение, выбрасываемое при ошибках доступа к данным.
-     */
-    public static class DataAccessException extends RuntimeException {
-        /**
-         * Конструктор исключения DataAccessException.
-         *
-         * @param message сообщение об ошибке
-         * @param cause   причина исключения
-         */
-        public DataAccessException(String message, Throwable cause) {
-            super(message, cause);
-        }
     }
 }
