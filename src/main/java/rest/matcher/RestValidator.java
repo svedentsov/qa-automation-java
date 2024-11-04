@@ -28,7 +28,7 @@ public class RestValidator {
      * @return Ссылка на текущий экземпляр {@link RestValidator}
      */
     public RestValidator shouldHave(Condition condition) {
-        log.info("Проверка условия: " + condition.toString());
+        log.debug("Проверка условия: {}", condition.toString());
         condition.check(response);
         return this;
     }
@@ -43,7 +43,7 @@ public class RestValidator {
     public RestValidator shouldHave(Condition... conditions) {
         List<Condition> conds = Arrays.asList(conditions);
         conds.forEach(condition -> {
-            log.info("Проверка условия: " + condition.toString());
+            log.debug("Проверка условия: {}", condition.toString());
             condition.check(response);
         });
         return this;

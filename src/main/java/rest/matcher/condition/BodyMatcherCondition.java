@@ -6,22 +6,20 @@ import org.hamcrest.Matcher;
 import rest.matcher.Condition;
 
 /**
- * Класс, представляющий условие проверки тела ответа с использованием Hamcrest Matcher.
- * Данный класс реализует интерфейс {@link Condition}, предоставляя функциональность
- * проверки тела ответа с использованием переданного {@link Matcher}.
+ * Условие для проверки тела ответа с использованием Hamcrest Matcher.
  */
 @AllArgsConstructor
 public class BodyMatcherCondition implements Condition {
 
-    private Matcher matcher;
+    private final Matcher<?> matcher;
 
     @Override
     public void check(Response response) {
-        response.then().assertThat().body(matcher);
+        response.then().body(matcher);
     }
 
     @Override
     public String toString() {
-        return "Тело ответа соответствует: " + matcher.toString();
+        return String.format("Тело ответа соответствует условию: %s", matcher);
     }
 }

@@ -39,7 +39,6 @@ public class DbExecutor<T> {
     private String hqlQuery;
     private String sqlQuery;
     private String namedQuery;
-    private StoredProcedureQuery storedProcedureQuery;
     private int batchSize = DEFAULT_BATCH_SIZE;
     private int fetchSize;
     private int maxResults;
@@ -512,9 +511,9 @@ public class DbExecutor<T> {
      */
     private <R> R executeInTransaction(Function<Session, R> action) {
         try (Session session = sessionFactory.openSession()) {
+            setTransactionIsolationLevel(session);
             Transaction transaction = session.beginTransaction();
             try {
-                setTransactionIsolationLevel(session);
                 R result = action.apply(session);
                 transaction.commit();
                 return result;
@@ -523,6 +522,8 @@ public class DbExecutor<T> {
                 log.error("Ошибка при выполнении операции: {}", e.getMessage(), e);
                 throw new DataAccessException("Ошибка при выполнении операции", e);
             }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
         }
     }
 
@@ -590,26 +591,17 @@ public class DbExecutor<T> {
      * @return соответствующий тип блокировки Hibernate
      */
     private LockMode convertToHibernateLockMode(LockModeType lockModeType) {
-        switch (lockModeType) {
-            case NONE:
-                return LockMode.NONE;
-            case READ:
-                return LockMode.READ;
-            case WRITE:
-                return LockMode.WRITE;
-            case OPTIMISTIC:
-                return LockMode.OPTIMISTIC;
-            case OPTIMISTIC_FORCE_INCREMENT:
-                return LockMode.OPTIMISTIC_FORCE_INCREMENT;
-            case PESSIMISTIC_READ:
-                return LockMode.PESSIMISTIC_READ;
-            case PESSIMISTIC_WRITE:
-                return LockMode.PESSIMISTIC_WRITE;
-            case PESSIMISTIC_FORCE_INCREMENT:
-                return LockMode.PESSIMISTIC_FORCE_INCREMENT;
-            default:
-                return LockMode.NONE;
-        }
+        return switch (lockModeType) {
+            case NONE -> LockMode.NONE;
+            case READ -> LockMode.READ;
+            case WRITE -> LockMode.WRITE;
+            case OPTIMISTIC -> LockMode.OPTIMISTIC;
+            case OPTIMISTIC_FORCE_INCREMENT -> LockMode.OPTIMISTIC_FORCE_INCREMENT;
+            case PESSIMISTIC_READ -> LockMode.PESSIMISTIC_READ;
+            case PESSIMISTIC_WRITE -> LockMode.PESSIMISTIC_WRITE;
+            case PESSIMISTIC_FORCE_INCREMENT -> LockMode.PESSIMISTIC_FORCE_INCREMENT;
+            default -> LockMode.NONE;
+        };
     }
 
     // Методы получения результатов

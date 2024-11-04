@@ -6,8 +6,6 @@ import rest.matcher.Condition;
 
 /**
  * Класс, представляющий условие проверки наличия заголовка в ответе.
- * Данный класс реализует интерфейс {@link Condition}, предоставляя функциональность
- * проверки того, присутствует ли ожидаемый заголовок с именем {@link #expectedHeaderName} в ответе.
  */
 @AllArgsConstructor
 public class HeaderContainsCondition implements Condition {
@@ -18,12 +16,12 @@ public class HeaderContainsCondition implements Condition {
     public void check(Response response) {
         boolean hasHeader = response.then().extract().headers().hasHeaderWithName(expectedHeaderName);
         if (!hasHeader) {
-            throw new AssertionError("Заголовок с именем \"" + expectedHeaderName + "\" не найден.");
+            throw new AssertionError(String.format("Заголовок с именем '%s' не найден.", expectedHeaderName));
         }
     }
 
     @Override
     public String toString() {
-        return "Заголовок \"" + expectedHeaderName + "\" должен присутствовать.";
+        return String.format("Заголовок '%s' должен присутствовать.", expectedHeaderName);
     }
 }

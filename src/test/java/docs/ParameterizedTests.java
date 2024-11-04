@@ -44,7 +44,7 @@ public class ParameterizedTests {
      * @param testData поисковый запрос
      */
     @ValueSource(strings = {"Selenide", "JUnit 5"})
-    @ParameterizedTest(name = "Проверка отображения поисковых результатов в Яндексе для запроса \"{0}\"")
+    @ParameterizedTest(name = "Проверка отображения поисковых результатов в Яндексе для запроса '{0}'")
     void commonSearchTest(String testData) {
         Selenide.$("#text").setValue(testData);
         Selenide.$("button[type='submit']").click();
@@ -61,7 +61,7 @@ public class ParameterizedTests {
             "Selenide| concise UI tests in Java",
             "JUnit 5| IntelliJ IDEA"
     }, delimiter = '|')
-    @ParameterizedTest(name = "Проверка отображения поисковых результатов в Яндексе для запроса \"{0}\"")
+    @ParameterizedTest(name = "Проверка отображения поисковых результатов в Яндексе для запроса '{0}'")
     void complexSearchTest(String testData, String expectedText) {
         Selenide.$("#text").setValue(testData);
         Selenide.$("button[type='submit']").click();
@@ -103,7 +103,7 @@ public class ParameterizedTests {
             "Дмитрий| Тучс",
             "Иван | Иванов"
     }, delimiter = '|')
-    @ParameterizedTest(name = "Проверка отображения поисковых результатов в Яндексе для запроса \"{0}\"")
+    @ParameterizedTest(name = "Проверка отображения поисковых результатов в Яндексе для запроса '{0}'")
     void threeInputsTest(String name, String surname) {
         Selenide.$("#surname").setValue(name);
         Selenide.$("#name").setValue(surname);

@@ -6,22 +6,20 @@ import lombok.AllArgsConstructor;
 import rest.matcher.Condition;
 
 /**
- * Класс, представляющий условие проверки типа контента в ответе.
- * Данный класс реализует интерфейс {@link Condition}, предоставляя функциональность
- * проверки того, соответствует ли тип контента ответа ожидаемому {@link #contentType}.
+ * Условие для проверки типа содержимого ответа.
  */
 @AllArgsConstructor
 public class ContentTypeCondition implements Condition {
 
-    private ContentType contentType;
+    private final ContentType contentType;
 
     @Override
     public void check(Response response) {
-        response.then().assertThat().contentType(contentType);
+        response.then().contentType(contentType);
     }
 
     @Override
     public String toString() {
-        return "Ожидаемый тип контента: " + contentType.toString();
+        return String.format("Тип содержимого: '%s'", contentType);
     }
 }

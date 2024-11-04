@@ -16,7 +16,7 @@ public class AllureRestAssuredFilter {
      * @return экземпляр AllureRestAssured с настроенными шаблонами
      */
     public static AllureRestAssured withCustomTemplates() {
-        FILTER.setRequestTemplate("request.ftl");   // Установка пользовательского шаблона для логирования запросов
+        FILTER.setRequestTemplate("request.ftl"); // Установка пользовательского шаблона для логирования запросов
         FILTER.setResponseTemplate("response.ftl"); // Установка пользовательского шаблона для логирования ответов
         return FILTER;
     }

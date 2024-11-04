@@ -9,357 +9,357 @@ import java.util.List;
 
 /**
  * Утилитный класс для создания условий проверки сообщений Kafka.
- * Предоставляет методы для создания различных условий проверки наличия записей, значений ключей, заголовков и содержимого.
+ * Предоставляет методы для создания различных условий проверки записей, ключей, заголовков и значений.
  */
 @UtilityClass
 public class KafkaMatcher {
 
     /**
-     * Проверка наличия хотя бы одной записи.
-     *
-     * @return условие {@link RecordExistConditions}
-     */
-    public static Conditions recordsExists() {
-        return new RecordExistConditions();
-    }
-
-    /**
-     * Проверка, что количество записей больше указанного.
-     *
-     * @param count минимальное количество записей
-     * @return условие {@link RecordCountGreaterConditions}
-     */
-    public static Conditions recordsCountGreater(int count) {
-        return new RecordCountGreaterConditions(count);
-    }
-
-    /**
-     * Проверка, что количество записей равно указанному значению.
-     *
-     * @param count точное количество записей
-     * @return условие {@link RecordCountEqualConditions}
-     */
-    public static Conditions recordsCountEqual(int count) {
-        return new RecordCountEqualConditions(count);
-    }
-
-    /**
-     * Проверка наличия записи с указанным ключом.
-     *
-     * @param key ключ для проверки
-     * @return условие {@link KeyExistConditions}
-     */
-    public static Conditions keysExists(@NonNull String key) {
-        return new KeyExistConditions(key);
-    }
-
-    /**
-     * Проверка наличия записи с указанным заголовком и значением.
+     * Проверяет наличие записи с указанным заголовком и значением.
      *
      * @param headerKey   ключ заголовка
      * @param headerValue значение заголовка
-     * @return условие {@link HeaderExistConditions}
+     * @return условие для проверки наличия заголовка с указанным значением
      */
     public static Conditions headersExists(@NonNull String headerKey, @NonNull String headerValue) {
         return new HeaderExistConditions(headerKey, headerValue);
     }
 
     /**
-     * Проверка, что ключ записи равен ожидаемому значению.
+     * Проверяет наличие записи с указанным ключом.
      *
-     * @param expectedKey ожидаемый ключ
-     * @return условие {@link KeyEqualCondition}
+     * @param key ключ для проверки
+     * @return условие для проверки наличия ключа
      */
-    public static Condition keyEquals(@NonNull String expectedKey) {
-        return new KeyEqualCondition(expectedKey);
+    public static Conditions keysExists(@NonNull String key) {
+        return new KeyExistConditions(key);
     }
 
     /**
-     * Проверка, что ключ записи содержит указанный текст.
+     * Проверяет, что количество записей больше указанного.
      *
-     * @param text текст для проверки
-     * @return условие {@link KeyContainCondition}
+     * @param count минимальное количество записей
+     * @return условие для проверки количества записей
      */
-    public static Condition keyContains(@NonNull String text) {
-        return new KeyContainCondition(text);
+    public static Conditions recordsCountGreater(int count) {
+        return new RecordCountGreaterConditions(count);
     }
 
     /**
-     * Проверка, что ключ записи не содержит указанный текст.
+     * Проверяет, что количество записей равно указанному значению.
      *
-     * @param text текст для проверки
-     * @return условие {@link KeyContainNotCondition}
+     * @param count точное количество записей
+     * @return условие для проверки количества записей
      */
-    public static Condition keyNotContains(@NonNull String text) {
-        return new KeyContainNotCondition(text);
+    public static Conditions recordsCountEqual(int count) {
+        return new RecordCountEqualConditions(count);
     }
 
     /**
-     * Проверка, что заголовок записи равен ожидаемому значению.
+     * Проверяет наличие хотя бы одной записи.
      *
-     * @param headerKey ключ заголовка
-     * @param text      ожидаемое значение заголовка
-     * @return условие {@link HeaderEqualCondition}
+     * @return условие для проверки наличия записей
      */
-    public static Condition headerEquals(@NonNull String headerKey, @NonNull String text) {
-        return new HeaderEqualCondition(headerKey, text);
+    public static Conditions recordsExists() {
+        return new RecordExistConditions();
     }
 
     /**
-     * Проверка, что заголовок записи содержит указанный текст.
+     * Проверяет, что заголовок записи содержит указанный текст.
      *
      * @param headerKey ключ заголовка
      * @param text      текст для проверки
-     * @return условие {@link HeaderContainCondition}
+     * @return условие для проверки содержимого заголовка
      */
     public static Condition headerContains(@NonNull String headerKey, @NonNull String text) {
         return new HeaderContainCondition(headerKey, text);
     }
 
     /**
-     * Проверка, что заголовок записи не содержит указанный текст.
+     * Проверяет, что заголовок записи не содержит указанный текст.
      *
      * @param headerKey ключ заголовка
      * @param text      текст для проверки
-     * @return условие {@link HeaderContainNotCondition}
+     * @return условие для проверки отсутствия текста в заголовке
      */
     public static Condition headerNotContains(@NonNull String headerKey, @NonNull String text) {
         return new HeaderContainNotCondition(headerKey, text);
     }
 
     /**
-     * Проверка, что ключ заголовка записи существует.
+     * Проверяет, что заголовок записи равен ожидаемому значению.
      *
      * @param headerKey ключ заголовка
-     * @return условие {@link HeaderKeyExistCondition}
+     * @param text      ожидаемое значение заголовка
+     * @return условие для проверки равенства значения заголовка
+     */
+    public static Condition headerEquals(@NonNull String headerKey, @NonNull String text) {
+        return new HeaderEqualCondition(headerKey, text);
+    }
+
+    /**
+     * Проверяет, что ключ заголовка записи существует.
+     *
+     * @param headerKey ключ заголовка
+     * @return условие для проверки наличия ключа заголовка
      */
     public static Condition headerKeyExists(@NonNull String headerKey) {
         return new HeaderKeyExistCondition(headerKey);
     }
 
     /**
-     * Проверка, что ключ заголовка записи равен ожидаемому значению.
+     * Проверяет, что ключ заголовка записи равен ожидаемому значению.
      *
      * @param expectedKey ожидаемый ключ заголовка
-     * @return условие {@link HeaderKeyEqualCondition}
+     * @return условие для проверки равенства ключа заголовка
      */
     public static Condition headerKeyEquals(@NonNull String expectedKey) {
         return new HeaderKeyEqualCondition(expectedKey);
     }
 
     /**
-     * Проверка, что ключ заголовка записи содержит указанный текст.
+     * Проверяет, что ключ заголовка записи содержит указанный текст.
      *
      * @param text текст для проверки
-     * @return условие {@link HeaderKeyContainCondition}
+     * @return условие для проверки содержимого ключа заголовка
      */
     public static Condition headerKeyContains(@NonNull String text) {
         return new HeaderKeyContainCondition(text);
     }
 
     /**
-     * Проверка, что ключ заголовка записи не содержит указанный текст.
+     * Проверяет, что ключ заголовка записи не содержит указанный текст.
      *
      * @param text текст для проверки
-     * @return условие {@link HeaderKeyContainNotCondition}
+     * @return условие для проверки отсутствия текста в ключе заголовка
      */
     public static Condition headerKeyNotContains(@NonNull String text) {
         return new HeaderKeyContainNotCondition(text);
     }
 
     /**
-     * Проверка, что значение заголовка записи равно ожидаемому значению.
-     *
-     * @param headerKey     ключ заголовка
-     * @param expectedValue ожидаемое значение заголовка
-     * @return условие {@link HeaderValueEqualCondition}
-     */
-    public static Condition headerValueEquals(@NonNull String headerKey, @NonNull String expectedValue) {
-        return new HeaderValueEqualCondition(headerKey, expectedValue);
-    }
-
-    /**
-     * Проверка, что значение заголовка записи содержит указанный текст.
+     * Проверяет, что значение заголовка записи содержит указанный текст.
      *
      * @param headerKey ключ заголовка
      * @param text      текст для проверки
-     * @return условие {@link HeaderValueContainCondition}
+     * @return условие для проверки содержимого значения заголовка
      */
     public static Condition headerValueContains(@NonNull String headerKey, @NonNull String text) {
         return new HeaderValueContainCondition(headerKey, text);
     }
 
     /**
-     * Проверка, что значение заголовка записи не содержит указанный текст.
+     * Проверяет, что значение заголовка записи не содержит указанный текст.
      *
      * @param headerKey ключ заголовка
      * @param text      текст для проверки
-     * @return условие {@link HeaderValueContainNotCondition}
+     * @return условие для проверки отсутствия текста в значении заголовка
      */
     public static Condition headerValueNotContains(@NonNull String headerKey, @NonNull String text) {
         return new HeaderValueContainNotCondition(headerKey, text);
     }
 
     /**
-     * Проверка, что значение записи равно ожидаемому значению.
+     * Проверяет, что значение заголовка записи равно ожидаемому значению.
      *
-     * @param expectedValue ожидаемое значение
-     * @return условие {@link ValueEqualCondition}
+     * @param headerKey     ключ заголовка
+     * @param expectedValue ожидаемое значение заголовка
+     * @return условие для проверки равенства значения заголовка
      */
-    public static Condition valueEquals(@NonNull String expectedValue) {
-        return new ValueEqualCondition(expectedValue);
+    public static Condition headerValueEquals(@NonNull String headerKey, @NonNull String expectedValue) {
+        return new HeaderValueEqualCondition(headerKey, expectedValue);
     }
 
     /**
-     * Проверка, что значение записи содержит указанный текст.
+     * Проверяет, что ключ записи равен ожидаемому значению.
      *
-     * @param text текст для проверки
-     * @return условие {@link ValueContainCondition}
+     * @param expectedKey ожидаемый ключ
+     * @return условие для проверки равенства ключа
      */
-    public static Condition valueContains(@NonNull String text) {
-        return new ValueContainCondition(text);
+    public static Condition keyEquals(@NonNull String expectedKey) {
+        return new KeyEqualCondition(expectedKey);
     }
 
     /**
-     * Проверка, что значение записи содержит все указанные тексты.
-     *
-     * @param texts список текстов для проверки
-     * @return условие {@link ValueContainsCondition}
-     */
-    public static Condition valueContains(@NonNull List<String> texts) {
-        return new ValueContainsCondition(texts);
-    }
-
-    /**
-     * Проверка, что значение записи содержит хотя бы один из указанных текстов.
-     *
-     * @param texts список текстов для проверки
-     * @return условие {@link ValueContainsAnyCondition}
-     */
-    public static Condition valueContainsAny(@NonNull List<String> texts) {
-        return new ValueContainsAnyCondition(texts);
-    }
-
-    /**
-     * Проверка, что значение записи не содержит указанный текст.
+     * Проверяет, что ключ записи содержит указанный текст.
      *
      * @param text текст для проверки
-     * @return условие {@link ValueContainNotCondition}
+     * @return условие для проверки содержимого ключа
      */
-    public static Condition valueNotContains(@NonNull String text) {
-        return new ValueContainNotCondition(text);
+    public static Condition keyContains(@NonNull String text) {
+        return new KeyContainCondition(text);
     }
 
     /**
-     * Проверка, что значение записи не содержит все указанные тексты.
+     * Проверяет, что ключ записи не содержит указанный текст.
      *
-     * @param texts список текстов для проверки
-     * @return условие {@link ValueContainsNotCondition}
+     * @param text текст для проверки
+     * @return условие для проверки отсутствия текста в ключе
      */
-    public static Condition valueNotContains(@NonNull List<String> texts) {
-        return new ValueContainsNotCondition(texts);
+    public static Condition keyNotContains(@NonNull String text) {
+        return new KeyContainNotCondition(text);
     }
 
     /**
-     * Проверка значения записи с помощью JSONPath.
+     * Проверяет значение записи с помощью JSONPath.
      *
      * @param jsonPath      JSONPath выражение
      * @param expectedValue ожидаемое значение
-     * @return условие {@link ValueJsonPathEqualCondition}
+     * @return условие для проверки значения по JSONPath
      */
     public static Condition valueJsonPathEquals(@NonNull String jsonPath, @NonNull String expectedValue) {
         return new ValueJsonPathEqualCondition(jsonPath, expectedValue);
     }
 
     /**
-     * Проверка, что значение записи содержит указанный текст по JSONPath.
+     * Проверяет, что значение записи содержит указанный текст по JSONPath.
      *
      * @param jsonPath      JSONPath выражение
      * @param expectedValue ожидаемый текст
-     * @return условие {@link ValueJsonPathContainCondition}
+     * @return условие для проверки содержания по JSONPath
      */
     public static Condition valueJsonPathContains(@NonNull String jsonPath, @NonNull String expectedValue) {
         return new ValueJsonPathContainCondition(jsonPath, expectedValue);
     }
 
     /**
-     * Проверка, что значение записи не содержит указанный текст по JSONPath.
+     * Проверяет, что значение записи не содержит указанный текст по JSONPath.
      *
      * @param jsonPath JSONPath выражение
      * @param text     текст для проверки
-     * @return условие {@link ValueJsonPathContainNotCondition}
+     * @return условие для проверки отсутствия текста по JSONPath
      */
     public static Condition valueJsonPathNotContains(@NonNull String jsonPath, @NonNull String text) {
         return new ValueJsonPathContainNotCondition(jsonPath, text);
     }
 
     /**
-     * Проверка, что значение записи соответствует регулярному выражению по JSONPath.
+     * Проверяет, что значение записи соответствует регулярному выражению по JSONPath.
      *
      * @param jsonPath JSONPath выражение
      * @param regex    регулярное выражение
-     * @return условие {@link ValueJsonPathMatchesRegexCondition}
+     * @return условие для проверки значения по регулярному выражению
      */
     public static Condition valueJsonPathMatchesRegex(@NonNull String jsonPath, @NonNull String regex) {
         return new ValueJsonPathMatchesRegexCondition(jsonPath, regex);
     }
 
     /**
-     * Проверка, что значение по JSONPath является строкой.
+     * Проверяет, что значение записи содержит все указанные тексты.
      *
-     * @param jsonPath JSONPath выражение
-     * @return условие {@link ValueJsonPathIsStringCondition}
+     * @param texts список текстов для проверки
+     * @return условие для проверки содержимого значения
      */
-    public static Condition valueJsonPathIsString(@NonNull String jsonPath) {
-        return new ValueJsonPathIsStringCondition(jsonPath);
+    public static Condition valueContains(@NonNull List<String> texts) {
+        return new ValueContainsCondition(texts);
     }
 
     /**
-     * Проверка, что значение по JSONPath является числом.
+     * Проверяет, что значение записи содержит хотя бы один из указанных текстов.
      *
-     * @param jsonPath JSONPath выражение
-     * @return условие {@link ValueJsonPathIsNumberCondition}
+     * @param texts список текстов для проверки
+     * @return условие для проверки наличия любого текста в значении
      */
-    public static Condition valueJsonPathIsNumber(@NonNull String jsonPath) {
-        return new ValueJsonPathIsNumberCondition(jsonPath);
+    public static Condition valueContainsAny(@NonNull List<String> texts) {
+        return new ValueContainsAnyCondition(texts);
     }
 
     /**
-     * Проверка, что значение по JSONPath является булевым значением.
+     * Проверяет, что значение записи содержит указанный текст.
+     *
+     * @param text текст для проверки
+     * @return условие для проверки содержимого значения
+     */
+    public static Condition valueContains(@NonNull String text) {
+        return new ValueContainCondition(text);
+    }
+
+    /**
+     * Проверяет, что значение записи не содержит указанный текст.
+     *
+     * @param text текст для проверки
+     * @return условие для проверки отсутствия текста в значении
+     */
+    public static Condition valueNotContains(@NonNull String text) {
+        return new ValueContainNotCondition(text);
+    }
+
+    /**
+     * Проверяет, что значение записи не содержит все указанные тексты.
+     *
+     * @param texts список текстов для проверки
+     * @return условие для проверки отсутствия всех текстов в значении
+     */
+    public static Condition valueNotContains(@NonNull List<String> texts) {
+        return new ValueContainsNotCondition(texts);
+    }
+
+    /**
+     * Проверяет, что значение записи равно ожидаемому значению.
+     *
+     * @param expectedValue ожидаемое значение
+     * @return условие для проверки равенства значения
+     */
+    public static Condition valueEquals(@NonNull String expectedValue) {
+        return new ValueEqualCondition(expectedValue);
+    }
+
+    /**
+     * Проверяет, что значение по JSONPath является булевым значением.
      *
      * @param jsonPath JSONPath выражение
-     * @return условие {@link ValueJsonPathIsBooleanCondition}
+     * @return условие для проверки типа булевого значения по JSONPath
      */
     public static Condition valueJsonPathIsBoolean(@NonNull String jsonPath) {
         return new ValueJsonPathIsBooleanCondition(jsonPath);
     }
 
     /**
-     * Проверка, что значение по JSONPath является массивом.
+     * Проверяет, что значение по JSONPath является числом.
      *
      * @param jsonPath JSONPath выражение
-     * @return условие {@link ValueJsonPathIsArrayCondition}
+     * @return условие для проверки типа числа по JSONPath
+     */
+    public static Condition valueJsonPathIsNumber(@NonNull String jsonPath) {
+        return new ValueJsonPathIsNumberCondition(jsonPath);
+    }
+
+    /**
+     * Проверяет, что значение по JSONPath является строкой.
+     *
+     * @param jsonPath JSONPath выражение
+     * @return условие для проверки типа строки по JSONPath
+     */
+    public static Condition valueJsonPathIsString(@NonNull String jsonPath) {
+        return new ValueJsonPathIsStringCondition(jsonPath);
+    }
+
+    /**
+     * Проверяет, что значение по JSONPath является массивом.
+     *
+     * @param jsonPath JSONPath выражение
+     * @return условие для проверки типа массива по JSONPath
      */
     public static Condition valueJsonPathIsArray(@NonNull String jsonPath) {
         return new ValueJsonPathIsArrayCondition(jsonPath);
     }
 
     /**
-     * Проверка размера массива по JSONPath.
+     * Проверяет размер массива по JSONPath.
      *
      * @param jsonPath     JSONPath выражение
      * @param expectedSize ожидаемый размер массива
-     * @return условие {@link ValueJsonPathArraySizeCondition}
+     * @return условие для проверки размера массива
      */
     public static Condition valueJsonPathArraySize(@NonNull String jsonPath, int expectedSize) {
         return new ValueJsonPathArraySizeCondition(jsonPath, expectedSize);
     }
 
     /**
-     * Проверка порядка слов в значении записи.
+     * Проверяет порядок слов в значении записи.
      *
      * @param words список слов для проверки порядка
-     * @return условие {@link ValueWordsOrderCondition}
+     * @return условие для проверки порядка слов в значении
      */
     public static Condition valueWordsOrder(@NonNull List<String> words) {
         return new ValueWordsOrderCondition(words);

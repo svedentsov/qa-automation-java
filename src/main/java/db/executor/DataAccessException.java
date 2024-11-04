@@ -4,6 +4,7 @@ package db.executor;
  * Исключение, выбрасываемое при ошибках доступа к данным.
  */
 public class DataAccessException extends RuntimeException {
+
     /**
      * Конструктор исключения DataAccessException.
      *

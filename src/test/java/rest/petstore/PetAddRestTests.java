@@ -36,7 +36,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет успешное добавление нового питомца в магазин c минимальным набором полей")
     public void createPetWithMinDataPetTest() {
         // Act, Assert
-        petStore.petSteps().createPetSuccessfully(minDataPet);
+        petStore.petSteps()
+                .createPetSuccessfully(minDataPet);
     }
 
     @Test
@@ -45,7 +46,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет успешное добавление нового питомца в магазин c максимальным набором полей")
     public void createPetWithFullDataPetTest() {
         // Act, Assert
-        petStore.petSteps().createPetSuccessfully(fullDataPet);
+        petStore.petSteps()
+                .createPetSuccessfully(fullDataPet);
     }
 
     @Test
@@ -54,7 +56,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет обработку некорректного тела запроса при добавлении питомца")
     public void createPetWithIncorrectJsonTest() {
         // Act, Assert
-        petStore.petSteps().postBadRequest(incorrectJson);
+        petStore.petSteps()
+                .postBadRequest(incorrectJson);
     }
 
     @Test
@@ -63,13 +66,16 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет успешное удаление питомца из магазина")
     public void deletePetTest() {
         // Arrange
-        Pet createdPet = petStore.petSteps().createPetSuccessfully(fullDataPet);
+        Pet createdPet = petStore.petSteps()
+                .createPetSuccessfully(fullDataPet);
 
         // Act
-        petStore.petSteps().deletePetById(createdPet.id());
+        petStore.petSteps().
+                deletePetById(createdPet.id());
 
         // Assert
-        petStore.petSteps().getNotFoundPetById(createdPet.id());
+        petStore.petSteps()
+                .getNotFoundPetById(createdPet.id());
     }
 
     @Test
@@ -78,7 +84,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет удаление из магазина несуществующему питомца по ID")
     public void deleteNotFoundPetTest() {
         // Act, Assert
-        petStore.petSteps().deleteNotFoundPetById(notFoundId);
+        petStore.petSteps()
+                .deleteNotFoundPetById(notFoundId);
     }
 
     @Test
@@ -87,10 +94,12 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет получение правильного питомца по указанному ID")
     public void getPetByIdTest() {
         // Arrange
-        Pet createdPet = petStore.petSteps().createPetSuccessfully(fullDataPet);
+        Pet createdPet = petStore.petSteps()
+                .createPetSuccessfully(fullDataPet);
 
         // Act, Assert
-        petStore.petSteps().assertPetData(createdPet);
+        petStore.petSteps()
+                .assertPetData(createdPet);
     }
 
     @Test
@@ -99,7 +108,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет получение из магазина несуществующего питомца по ID")
     public void getNotFoundPetTest() {
         // Act, Assert
-        petStore.petSteps().getNotFoundPetById(notFoundId);
+        petStore.petSteps()
+                .getNotFoundPetById(notFoundId);
     }
 
     @Test
@@ -108,7 +118,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет корректное обновление существующего питомца")
     public void updateFullDataPetTest() {
         // Arrange
-        petStore.petSteps().createPetSuccessfully(fullDataPet);
+        petStore.petSteps()
+                .createPetSuccessfully(fullDataPet);
 
         // Act
         petStore.petSteps()
@@ -133,7 +144,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет обработку некорректного тела запроса методом PUT")
     public void putIncorrectJsonTest() {
         // Act, Assert
-        petStore.petSteps().putBadRequest(incorrectJson);
+        petStore.petSteps()
+                .putBadRequest(incorrectJson);
     }
 
     @Test
@@ -142,7 +154,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет корректный поиск питомцев по их статусу")
     public void findPetsByStatusTest() {
         // Act, Assert
-        petStore.petSteps().findPetsByStatus(AVAILABLE);
+        petStore.petSteps()
+                .findPetsByStatus(AVAILABLE);
     }
 
     @Test
@@ -151,7 +164,8 @@ public class PetAddRestTests extends RestTest {
     @Description("Проверяет корректное обновление питомца с использованием формы")
     public void updatePetWithFormTest() {
         // Arrange
-        petStore.petSteps().createPetSuccessfully(fullDataPet);
+        petStore.petSteps()
+                .createPetSuccessfully(fullDataPet);
 
         // Act
         petStore.petSteps()

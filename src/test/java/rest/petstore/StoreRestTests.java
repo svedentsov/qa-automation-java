@@ -29,14 +29,18 @@ public class StoreRestTests extends RestTest {
     @Description("Проверяет успешное удаление заказа по его идентификатору")
     public void deleteOrderTest() {
         // Arrange
-        Pet createdPet = petStore.petSteps().createPetSuccessfully(minDataPet);
-        Order placedOrder = petStore.storeSteps().placeOrder(order.petId(createdPet.id()));
+        Pet createdPet = petStore.petSteps()
+                .createPetSuccessfully(minDataPet);
+        Order placedOrder = petStore.storeSteps()
+                .placeOrder(order.petId(createdPet.id()));
 
         // Act
-        petStore.storeSteps().deleteOrder(placedOrder.id());
+        petStore.storeSteps()
+                .deleteOrder(placedOrder.id());
 
         // Assert
-        petStore.storeSteps().getNotFoundOrderById(placedOrder.id());
+        petStore.storeSteps()
+                .getNotFoundOrderById(placedOrder.id());
     }
 
     @Test
@@ -45,10 +49,12 @@ public class StoreRestTests extends RestTest {
     @Description("Проверяет получение корректного количества питомцев в магазине")
     public void getInventoryTest() {
         // Act
-        Map<String, Object> inventory = petStore.storeSteps().getInventory();
+        Map<String, Object> inventory = petStore.storeSteps()
+                .getInventory();
 
         // Assert
-        petStore.storeSteps().assertInventoryAvailable(inventory);
+        petStore.storeSteps()
+                .assertInventoryAvailable(inventory);
     }
 
     @Test
@@ -57,11 +63,14 @@ public class StoreRestTests extends RestTest {
     @Description("Проверяет успешный поиск заказа по его идентификатору")
     public void getOrderByIdTest() {
         // Arrange
-        Pet createdPet = petStore.petSteps().createPetSuccessfully(minDataPet);
-        Order placedOrder = petStore.storeSteps().placeOrder(order.petId(createdPet.id()));
+        Pet createdPet = petStore.petSteps()
+                .createPetSuccessfully(minDataPet);
+        Order placedOrder = petStore.storeSteps()
+                .placeOrder(order.petId(createdPet.id()));
 
         // Act
-        Order fetchedOrder = petStore.storeSteps().getOrderById(placedOrder.id());
+        Order fetchedOrder = petStore.storeSteps()
+                .getOrderById(placedOrder.id());
 
         // Assert
         petStore.storeSteps()
@@ -75,11 +84,13 @@ public class StoreRestTests extends RestTest {
     @Description("Проверяет успешное оформление заказа на питомца")
     public void placeOrderTest() {
         // Arrange
-        Pet createdPet = petStore.petSteps().createPetSuccessfully(minDataPet);
+        Pet createdPet = petStore.petSteps()
+                .createPetSuccessfully(minDataPet);
         Order newOrder = order.petId(createdPet.id());
 
         // Act
-        Order placedOrder = petStore.storeSteps().placeOrder(newOrder);
+        Order placedOrder = petStore.storeSteps()
+                .placeOrder(newOrder);
 
         // Assert
         petStore.storeSteps()

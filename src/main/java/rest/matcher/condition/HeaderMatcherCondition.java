@@ -6,24 +6,21 @@ import org.hamcrest.Matcher;
 import rest.matcher.Condition;
 
 /**
- * Класс, представляющий условие проверки заголовка в ответе с использованием {@link Matcher}.
- * Этот класс реализует интерфейс {@link Condition}, предоставляя функциональность
- * проверки того, соответствует ли заголовок с именем {@link #headerName} ожидаемому значению,
- * заданному с помощью {@link #matcher}.
+ * Условие для проверки значения заголовка с использованием Hamcrest Matcher.
  */
 @AllArgsConstructor
 public class HeaderMatcherCondition implements Condition {
 
-    private String headerName;
-    private Matcher matcher;
+    private final String headerName;
+    private final Matcher<?> matcher;
 
     @Override
     public void check(Response response) {
-        response.then().assertThat().header(headerName, matcher);
+        response.then().header(headerName, matcher);
     }
 
     @Override
     public String toString() {
-        return "Заголовок \"" + headerName + "\" " + matcher.toString();
+        return String.format("Значение заголовка '%s' соответствует условию: %s", headerName, matcher);
     }
 }

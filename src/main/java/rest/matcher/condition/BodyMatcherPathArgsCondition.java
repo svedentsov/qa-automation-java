@@ -9,24 +9,22 @@ import rest.matcher.Condition;
 import java.util.List;
 
 /**
- * Класс, представляющий условие проверки определенного поля тела ответа с использованием пути, списка аргументов и Hamcrest Matcher.
- * Данный класс реализует интерфейс {@link Condition}, предоставляя функциональность
- * проверки поля тела ответа, определенного путем {@link #path}, с использованием переданного списка {@link Argument} и {@link Matcher}.
+ * Условие для проверки определенного пути в теле ответа с использованием списка аргументов и Hamcrest Matcher.
  */
 @AllArgsConstructor
 public class BodyMatcherPathArgsCondition implements Condition {
 
-    private String path;
-    private List<Argument> arguments;
-    private Matcher matcher;
+    private final String path;
+    private final List<Argument> arguments;
+    private final Matcher<?> matcher;
 
     @Override
     public void check(Response response) {
-        response.then().assertThat().body(path, arguments, matcher);
+        response.then().body(path, arguments, matcher);
     }
 
     @Override
     public String toString() {
-        return "Поле тела ответа " + path + " с аргументами: \"" + arguments.toString() + "\" должно соответствовать условию: " + matcher;
+        return String.format("Путь в теле ответа '%s' с аргументами %s соответствует условию: %s", path, arguments, matcher);
     }
 }

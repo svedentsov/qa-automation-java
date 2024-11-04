@@ -21,21 +21,19 @@ import java.util.concurrent.CompletableFuture;
 public class DbSteps {
 
     private final SessionFactory sessionFactory;
-    private final SessionFactory sessionFactoryDb1;
 
     /**
      * Конструктор класса DbSteps.
      * Инициализирует SessionFactory для работы с базой данных.
      */
     public DbSteps() {
-        sessionFactoryDb1 = SessionFactoryProvider.getSessionFactory(DatabaseType.DB1);
-
         // Настройка Hibernate и создание SessionFactory
         Configuration configuration = new Configuration().configure();
 
         // Добавление аннотированных классов сущностей
         configuration.addAnnotatedClass(MyEntity.class);
-        sessionFactory = configuration.buildSessionFactory();
+//        sessionFactory = configuration.buildSessionFactory();
+        sessionFactory = SessionFactoryProvider.getSessionFactory(DatabaseType.DB1);
     }
 
     @Step("Демонстрация CRUD операций")
@@ -207,7 +205,7 @@ public class DbSteps {
                 });
     }
 
-    @Step("Завершения работы и закрытие SessionFactory")
+    @Step("Завершение работы и закрытие SessionFactory")
     public void shutdown() {
         if (sessionFactory != null) {
             sessionFactory.close();
