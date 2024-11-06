@@ -25,6 +25,6 @@ public class RecordCountEqualConditions implements Conditions {
 
     @Override
     public String toString() {
-        return "Условие, что количество записей равно " + count;
+        return String.format("Условие, что количество записей равно %d", count);
     }
 }

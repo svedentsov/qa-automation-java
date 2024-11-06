@@ -22,6 +22,6 @@ public class ValueContainNotCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие проверки, что значение записи не содержит текст: " + text;
+        return String.format("Условие проверки, что значение записи не содержит текст: %s", text);
     }
 }

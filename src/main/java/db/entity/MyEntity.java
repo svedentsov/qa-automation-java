@@ -1,10 +1,12 @@
 package db.entity;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 
 @Data
+@Accessors(fluent = true)
 @Entity
 @Table(name = "my_entity")
 @NamedQueries({@NamedQuery(

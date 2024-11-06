@@ -26,6 +26,6 @@ public class ValueJsonPathContainCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Значение по JSONPath " + jsonPath + " должно содержать: " + expectedValue;
+        return String.format("Значение по JSONPath %s должно содержать: %s", jsonPath, expectedValue);
     }
 }

@@ -32,6 +32,6 @@ public class ValueWordsOrderCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Значение записи должно содержать слова в порядке: " + String.join(", ", words);
+        return String.format("Значение записи должно содержать слова в порядке: %s", String.join(", ", words));
     }
 }

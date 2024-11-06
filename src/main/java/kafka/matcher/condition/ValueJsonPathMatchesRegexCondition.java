@@ -29,6 +29,6 @@ public class ValueJsonPathMatchesRegexCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Значение по JSONPath " + jsonPath + " должно соответствовать регулярному выражению: " + regex;
+        return String.format("Значение по JSONPath %s должно соответствовать регулярному выражению: %s", jsonPath, regex);
     }
 }

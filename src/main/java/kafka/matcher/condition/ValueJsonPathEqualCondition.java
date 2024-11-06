@@ -8,8 +8,7 @@ import org.assertj.core.api.Assertions;
 
 /**
  * Проверка условия соответствия значения по JSONPath для записи Kafka.
- * Условие используется для валидации, что значение, полученное из JSON по указанному пути,
- * соответствует ожидаемому значению.
+ * Условие используется для валидации, что значение, полученное из JSON по указанному пути, соответствует ожидаемому значению.
  */
 @RequiredArgsConstructor
 public class ValueJsonPathEqualCondition implements Condition {
@@ -27,6 +26,6 @@ public class ValueJsonPathEqualCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие JSONPath с ожидаемым значением: " + expectedValue;
+        return String.format("Условие JSONPath с ожидаемым значением: %s", expectedValue);
     }
 }

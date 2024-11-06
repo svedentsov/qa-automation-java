@@ -29,6 +29,6 @@ public class HeaderContainCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие проверки, что заголовок записи содержит текст: " + text;
+        return String.format("Условие проверки, что заголовок записи содержит текст: %s", text);
     }
 }

@@ -23,6 +23,6 @@ public class ValueEqualCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие значения Kafka с ожидаемым значением: " + expectedValue;
+        return String.format("Условие значения Kafka с ожидаемым значением: %s", expectedValue);
     }
 }

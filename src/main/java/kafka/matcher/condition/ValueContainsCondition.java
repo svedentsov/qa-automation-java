@@ -27,6 +27,6 @@ public class ValueContainsCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие проверки, что сообщение содержит все тексты: " + texts;
+        return String.format("Условие проверки, что сообщение содержит все тексты: %s", texts);
     }
 }

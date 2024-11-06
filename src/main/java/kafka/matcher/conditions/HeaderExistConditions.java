@@ -38,6 +38,6 @@ public class HeaderExistConditions implements Conditions {
 
     @Override
     public String toString() {
-        return "Условие наличия записи с заголовком: " + headerKey + " и значением: " + headerValue;
+        return String.format("Условие наличия записи с заголовком: %s и значением: %s", headerKey, headerValue);
     }
 }

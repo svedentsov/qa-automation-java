@@ -30,6 +30,6 @@ public class HeaderValueContainNotCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие значения заголовка Kafka, не содержащего текст: " + text;
+        return String.format("Условие значения заголовка Kafka, не содержащего текст: %s", text);
     }
 }

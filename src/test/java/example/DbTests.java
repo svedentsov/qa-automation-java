@@ -1,4 +1,4 @@
-package db;
+package example;
 
 import db.entity.MyEntity;
 import db.matcher.ValidateEntities;
@@ -12,7 +12,7 @@ import java.util.Map;
 
 import static db.matcher.DbMatcher.*;
 
-public class ExampleUsage {
+public class DbTests {
 
     public void validateEntities(List<MyEntity> entities) throws Exception {
         // Проверка наличия хотя бы одной сущности
@@ -56,6 +56,9 @@ public class ExampleUsage {
         // Проверка, что свойство "name" содержит "Test"
         new ValidateEntity<>(entity)
                 .shouldHave(propertyContains("name", "Test"));
+
+        new ValidateEntity<>(entity)
+                .shouldHave(propertyContains(MyEntity::name, "Test"));
 
         // Проверка, что свойство "description" не содержит "Error"
         new ValidateEntity<>(entity)

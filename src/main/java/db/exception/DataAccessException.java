@@ -1,4 +1,4 @@
-package db.executor;
+package db.exception;
 
 /**
  * Исключение, выбрасываемое при ошибках доступа к данным.

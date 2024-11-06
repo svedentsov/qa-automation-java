@@ -42,20 +42,20 @@ public class DbSteps {
 
         // Создание новой сущности
         MyEntity newEntity = new MyEntity();
-        newEntity.setName("Test Entity");
-        newEntity.setStatus("ACTIVE");
+        newEntity.name("Test Entity");
+        newEntity.status("ACTIVE");
 
         // Сохранение сущности
         MyEntity savedEntity = dbExecutor.save(newEntity);
         log.info("Сохраненная сущность: {}", savedEntity);
 
         // Получение сущности по ID
-        Optional<MyEntity> optionalEntity = dbExecutor.getById(savedEntity.getId());
+        Optional<MyEntity> optionalEntity = dbExecutor.getById(savedEntity.id());
         optionalEntity.ifPresent(entity -> {
             log.info("Полученная сущность: {}", entity);
 
             // Обновление сущности
-            entity.setName("Updated Entity");
+            entity.name("Updated Entity");
             MyEntity updatedEntity = dbExecutor.update(entity);
             log.info("Обновленная сущность: {}", updatedEntity);
 
@@ -121,8 +121,8 @@ public class DbSteps {
         List<MyEntity> entities = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             MyEntity entity = new MyEntity();
-            entity.setName("Entity " + i);
-            entity.setStatus("ACTIVE");
+            entity.name("Entity " + i);
+            entity.status("ACTIVE");
             entities.add(entity);
         }
 

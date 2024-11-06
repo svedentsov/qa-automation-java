@@ -25,6 +25,6 @@ public class ValueJsonPathIsBooleanCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Значение по JSONPath " + jsonPath + " должно быть булевым значением";
+        return String.format("Значение по JSONPath %s должно быть булевым значением", jsonPath);
     }
 }

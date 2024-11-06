@@ -27,6 +27,6 @@ public class ValueJsonPathIsArrayCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Значение по JSONPath " + jsonPath + " должно быть массивом";
+        return String.format("Значение по JSONPath %s должно быть массивом", jsonPath);
     }
 }

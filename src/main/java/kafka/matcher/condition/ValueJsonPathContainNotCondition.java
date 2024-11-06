@@ -26,6 +26,6 @@ public class ValueJsonPathContainNotCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Значение по JSONPath " + jsonPath + " не должно содержать: " + text;
+        return String.format("Значение по JSONPath %s не должно содержать: %s", jsonPath, text);
     }
 }

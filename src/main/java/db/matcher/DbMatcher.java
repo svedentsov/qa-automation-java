@@ -8,6 +8,7 @@ import lombok.experimental.UtilityClass;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Утилитный класс для создания условий проверки сущностей базы данных.
@@ -137,6 +138,10 @@ public class DbMatcher {
      */
     public static <T> Condition<T> propertyContains(@NonNull String propertyName, @NonNull String text) {
         return new PropertyContainsCondition<>(propertyName, text);
+    }
+
+    public static <T> Condition<T> propertyContains(@NonNull Function<T, String> getter, @NonNull String text) {
+        return new PropertyContainsConditionNew<>(getter, text);
     }
 
     /**

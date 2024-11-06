@@ -1,4 +1,4 @@
-package rest;
+package example;
 
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -10,7 +10,7 @@ import java.time.Duration;
 import static org.hamcrest.Matchers.*;
 import static rest.matcher.RestMatcher.*;
 
-public class RestApiTest {
+public class RestTests {
 
     public void testApiResponse() {
         Response response = RestAssured.get("https://api.example.com/data");

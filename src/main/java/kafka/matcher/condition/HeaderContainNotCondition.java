@@ -29,6 +29,6 @@ public class HeaderContainNotCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие проверки, что заголовок записи не содержит текст: " + text;
+        return String.format("Условие проверки, что заголовок записи не содержит текст: %s", text);
     }
 }

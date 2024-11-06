@@ -31,6 +31,6 @@ public class HeaderEqualCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие заголовка Kafka с ожидаемым значением: " + expectedValue;
+        return String.format("Условие заголовка Kafka с ожидаемым значением: %s", expectedValue);
     }
 }

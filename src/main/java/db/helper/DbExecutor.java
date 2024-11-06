@@ -1,13 +1,12 @@
 package db.helper;
 
-import db.executor.DataAccessException;
+import db.exception.DataAccessException;
 import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.*;
 import org.hibernate.query.NativeQuery;
 
 import javax.persistence.LockModeType;
-import javax.persistence.StoredProcedureQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Order;

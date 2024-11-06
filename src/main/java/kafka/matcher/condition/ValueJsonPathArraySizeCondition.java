@@ -28,6 +28,6 @@ public class ValueJsonPathArraySizeCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Размер массива по JSONPath " + jsonPath + " должен быть " + expectedSize;
+        return String.format("Размер массива по JSONPath %s должен быть %d", jsonPath, expectedSize);
     }
 }

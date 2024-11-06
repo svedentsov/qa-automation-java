@@ -22,6 +22,6 @@ public class KeyContainNotCondition implements Condition {
 
     @Override
     public String toString() {
-        return "Условие проверки, что ключ записи не содержит текст: " + text;
+        return String.format("Условие проверки, что ключ записи не содержит текст: %s", text);
     }
 }
