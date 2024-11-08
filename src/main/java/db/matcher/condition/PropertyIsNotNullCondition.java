@@ -1,9 +1,9 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
+
+import java.util.function.Function;
 
 /**
  * Проверка, что свойство не является null.
@@ -13,18 +13,18 @@ import org.assertj.core.api.Assertions;
 @RequiredArgsConstructor
 public class PropertyIsNotNullCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, ?> getter;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object actualValue = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        Object actualValue = getter.apply(entity);
         Assertions.assertThat(actualValue)
-                .as("Проверка, что свойство '%s' не является null", propertyName)
+                .as("Проверка, что значение не является null")
                 .isNotNull();
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' не является null", propertyName);
+        return "Значение не является null";
     }
 }

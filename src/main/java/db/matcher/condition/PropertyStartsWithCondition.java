@@ -1,9 +1,9 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
+
+import java.util.function.Function;
 
 /**
  * Проверка, что строковое свойство начинается с указанного префикса.
@@ -13,22 +13,22 @@ import org.assertj.core.api.Assertions;
 @RequiredArgsConstructor
 public class PropertyStartsWithCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, String> getter;
     private final String prefix;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object value = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        String value = getter.apply(entity);
         Assertions.assertThat(value)
-                .as("Свойство '%s' должно быть строкой", propertyName)
+                .as("Значение должно быть строкой")
                 .isInstanceOf(String.class);
-        Assertions.assertThat((String) value)
-                .as("Проверка, что свойство '%s' начинается с '%s'", propertyName, prefix)
+        Assertions.assertThat(value)
+                .as("Проверка, что значение начинается с '%s'", prefix)
                 .startsWith(prefix);
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' начинается с '%s'", propertyName, prefix);
+        return String.format("Значение начинается с '%s'", prefix);
     }
 }

@@ -1,9 +1,9 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
+
+import java.util.function.Function;
 
 /**
  * Проверка, что свойство является подклассом указанного типа или реализует указанный интерфейс.
@@ -13,22 +13,22 @@ import org.assertj.core.api.Assertions;
 @RequiredArgsConstructor
 public class PropertyIsAssignableFromCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, ?> getter;
     private final Class<?> expectedSuperType;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object value = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        Object value = getter.apply(entity);
         Assertions.assertThat(value)
-                .as("Свойство '%s' не должно быть null", propertyName)
+                .as("Значение не должно быть null")
                 .isNotNull();
         Assertions.assertThat(expectedSuperType.isAssignableFrom(value.getClass()))
-                .as("Свойство '%s' должно быть подклассом %s", propertyName, expectedSuperType.getName())
+                .as("Значение должно быть подклассом %s", expectedSuperType.getName())
                 .isTrue();
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' является подклассом %s", propertyName, expectedSuperType.getName());
+        return String.format("Значение является подклассом %s", expectedSuperType.getName());
     }
 }

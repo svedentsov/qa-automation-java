@@ -1,9 +1,9 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
+
+import java.util.function.Function;
 
 /**
  * Проверка, что свойство сущности равно ожидаемому значению.
@@ -13,19 +13,19 @@ import org.assertj.core.api.Assertions;
 @RequiredArgsConstructor
 public class PropertyEqualCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, ?> getter;
     private final Object expectedValue;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object actualValue = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        Object actualValue = getter.apply(entity);
         Assertions.assertThat(actualValue)
-                .as("Проверка, что свойство '%s' равно '%s'", propertyName, expectedValue)
+                .as("Проверка, что значение равно '%s'", expectedValue)
                 .isEqualTo(expectedValue);
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' равно '%s'", propertyName, expectedValue);
+        return String.format("Значение равно '%s'", expectedValue);
     }
 }

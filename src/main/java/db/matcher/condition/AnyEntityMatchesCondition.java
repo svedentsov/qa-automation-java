@@ -1,7 +1,5 @@
-package db.matcher.conditions;
+package db.matcher.condition;
 
-import db.matcher.Condition;
-import db.matcher.Conditions;
 import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.Assertions;
 
@@ -18,7 +16,7 @@ public class AnyEntityMatchesCondition<T> implements Conditions<T> {
     private final Condition<T> condition;
 
     @Override
-    public void check(List<T> entities) throws Exception {
+    public void check(List<T> entities) {
         boolean matchFound = false;
         for (T entity : entities) {
             try {
@@ -26,7 +24,7 @@ public class AnyEntityMatchesCondition<T> implements Conditions<T> {
                 matchFound = true;
                 break;
             } catch (Exception e) {
-                throw e;
+                throw e; // Ожидаемое поведение, если сущность не соответствует условию
             }
         }
         Assertions.assertThat(matchFound)

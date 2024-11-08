@@ -1,7 +1,5 @@
-package db.matcher.conditions;
+package db.matcher.condition;
 
-import db.matcher.Condition;
-import db.matcher.Conditions;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
@@ -17,7 +15,7 @@ public class AllEntitiesMatchCondition<T> implements Conditions<T> {
     private final Condition<T> condition;
 
     @Override
-    public void check(List<T> entities) throws Exception {
+    public void check(List<T> entities) {
         for (T entity : entities) {
             condition.check(entity);
         }

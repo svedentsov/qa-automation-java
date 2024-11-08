@@ -1,11 +1,10 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * Проверка, что длина свойства меньше заданного значения.
@@ -15,21 +14,21 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class PropertyLengthLessThanCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, ?> getter;
     private final int maxLength;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object value = PropertyUtils.getProperty(entity, propertyName);
-        int actualLength = getLength(value, propertyName);
+    public void check(T entity) {
+        Object value = getter.apply(entity);
+        int actualLength = getLength(value);
         Assertions.assertThat(actualLength)
-                .as("Длина свойства '%s' должна быть меньше %d", propertyName, maxLength)
+                .as("Длина значения должна быть меньше %d", maxLength)
                 .isLessThan(maxLength);
     }
 
-    private int getLength(Object value, String propertyName) {
+    private int getLength(Object value) {
         Assertions.assertThat(value)
-                .as("Свойство '%s' не должно быть null", propertyName)
+                .as("Значение не должно быть null")
                 .isNotNull();
 
         if (value instanceof String) {
@@ -39,12 +38,12 @@ public class PropertyLengthLessThanCondition<T> implements Condition<T> {
         } else if (value.getClass().isArray()) {
             return ((Object[]) value).length;
         } else {
-            throw new IllegalArgumentException(String.format("Свойство '%s' не является строкой, коллекцией или массивом", propertyName));
+            throw new IllegalArgumentException("Значение не является строкой, коллекцией или массивом");
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Длина свойства '%s' меньше %d", propertyName, maxLength);
+        return String.format("Длина значения меньше %d", maxLength);
     }
 }

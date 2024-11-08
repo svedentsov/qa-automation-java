@@ -1,9 +1,9 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
+
+import java.util.function.Function;
 
 /**
  * Проверка, что строковое свойство заканчивается указанным суффиксом.
@@ -13,22 +13,22 @@ import org.assertj.core.api.Assertions;
 @RequiredArgsConstructor
 public class PropertyEndsWithCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, String> getter;
     private final String suffix;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object actualValue = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        String actualValue = getter.apply(entity);
         Assertions.assertThat(actualValue)
-                .as("Свойство '%s' должно быть строкой", propertyName)
+                .as("Значение должно быть строкой")
                 .isInstanceOf(String.class);
-        Assertions.assertThat((String) actualValue)
-                .as("Проверка, что свойство '%s' заканчивается на '%s'", propertyName, suffix)
+        Assertions.assertThat(actualValue)
+                .as("Проверка, что значение заканчивается на '%s'", suffix)
                 .endsWith(suffix);
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' заканчивается на '%s'", propertyName, suffix);
+        return String.format("Значение заканчивается на '%s'", suffix);
     }
 }

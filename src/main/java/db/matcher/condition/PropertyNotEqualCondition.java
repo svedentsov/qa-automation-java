@@ -1,9 +1,9 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
+
+import java.util.function.Function;
 
 /**
  * Проверка, что свойство сущности не равно указанному значению.
@@ -13,19 +13,19 @@ import org.assertj.core.api.Assertions;
 @RequiredArgsConstructor
 public class PropertyNotEqualCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, ?> getter;
     private final Object unexpectedValue;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object actualValue = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        Object actualValue = getter.apply(entity);
         Assertions.assertThat(actualValue)
-                .as("Проверка, что свойство '%s' не равно '%s'", propertyName, unexpectedValue)
+                .as("Проверка, что значение не равно '%s'", unexpectedValue)
                 .isNotEqualTo(unexpectedValue);
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' не равно '%s'", propertyName, unexpectedValue);
+        return String.format("Значение не равно '%s'", unexpectedValue);
     }
 }

@@ -1,10 +1,9 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
 
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -15,23 +14,23 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class PropertyMatchesRegexCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, String> getter;
     private final String regex;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object actualValue = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        String actualValue = getter.apply(entity);
         Pattern pattern = Pattern.compile(regex);
         Assertions.assertThat(actualValue)
-                .as("Свойство '%s' должно быть строкой", propertyName)
+                .as("Значение должно быть строкой")
                 .isInstanceOf(String.class);
-        Assertions.assertThat((String) actualValue)
-                .as("Проверка, что свойство '%s' соответствует регулярному выражению '%s'", propertyName, regex)
+        Assertions.assertThat(actualValue)
+                .as("Проверка, что значение соответствует регулярному выражению '%s'", regex)
                 .matches(pattern);
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' соответствует регулярному выражению '%s'", propertyName, regex);
+        return String.format("Значение соответствует регулярному выражению '%s'", regex);
     }
 }

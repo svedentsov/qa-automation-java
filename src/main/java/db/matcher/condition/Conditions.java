@@ -1,4 +1,4 @@
-package db.matcher;
+package db.matcher.condition;
 
 import java.util.List;
 
@@ -13,7 +13,6 @@ public interface Conditions<T> {
      * Метод для проверки списка сущностей.
      *
      * @param entities список сущностей для проверки
-     * @throws Exception если происходит ошибка при проверке
      */
-    void check(List<T> entities) throws Exception;
+    void check(List<T> entities);
 }

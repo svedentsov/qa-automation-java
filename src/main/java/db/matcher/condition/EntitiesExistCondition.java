@@ -1,14 +1,15 @@
-package db.matcher.conditions;
+package db.matcher.condition;
 
-import db.matcher.Conditions;
 import org.assertj.core.api.Assertions;
 
 import java.util.List;
 
 /**
  * Проверка наличия хотя бы одной сущности в списке.
+ *
+ * @param <T> тип сущности
  */
-public class EntityExistsCondition<T> implements Conditions<T> {
+public class EntitiesExistCondition<T> implements Conditions<T> {
 
     @Override
     public void check(List<T> entities) {
@@ -19,6 +20,6 @@ public class EntityExistsCondition<T> implements Conditions<T> {
 
     @Override
     public String toString() {
-        return "Условие наличия хотя бы одной сущности";
+        return "Наличие хотя бы одной сущности";
     }
 }

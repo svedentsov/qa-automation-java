@@ -1,11 +1,10 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
 
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Проверка, что все указанные свойства имеют ожидаемые значения.
@@ -15,16 +14,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AllPropertiesEqualCondition<T> implements Condition<T> {
 
-    private final Map<String, Object> expectedProperties;
+    private final Map<Function<T, ?>, Object> expectedProperties;
 
     @Override
-    public void check(T entity) throws Exception {
-        for (Map.Entry<String, Object> entry : expectedProperties.entrySet()) {
-            String propertyName = entry.getKey();
+    public void check(T entity) {
+        for (Map.Entry<Function<T, ?>, Object> entry : expectedProperties.entrySet()) {
+            Function<T, ?> getter = entry.getKey();
             Object expectedValue = entry.getValue();
-            Object actualValue = PropertyUtils.getProperty(entity, propertyName);
+            Object actualValue = getter.apply(entity);
             Assertions.assertThat(actualValue)
-                    .as("Проверка, что свойство '%s' равно '%s'", propertyName, expectedValue)
+                    .as("Проверка, что значение равно '%s'", expectedValue)
                     .isEqualTo(expectedValue);
         }
     }

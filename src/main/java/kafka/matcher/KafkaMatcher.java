@@ -1,7 +1,6 @@
 package kafka.matcher;
 
 import kafka.matcher.condition.*;
-import kafka.matcher.conditions.*;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 

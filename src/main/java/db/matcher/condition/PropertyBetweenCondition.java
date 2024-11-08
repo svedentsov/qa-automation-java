@@ -1,11 +1,10 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
 
 import java.math.BigDecimal;
+import java.util.function.Function;
 
 /**
  * Проверка, что числовое свойство находится в заданном диапазоне.
@@ -15,24 +14,24 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PropertyBetweenCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, Number> getter;
     private final BigDecimal start;
     private final BigDecimal end;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object actualValue = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        Number actualValue = getter.apply(entity);
         Assertions.assertThat(actualValue)
-                .as("Свойство '%s' должно быть числом", propertyName)
+                .as("Значение должно быть числом")
                 .isInstanceOf(Number.class);
         BigDecimal actualNumber = new BigDecimal(actualValue.toString());
         Assertions.assertThat(actualNumber)
-                .as("Проверка, что свойство '%s' между '%s' и '%s'", propertyName, start, end)
+                .as("Проверка, что значение между '%s' и '%s'", start, end)
                 .isBetween(start, end);
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' между '%s' и '%s'", propertyName, start, end);
+        return String.format("Значение между '%s' и '%s'", start, end);
     }
 }

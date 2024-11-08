@@ -1,7 +1,5 @@
-package db.matcher.conditions;
+package db.matcher.condition;
 
-import db.matcher.Condition;
-import db.matcher.Conditions;
 import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.Assertions;
 
@@ -18,12 +16,12 @@ public class NoEntitiesMatchCondition<T> implements Conditions<T> {
     private final Condition<T> condition;
 
     @Override
-    public void check(List<T> entities) throws Exception {
+    public void check(List<T> entities) {
         for (T entity : entities) {
             try {
                 condition.check(entity);
                 Assertions.fail("Найдена сущность, соответствующая условию '%s'", condition);
-            } catch (AssertionError | Exception e) {
+            } catch (AssertionError e) {
                 // Ожидаемое поведение, сущность не должна соответствовать условию
             }
         }

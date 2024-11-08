@@ -1,11 +1,10 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
 
 import java.util.Collection;
+import java.util.function.Function;
 
 /**
  * Проверка, что длина свойства равна заданному значению.
@@ -15,21 +14,21 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class PropertyLengthEqualCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, ?> getter;
     private final int expectedLength;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object value = PropertyUtils.getProperty(entity, propertyName);
-        int actualLength = getLength(value, propertyName);
+    public void check(T entity) {
+        Object value = getter.apply(entity);
+        int actualLength = getLength(value);
         Assertions.assertThat(actualLength)
-                .as("Длина свойства '%s' должна быть равна %d", propertyName, expectedLength)
+                .as("Длина значения должна быть равна %d", expectedLength)
                 .isEqualTo(expectedLength);
     }
 
-    private int getLength(Object value, String propertyName) {
+    private int getLength(Object value) {
         Assertions.assertThat(value)
-                .as("Свойство '%s' не должно быть null", propertyName)
+                .as("Значение не должно быть null")
                 .isNotNull();
 
         if (value instanceof String) {
@@ -39,12 +38,12 @@ public class PropertyLengthEqualCondition<T> implements Condition<T> {
         } else if (value.getClass().isArray()) {
             return ((Object[]) value).length;
         } else {
-            throw new IllegalArgumentException(String.format("Свойство '%s' не является строкой, коллекцией или массивом", propertyName));
+            throw new IllegalArgumentException("Значение не является строкой, коллекцией или массивом");
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Длина свойства '%s' равна %d", propertyName, expectedLength);
+        return String.format("Длина значения равна %d", expectedLength);
     }
 }

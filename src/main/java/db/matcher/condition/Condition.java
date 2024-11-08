@@ -1,4 +1,4 @@
-package db.matcher;
+package db.matcher.condition;
 
 /**
  * Интерфейс Condition для проверки одной сущности базы данных.
@@ -11,7 +11,6 @@ public interface Condition<T> {
      * Метод для проверки сущности.
      *
      * @param entity сущность для проверки
-     * @throws Exception если происходит ошибка при проверке
      */
-    void check(T entity) throws Exception;
+    void check(T entity);
 }

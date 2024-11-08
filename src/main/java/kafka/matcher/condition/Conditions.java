@@ -1,4 +1,4 @@
-package kafka.matcher;
+package kafka.matcher.condition;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 

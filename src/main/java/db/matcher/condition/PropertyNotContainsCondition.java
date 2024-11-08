@@ -1,9 +1,9 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.beanutils.PropertyUtils;
 import org.assertj.core.api.Assertions;
+
+import java.util.function.Function;
 
 /**
  * Проверка, что строковое свойство не содержит указанный текст.
@@ -13,22 +13,22 @@ import org.assertj.core.api.Assertions;
 @RequiredArgsConstructor
 public class PropertyNotContainsCondition<T> implements Condition<T> {
 
-    private final String propertyName;
+    private final Function<T, String> getter;
     private final String text;
 
     @Override
-    public void check(T entity) throws Exception {
-        Object actualValue = PropertyUtils.getProperty(entity, propertyName);
+    public void check(T entity) {
+        String actualValue = getter.apply(entity);
         Assertions.assertThat(actualValue)
-                .as("Свойство '%s' должно быть строкой", propertyName)
+                .as("Значение должно быть строкой")
                 .isInstanceOf(String.class);
-        Assertions.assertThat((String) actualValue)
-                .as("Проверка, что свойство '%s' не содержит '%s'", propertyName, text)
+        Assertions.assertThat(actualValue)
+                .as("Проверка, что значение не содержит '%s'", text)
                 .doesNotContain(text);
     }
 
     @Override
     public String toString() {
-        return String.format("Свойство '%s' не содержит '%s'", propertyName, text);
+        return String.format("Значение не содержит '%s'", text);
     }
 }
