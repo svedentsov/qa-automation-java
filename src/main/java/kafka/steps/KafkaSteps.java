@@ -4,10 +4,9 @@ import io.qameta.allure.Step;
 import kafka.enums.ConsumerType;
 import kafka.enums.ProducerType;
 import kafka.helper.KafkaExecutor;
-import kafka.matcher.ValidateRecord;
-import kafka.matcher.ValidateRecords;
-import kafka.matcher.condition.Condition;
-import kafka.matcher.condition.Conditions;
+import kafka.matcher.KafkaValidator;
+import kafka.matcher.Condition;
+import kafka.matcher.Conditions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -171,13 +170,13 @@ public class KafkaSteps {
     }
 
     @Step("Проверить запись на соответствие условиям")
-    public ValidateRecord validateRecord(ConsumerRecord<String, String> record) {
-        return new ValidateRecord(record);
+    public KafkaValidator validateRecord(ConsumerRecord<String, String> record) {
+        return new KafkaValidator(record);
     }
 
     @Step("Проверить записи на соответствие условиям")
-    public ValidateRecords validateRecords(List<ConsumerRecord<String, String>> records) {
-        return new ValidateRecords(records);
+    public KafkaValidator validateRecords(List<ConsumerRecord<String, String>> records) {
+        return new KafkaValidator(records);
     }
 
     @Step("Получить из топика '{topic}' запись соответствующую условию")

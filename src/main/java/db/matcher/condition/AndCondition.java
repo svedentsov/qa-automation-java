@@ -1,5 +1,7 @@
 package db.matcher.condition;
 
+import db.matcher.Condition;
+
 /**
  * Условие, объединяющее несколько условий с помощью логической операции AND.
  *

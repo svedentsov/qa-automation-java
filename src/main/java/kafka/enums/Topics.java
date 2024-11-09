@@ -9,7 +9,6 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public enum Topics {
-
     TOPIC_1("topic1"),
     TOPIC_2("topic2");
 

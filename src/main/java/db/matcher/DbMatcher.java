@@ -19,9 +19,7 @@ import java.util.function.Function;
 @UtilityClass
 public class DbMatcher {
 
-    // ===========================================================================
-    // Условия для списка сущностей (Conditions<T>)
-    // ===========================================================================
+    // ------------------- Условия для списка сущностей (Conditions<T>) -------------------
 
     /**
      * Проверяет наличие хотя бы одной сущности.
@@ -100,9 +98,7 @@ public class DbMatcher {
         return new EntitiesPropertyValuesEqualCondition<>(getter, expectedValue);
     }
 
-    // ===========================================================================
-    // Условия для свойств сущности (Condition<T>)
-    // ===========================================================================
+    // ------------------- Условия для свойств сущности (Condition<T>) -------------------
 
     /**
      * Проверяет, что все указанные свойства сущности равны ожидаемым значениям.
@@ -426,32 +422,6 @@ public class DbMatcher {
     }
 
     /**
-     * Проверяет, что свойство перечисление имеет определенное значение.
-     *
-     * @param getter        функция для получения значения свойства
-     * @param expectedValue ожидаемое значение перечисления
-     * @param <T>           тип сущности
-     * @param <E>           тип перечисления
-     * @return условие для проверки значения перечисления
-     */
-    public static <T, E extends Enum<E>> Condition<T> enumPropertyEquals(@NonNull Function<T, E> getter, @NonNull E expectedValue) {
-        return new PropertyEnumValueCondition<>(getter, expectedValue);
-    }
-
-    /**
-     * Проверяет вложенное свойство с указанным условием.
-     *
-     * @param getter          функция для получения вложенного свойства
-     * @param nestedCondition условие для проверки вложенного свойства
-     * @param <T>             тип сущности
-     * @param <R>             тип вложенной сущности
-     * @return условие для проверки вложенного свойства
-     */
-    public static <T, R> Condition<T> nestedProperty(@NonNull Function<T, R> getter, @NonNull Condition<R> nestedCondition) {
-        return new NestedPropertyCondition<>(getter, nestedCondition);
-    }
-
-    /**
      * Проверяет, что все элементы коллекции внутри сущности соответствуют условию.
      *
      * @param getter           функция для получения коллекции
@@ -464,9 +434,7 @@ public class DbMatcher {
         return new AllCollectionElementsMatchCondition<>(getter, elementCondition);
     }
 
-    // ===========================================================================
-    // Логические операции над условиями
-    // ===========================================================================
+    // ------------------- Логические операции над условиями -------------------
 
     /**
      * Объединяет несколько условий с помощью логической операции AND.

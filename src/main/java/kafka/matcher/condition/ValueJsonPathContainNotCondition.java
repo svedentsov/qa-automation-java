@@ -1,6 +1,7 @@
 package kafka.matcher.condition;
 
 import com.jayway.jsonpath.JsonPath;
+import kafka.matcher.Condition;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.Assertions;

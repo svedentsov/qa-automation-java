@@ -57,8 +57,5 @@ public enum MenuItems {
     TYPOS("Typos"),
     WYSIWYG_EDITOR("WYSIWYG Editor");
 
-    /**
-     * Отображаемое имя элемента меню.
-     */
     private final String displayName;
 }

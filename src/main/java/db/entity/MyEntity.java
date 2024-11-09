@@ -47,12 +47,6 @@ class Address {
     private String street;
 }
 
-enum Status {
-    ACTIVE,
-    INACTIVE,
-    PENDING
-}
-
 @Data
 class Role {
     private String name;
