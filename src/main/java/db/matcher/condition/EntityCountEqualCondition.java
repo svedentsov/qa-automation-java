@@ -1,6 +1,5 @@
 package db.matcher.condition;
 
-import db.matcher.Conditions;
 import lombok.RequiredArgsConstructor;
 import org.assertj.core.api.Assertions;
 

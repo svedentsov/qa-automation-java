@@ -1,7 +1,6 @@
 package kafka.matcher.condition;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import kafka.matcher.Condition;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.Assertions;
 

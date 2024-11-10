@@ -93,6 +93,7 @@ dependencies { // Зависимости проекта
 
     // REST и HTTP-клиенты
     implementation "io.rest-assured:rest-assured:${restAssuredVersion}"
+    implementation "io.rest-assured:json-schema-validator:${restAssuredVersion}"
     implementation "com.squareup.retrofit2:retrofit:${retrofitVersion}"
     implementation "com.squareup.retrofit2:converter-jackson:${retrofitVersion}"
     implementation "com.squareup.okhttp3:logging-interceptor:${okhttp3Version}"

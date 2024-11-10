@@ -1,7 +1,5 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
-import db.matcher.Conditions;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;

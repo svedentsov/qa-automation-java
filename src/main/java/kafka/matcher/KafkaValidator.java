@@ -1,6 +1,8 @@
 package kafka.matcher;
 
 import kafka.exception.ValidationException;
+import kafka.matcher.condition.Condition;
+import kafka.matcher.condition.Conditions;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;

@@ -1,6 +1,5 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import lombok.RequiredArgsConstructor;
 
 import java.util.function.Function;

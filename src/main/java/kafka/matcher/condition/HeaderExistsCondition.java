@@ -1,6 +1,5 @@
 package kafka.matcher.condition;
 
-import kafka.matcher.Condition;
 import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;

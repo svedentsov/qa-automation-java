@@ -1,6 +1,5 @@
 package kafka.matcher.condition;
 
-import kafka.matcher.Conditions;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.Assertions;
 

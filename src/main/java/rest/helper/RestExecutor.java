@@ -19,7 +19,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.ProxySpecification;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
-import rest.matcher.Condition;
+import rest.matcher.condition.Condition;
 
 import java.util.List;
 import java.util.Map;

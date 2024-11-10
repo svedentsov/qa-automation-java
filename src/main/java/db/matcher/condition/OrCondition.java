@@ -1,6 +1,5 @@
 package db.matcher.condition;
 
-import db.matcher.Condition;
 import org.assertj.core.api.Assertions;
 
 /**

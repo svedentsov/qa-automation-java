@@ -62,8 +62,7 @@ public class KafkaExample {
         validateRecords.shouldHave(allValuesUnique());
 
         // Проверяем, что записи упорядочены по ключу в порядке возрастания
-        validateRecords.shouldHave(recordsOrdered(
-                ConsumerRecord::key, true));
+        validateRecords.shouldHave(recordsOrdered(ConsumerRecord::key, true));
 
         // ------------------- Key Conditions -------------------
 
