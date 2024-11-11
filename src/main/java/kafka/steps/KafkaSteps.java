@@ -151,18 +151,6 @@ public class KafkaSteps {
         return this;
     }
 
-    @Step("Проверить в топике '{topic}', что все записи имеют заголовок '{headerKey}' со значением '{headerValue}'")
-    public KafkaSteps checkRecordsByHeader(String topic, String headerKey, String headerValue) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(headerEquals(headerKey, headerValue));
-        return this;
-    }
-
-    @Step("Проверить в топике '{topic}', что все записи имеют заголовок '{headerKey}' содержащий значение '{headerValue}'")
-    public KafkaSteps checkRecordsHeaderContains(String topic, String headerKey, String headerValue) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(headerContains(headerKey, headerValue));
-        return this;
-    }
-
     @Step("Проверить в топике '{topic}', что все записи соответствуют условию '{condition}'")
     public KafkaSteps shouldHave(String topic, Conditions condition) {
         kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(condition);

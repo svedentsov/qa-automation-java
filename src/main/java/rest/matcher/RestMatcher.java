@@ -69,7 +69,7 @@ public class RestMatcher {
      *
      * @return условие для проверки успешного кода состояния
      */
-    public static Condition is2xxSuccess() {
+    public static Condition isSuccessful2xx() {
         return new ResponseIsSuccessCondition();
     }
 
@@ -78,7 +78,7 @@ public class RestMatcher {
      *
      * @return условие для проверки перенаправления
      */
-    public static Condition is3xxRedirect() {
+    public static Condition isRedirect3xx() {
         return new ResponseIsRedirectCondition();
     }
 
@@ -87,7 +87,7 @@ public class RestMatcher {
      *
      * @return условие для проверки кода состояния ошибки клиента
      */
-    public static Condition is4xxClientError() {
+    public static Condition isClientError4xx() {
         return new ResponseIsClientErrorCondition();
     }
 
@@ -96,7 +96,7 @@ public class RestMatcher {
      *
      * @return условие для проверки кода состояния ошибки сервера
      */
-    public static Condition is5xxServerError() {
+    public static Condition isServerError5xx() {
         return new ResponseIsServerErrorCondition();
     }
 
@@ -325,16 +325,6 @@ public class RestMatcher {
     }
 
     /**
-     * Проверяет, что тело ответа не содержит указанный текст.
-     *
-     * @param text строка, которая не должна присутствовать
-     * @return условие для проверки отсутствия строки в теле ответа
-     */
-    public static Condition bodyNotContains(String text) {
-        return new BodyNotContainsStringCondition(text);
-    }
-
-    /**
      * Проверяет, что тело ответа соответствует заданному регулярному выражению.
      *
      * @param pattern регулярное выражение
@@ -442,7 +432,7 @@ public class RestMatcher {
      * @param maxDuration максимальная длительность ответа
      * @return условие для проверки времени ответа
      */
-    public static Condition timeLessThan(Duration maxDuration) {
+    public static Condition responseTimeLessThan(Duration maxDuration) {
         return new ResponseTimeCondition(maxDuration);
     }
 

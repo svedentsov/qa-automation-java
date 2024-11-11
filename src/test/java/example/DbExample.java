@@ -43,23 +43,11 @@ public class DbExample {
                 // Проверка, что свойство "status" равно "ACTIVE"
                 .shouldHave(propertyEquals(MyEntity::status, "ACTIVE"))
 
-                // Проверка с кастомным сообщением об ошибке
-                .shouldHave(propertyEquals(MyEntity::status, "ACTIVE", "Статус должен быть 'ACTIVE'"))
-
-                // Проверка, что свойство "status" не равно "INACTIVE"
-                .shouldHave(propertyNotEquals(MyEntity::status, "INACTIVE"))
-
                 // Проверка, что свойство "name" содержит "Test"
                 .shouldHave(propertyContains(MyEntity::name, "Test"))
 
-                // Проверка, что свойство "description" не содержит "Error"
-                .shouldHave(propertyNotContains(MyEntity::status, "Error"))
-
                 // Проверка, что свойство "email" соответствует регулярному выражению
                 .shouldHave(propertyMatchesRegex(MyEntity::status, "^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$"))
-
-                // Проверка, что свойство "email" не является null
-                .shouldHave(propertyIsNotNull(MyEntity::status))
 
                 // Проверка, что свойство "middleName" является null
                 .shouldHave(propertyIsNull(MyEntity::status))
@@ -75,9 +63,6 @@ public class DbExample {
 
                 // Проверка, что свойство "role" входит в список значений
                 .shouldHave(propertyIn(MyEntity::status, Arrays.asList("USER", "ADMIN")))
-
-                // Проверка, что свойство "role" не входит в список значений
-                .shouldHave(propertyNotIn(MyEntity::status, Arrays.asList("GUEST", "ANONYMOUS")))
 
                 // Проверка, что свойство "name" начинается с "Test"
                 .shouldHave(propertyStartsWith(MyEntity::name, "Test"))
@@ -108,9 +93,6 @@ public class DbExample {
 
                 // Проверка, что описание пустое
                 .shouldHave(propertyIsEmpty(MyEntity::description))
-
-                // Проверка, что описание не пустое
-                .shouldHave(propertyIsNotEmpty(MyEntity::description))
 
                 // Проверка Optional свойства
                 .shouldHave(optionalPropertyIsPresent(MyEntity::middleNameOptional))

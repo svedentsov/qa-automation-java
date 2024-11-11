@@ -91,8 +91,7 @@ public class RestExample {
                 bodyEndsWith("architecto"),
                 bodyStartsWith("{"),
                 bodyContains("sunt aut facere"),
-                bodyContainsIgnoringCase("SUNT AUT FACERE"),
-                bodyNotContains("nonexistent text")
+                bodyContainsIgnoringCase("SUNT AUT FACERE")
         );
 
         validator.shouldHave(bodyMatchesPattern(Pattern.compile("\\{.*\\}", Pattern.DOTALL)));
@@ -151,20 +150,20 @@ public class RestExample {
                 statusCode(200),
                 statusCodeInRange(200, 299),
                 statusCodeClass(2),
-                is2xxSuccess(),
+                isSuccessful2xx(),
                 statusLine("HTTP/1.1 200 OK"));
 
         var redirectResponse = RestAssured.get("https://httpbin.org/redirect/1");
         new RestValidator(redirectResponse)
-                .shouldHave(is3xxRedirect());
+                .shouldHave(isRedirect3xx());
 
         var clientErrorResponse = RestAssured.get("https://httpbin.org/status/404");
         new RestValidator(clientErrorResponse)
-                .shouldHave(is4xxClientError());
+                .shouldHave(isClientError4xx());
 
         var serverErrorResponse = RestAssured.get("https://httpbin.org/status/500");
         new RestValidator(serverErrorResponse)
-                .shouldHave(is5xxServerError());
+                .shouldHave(isServerError5xx());
     }
 
     @Test
@@ -174,7 +173,7 @@ public class RestExample {
         var validator = new RestValidator(response);
 
         validator.shouldHave(
-                timeLessThan(Duration.ofSeconds(2)),
+                responseTimeLessThan(Duration.ofSeconds(2)),
                 responseTime(lessThan(2000L)));
     }
 

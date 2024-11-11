@@ -1,6 +1,19 @@
 package db.matcher;
 
-import db.matcher.condition.*;
+import db.matcher.condition.Condition;
+import db.matcher.condition.Conditions;
+import db.matcher.condition.collection.*;
+import db.matcher.condition.datetime.PropertyDateBeforeCondition;
+import db.matcher.condition.datetime.PropertyLocalDateTimeAfterCondition;
+import db.matcher.condition.entity.*;
+import db.matcher.condition.logical.AndCondition;
+import db.matcher.condition.logical.NotCondition;
+import db.matcher.condition.logical.OrCondition;
+import db.matcher.condition.numeric.PropertyBetweenCondition;
+import db.matcher.condition.numeric.PropertyGreaterThanCondition;
+import db.matcher.condition.numeric.PropertyLessThanCondition;
+import db.matcher.condition.property.*;
+import db.matcher.condition.string.*;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
@@ -124,31 +137,6 @@ public class DbMatcher {
     }
 
     /**
-     * Проверяет, что свойство сущности равно ожидаемому значению с кастомным сообщением об ошибке.
-     *
-     * @param getter        функция для получения значения свойства
-     * @param expectedValue ожидаемое значение
-     * @param errorMessage  кастомное сообщение об ошибке
-     * @param <T>           тип сущности
-     * @return условие для проверки равенства свойства с сообщением
-     */
-    public static <T> Condition<T> propertyEquals(@NonNull Function<T, ?> getter, @NonNull Object expectedValue, String errorMessage) {
-        return new PropertyEqualWithMessageCondition<>(getter, expectedValue, errorMessage);
-    }
-
-    /**
-     * Проверяет, что свойство сущности не равно указанному значению.
-     *
-     * @param getter          функция для получения значения свойства
-     * @param unexpectedValue значение, которому свойство не должно быть равно
-     * @param <T>             тип сущности
-     * @return условие для проверки неравенства свойства
-     */
-    public static <T> Condition<T> propertyNotEquals(@NonNull Function<T, ?> getter, @NonNull Object unexpectedValue) {
-        return new PropertyNotEqualCondition<>(getter, unexpectedValue);
-    }
-
-    /**
      * Проверяет, что свойство сущности содержит указанный текст.
      *
      * @param getter функция для получения значения свойства
@@ -170,18 +158,6 @@ public class DbMatcher {
      */
     public static <T> Condition<T> propertyContainsIgnoreCase(@NonNull Function<T, String> getter, @NonNull String text) {
         return new PropertyContainsIgnoreCaseCondition<>(getter, text);
-    }
-
-    /**
-     * Проверяет, что свойство сущности не содержит указанный текст.
-     *
-     * @param getter функция для получения значения свойства
-     * @param text   текст для проверки
-     * @param <T>    тип сущности
-     * @return условие для проверки отсутствия текста в свойстве
-     */
-    public static <T> Condition<T> propertyNotContains(@NonNull Function<T, String> getter, @NonNull String text) {
-        return new PropertyNotContainsCondition<>(getter, text);
     }
 
     /**
@@ -305,17 +281,6 @@ public class DbMatcher {
     }
 
     /**
-     * Проверяет, что свойство не пустое.
-     *
-     * @param getter функция для получения значения свойства
-     * @param <T>    тип сущности
-     * @return условие для проверки на непустоту
-     */
-    public static <T> Condition<T> propertyIsNotEmpty(@NonNull Function<T, ?> getter) {
-        return new PropertyIsNotEmptyCondition<>(getter);
-    }
-
-    /**
      * Проверяет, что свойство сущности входит в заданный список значений.
      *
      * @param getter функция для получения значения свойства
@@ -328,18 +293,6 @@ public class DbMatcher {
     }
 
     /**
-     * Проверяет, что свойство сущности не входит в заданный список значений.
-     *
-     * @param getter функция для получения значения свойства
-     * @param values список значений
-     * @param <T>    тип сущности
-     * @return условие для проверки отсутствия значения свойства в списке
-     */
-    public static <T> Condition<T> propertyNotIn(@NonNull Function<T, ?> getter, @NonNull List<?> values) {
-        return new PropertyNotInCondition<>(getter, values);
-    }
-
-    /**
      * Проверяет, что свойство сущности является null.
      *
      * @param getter функция для получения значения свойства
@@ -348,17 +301,6 @@ public class DbMatcher {
      */
     public static <T> Condition<T> propertyIsNull(@NonNull Function<T, ?> getter) {
         return new PropertyIsNullCondition<>(getter);
-    }
-
-    /**
-     * Проверяет, что свойство сущности не является null.
-     *
-     * @param getter функция для получения значения свойства
-     * @param <T>    тип сущности
-     * @return условие для проверки, что свойство не является null
-     */
-    public static <T> Condition<T> propertyIsNotNull(@NonNull Function<T, ?> getter) {
-        return new PropertyIsNotNullCondition<>(getter);
     }
 
     /**

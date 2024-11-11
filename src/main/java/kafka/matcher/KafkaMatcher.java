@@ -2,6 +2,22 @@ package kafka.matcher;
 
 import com.jayway.jsonpath.internal.filter.LogicalOperator;
 import kafka.matcher.condition.*;
+import kafka.matcher.condition.composite.CompositeCondition;
+import kafka.matcher.condition.composite.NofCondition;
+import kafka.matcher.condition.composite.NotCondition;
+import kafka.matcher.condition.header.*;
+import kafka.matcher.condition.jsonpath.*;
+import kafka.matcher.condition.key.KeyContainCondition;
+import kafka.matcher.condition.key.KeyEqualCondition;
+import kafka.matcher.condition.key.KeyExistConditions;
+import kafka.matcher.condition.offset.OffsetEqualCondition;
+import kafka.matcher.condition.partition.PartitionEqualCondition;
+import kafka.matcher.condition.record.*;
+import kafka.matcher.condition.timestamp.TimestampAfterCondition;
+import kafka.matcher.condition.timestamp.TimestampBeforeCondition;
+import kafka.matcher.condition.timestamp.TimestampInRangeCondition;
+import kafka.matcher.condition.topic.TopicEqualCondition;
+import kafka.matcher.condition.value.*;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -110,60 +126,7 @@ public class KafkaMatcher {
         return new KeyContainCondition(text);
     }
 
-    /**
-     * Проверяет, что ключ записи не содержит указанный текст.
-     *
-     * @param text текст для проверки
-     * @return условие для проверки отсутствия текста в ключе
-     */
-    public static Condition keyNotContains(@NonNull String text) {
-        return new KeyContainNotCondition(text);
-    }
-
     // ------------------- Header Conditions -------------------
-
-    /**
-     * Проверяет, что запись содержит заголовок с указанным ключом.
-     *
-     * @param headerKey ключ заголовка
-     * @return условие для проверки наличия заголовка
-     */
-    public static Condition headerExists(@NonNull String headerKey) {
-        return new HeaderExistsCondition(headerKey);
-    }
-
-    /**
-     * Проверяет, что заголовок записи содержит указанный текст.
-     *
-     * @param headerKey ключ заголовка
-     * @param text      текст для проверки
-     * @return условие для проверки содержимого заголовка
-     */
-    public static Condition headerContains(@NonNull String headerKey, @NonNull String text) {
-        return new HeaderContainCondition(headerKey, text);
-    }
-
-    /**
-     * Проверяет, что заголовок записи не содержит указанный текст.
-     *
-     * @param headerKey ключ заголовка
-     * @param text      текст для проверки
-     * @return условие для проверки отсутствия текста в заголовке
-     */
-    public static Condition headerNotContains(@NonNull String headerKey, @NonNull String text) {
-        return new HeaderContainNotCondition(headerKey, text);
-    }
-
-    /**
-     * Проверяет, что заголовок записи равен ожидаемому значению.
-     *
-     * @param headerKey ключ заголовка
-     * @param text      ожидаемое значение заголовка
-     * @return условие для проверки равенства значения заголовка
-     */
-    public static Condition headerEquals(@NonNull String headerKey, @NonNull String text) {
-        return new HeaderEqualCondition(headerKey, text);
-    }
 
     /**
      * Проверяет наличие записи с указанным заголовком и значением.
@@ -207,16 +170,6 @@ public class KafkaMatcher {
     }
 
     /**
-     * Проверяет, что ключ заголовка записи не содержит указанный текст.
-     *
-     * @param text текст для проверки
-     * @return условие для проверки отсутствия текста в ключе заголовка
-     */
-    public static Condition headerKeyNotContains(@NonNull String text) {
-        return new HeaderKeyContainNotCondition(text);
-    }
-
-    /**
      * Проверяет, что значение заголовка записи содержит указанный текст.
      *
      * @param headerKey ключ заголовка
@@ -225,17 +178,6 @@ public class KafkaMatcher {
      */
     public static Condition headerValueContains(@NonNull String headerKey, @NonNull String text) {
         return new HeaderValueContainCondition(headerKey, text);
-    }
-
-    /**
-     * Проверяет, что значение заголовка записи не содержит указанный текст.
-     *
-     * @param headerKey ключ заголовка
-     * @param text      текст для проверки
-     * @return условие для проверки отсутствия текста в значении заголовка
-     */
-    public static Condition headerValueNotContains(@NonNull String headerKey, @NonNull String text) {
-        return new HeaderValueContainNotCondition(headerKey, text);
     }
 
     /**
@@ -272,16 +214,6 @@ public class KafkaMatcher {
     }
 
     /**
-     * Проверяет, что значение записи не содержит указанный текст.
-     *
-     * @param text текст для проверки
-     * @return условие для проверки отсутствия текста в значении
-     */
-    public static Condition valueNotContains(@NonNull String text) {
-        return new ValueContainNotCondition(text);
-    }
-
-    /**
      * Проверяет, что значение записи содержит все указанные тексты.
      *
      * @param texts список текстов для проверки
@@ -299,16 +231,6 @@ public class KafkaMatcher {
      */
     public static Condition valueContainsAny(@NonNull List<String> texts) {
         return new ValueContainsAnyCondition(texts);
-    }
-
-    /**
-     * Проверяет, что значение записи не содержит все указанные тексты.
-     *
-     * @param texts список текстов для проверки
-     * @return условие для проверки отсутствия всех текстов в значении
-     */
-    public static Condition valueNotContains(@NonNull List<String> texts) {
-        return new ValueContainsNotCondition(texts);
     }
 
     /**
@@ -392,17 +314,6 @@ public class KafkaMatcher {
      */
     public static Condition valueJsonPathContains(@NonNull String jsonPath, @NonNull String expectedValue) {
         return new ValueJsonPathContainCondition(jsonPath, expectedValue);
-    }
-
-    /**
-     * Проверяет, что значение записи не содержит указанный текст по JSONPath.
-     *
-     * @param jsonPath JSONPath выражение
-     * @param text     текст для проверки
-     * @return условие для проверки отсутствия текста по JSONPath
-     */
-    public static Condition valueJsonPathNotContains(@NonNull String jsonPath, @NonNull String text) {
-        return new ValueJsonPathContainNotCondition(jsonPath, text);
     }
 
     /**

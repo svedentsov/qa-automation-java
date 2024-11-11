@@ -16,20 +16,10 @@ public class KafkaExample {
     public static void main(String[] args) {
         // Создаем пример записи Kafka
         ConsumerRecord<String, String> record1 = new ConsumerRecord<>(
-                "topic",    // Топик
-                0,          // Раздел (partition)
-                0L,         // Смещение (offset)
-                "key1",     // Ключ
-                "{\"name\":\"John\",\"age\":30,\"active\":true}" // Значение
-        );
+                "topic", 0, 0L, "key1", "{\"name\":\"John\",\"age\":30,\"active\":true}");
 
         ConsumerRecord<String, String> record2 = new ConsumerRecord<>(
-                "topic",    // Топик
-                0,
-                1L,
-                "key2",
-                "{\"name\":\"Jane\",\"age\":25,\"active\":false}"
-        );
+                "topic", 0, 1L, "key2", "{\"name\":\"Jane\",\"age\":25,\"active\":false}");
 
         // Добавляем заголовки (headers)
         record1.headers().add("headerKey", "headerValue".getBytes());
@@ -72,9 +62,6 @@ public class KafkaExample {
         // Проверяем, что ключ содержит "key"
         validateRecord.shouldHave(keyContains("key"));
 
-        // Проверяем, что ключ не содержит "not"
-        validateRecord.shouldHave(keyNotContains("not"));
-
         // Проверяем наличие записи с ключом "key1" в списке записей
         validateRecords.shouldHave(keysExists("key1"));
 
@@ -86,17 +73,11 @@ public class KafkaExample {
         // Проверяем, что значение содержит "John"
         validateRecord.shouldHave(valueContains("John"));
 
-        // Проверяем, что значение не содержит "Doe"
-        validateRecord.shouldHave(valueNotContains("Doe"));
-
         // Проверяем, что значение содержит все указанные тексты
         validateRecord.shouldHave(valueContains(List.of("John", "30")));
 
         // Проверяем, что значение содержит хотя бы один из указанных текстов
         validateRecord.shouldHave(valueContainsAny(List.of("John", "Doe")));
-
-        // Проверяем, что значение не содержит ни одного из указанных текстов
-        validateRecord.shouldHave(valueNotContains(List.of("Doe", "Smith")));
 
         // Проверяем, что значение начинается с "{"
         validateRecord.shouldHave(valueStartsWith("{"));
@@ -124,9 +105,6 @@ public class KafkaExample {
         // Проверяем, что значение по JSONPath содержит указанный текст
         validateRecord.shouldHave(valueJsonPathContains("$.name", "Jo"));
 
-        // Проверяем, что значение по JSONPath не содержит указанный текст
-        validateRecord.shouldHave(valueJsonPathNotContains("$.name", "Doe"));
-
         // Проверяем, что значение по JSONPath соответствует регулярному выражению
         validateRecord.shouldHave(valueJsonPathMatchesRegex("$.name", "J.*n"));
 
@@ -153,18 +131,6 @@ public class KafkaExample {
 
         // ------------------- Header Conditions -------------------
 
-        // Проверяем, что заголовок существует
-        validateRecord.shouldHave(headerExists("headerKey"));
-
-        // Проверяем, что заголовок содержит указанный текст
-        validateRecord.shouldHave(headerContains("headerKey", "headerValue"));
-
-        // Проверяем, что заголовок не содержит указанный текст
-        validateRecord.shouldHave(headerNotContains("headerKey", "notValue"));
-
-        // Проверяем, что заголовок равен заданному значению
-        validateRecord.shouldHave(headerEquals("headerKey", "headerValue"));
-
         // Проверяем, что ключ заголовка существует
         validateRecord.shouldHave(headerKeyExists("headerKey"));
 
@@ -174,17 +140,11 @@ public class KafkaExample {
         // Проверяем, что ключ заголовка содержит указанный текст
         validateRecord.shouldHave(headerKeyContains("header"));
 
-        // Проверяем, что ключ заголовка не содержит указанный текст
-        validateRecord.shouldHave(headerKeyNotContains("notHeader"));
+        // Проверяем, что значение заголовка равно заданному
+        validateRecord.shouldHave(headerValueEquals("headerKey", "headerValue"));
 
         // Проверяем, что значение заголовка содержит указанный текст
         validateRecord.shouldHave(headerValueContains("headerKey", "headerValue"));
-
-        // Проверяем, что значение заголовка не содержит указанный текст
-        validateRecord.shouldHave(headerValueNotContains("headerKey", "notValue"));
-
-        // Проверяем, что значение заголовка равно заданному
-        validateRecord.shouldHave(headerValueEquals("headerKey", "headerValue"));
 
         // Проверяем наличие записи с указанным заголовком и значением в списке записей
         validateRecords.shouldHave(headersExists("headerKey", "headerValue"));
@@ -199,7 +159,8 @@ public class KafkaExample {
 
         // Проверяем, что временная метка записи в заданном диапазоне
         validateRecord.shouldHave(timestampInRange(
-                Instant.now().minusSeconds(60), Instant.now().plusSeconds(60)));
+                Instant.now().minusSeconds(60),
+                Instant.now().plusSeconds(60)));
 
         // ------------------- Partition Conditions -------------------
 
