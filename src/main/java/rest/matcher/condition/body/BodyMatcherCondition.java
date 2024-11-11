@@ -2,6 +2,8 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
 import rest.matcher.condition.Condition;
 
@@ -15,11 +17,14 @@ public class BodyMatcherCondition implements Condition {
 
     @Override
     public void check(Response response) {
-        response.then().body(matcher);
+        Object body = response.getBody().as(Object.class);
+        Assertions.assertThat(body)
+                .as("Тело ответа не соответствует ожидаемому условию")
+                .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа соответствует условию: %s", matcher);
+        return String.format("Тело ответа соответствует условию: '%s'", matcher);
     }
 }

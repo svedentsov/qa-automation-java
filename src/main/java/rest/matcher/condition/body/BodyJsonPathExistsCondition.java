@@ -2,6 +2,7 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class BodyJsonPathExistsCondition implements Condition {
     @Override
     public void check(Response response) {
         Object value = response.getBody().path(jsonPath);
-        if (value == null) {
-            throw new AssertionError(String.format("JSON-путь '%s' не найден в теле ответа", jsonPath));
-        }
+        Assertions.assertThat(value)
+                .as("JSON-путь '%s' не найден в теле ответа", jsonPath)
+                .isNotNull();
     }
 
     @Override

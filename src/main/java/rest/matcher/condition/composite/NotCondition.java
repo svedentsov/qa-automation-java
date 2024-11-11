@@ -4,6 +4,9 @@ import io.restassured.response.Response;
 import lombok.RequiredArgsConstructor;
 import rest.matcher.condition.Condition;
 
+import java.util.Arrays;
+import java.util.stream.Collectors;
+
 /**
  * Композитное условие, которое инвертирует результат указанных условий (логическое НЕ).
  */
@@ -26,10 +29,8 @@ public class NotCondition implements Condition {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder("Не условия: ");
-        for (Condition condition : conditions) {
-            sb.append(condition).append("; ");
-        }
-        return sb.toString();
+        return "Не условия: " + Arrays.stream(conditions)
+                .map(Condition::toString)
+                .collect(Collectors.joining("; "));
     }
 }

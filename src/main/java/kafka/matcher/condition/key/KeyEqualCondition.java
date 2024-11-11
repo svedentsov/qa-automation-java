@@ -23,6 +23,6 @@ public class KeyEqualCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Условие ключа Kafka с ожидаемым значением: %s", expectedKey);
+        return String.format("Условие ключа Kafka с ожидаемым значением: '%s'", expectedKey);
     }
 }

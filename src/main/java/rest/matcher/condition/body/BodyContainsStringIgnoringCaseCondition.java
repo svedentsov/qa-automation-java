@@ -2,6 +2,7 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class BodyContainsStringIgnoringCaseCondition implements Condition {
     @Override
     public void check(Response response) {
         String body = response.getBody().asString();
-        if (!body.toLowerCase().contains(expectedText.toLowerCase())) {
-            throw new AssertionError(String.format("Тело ответа не содержит '%s' (без учета регистра)", expectedText));
-        }
+        Assertions.assertThat(body)
+                .as("Тело ответа не содержит '%s' (без учета регистра)", expectedText)
+                .containsIgnoringCase(expectedText);
     }
 
     @Override

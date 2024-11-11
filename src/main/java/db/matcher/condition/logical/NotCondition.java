@@ -18,7 +18,7 @@ public class NotCondition<T> implements Condition<T> {
     public void check(T entity) {
         try {
             condition.check(entity);
-            Assertions.fail("Условие должно было не выполняться, но выполнилось: %s", condition);
+            Assertions.fail("Условие должно было не выполняться, но выполнилось: '%s'", condition);
         } catch (AssertionError ignored) {
             // Ожидаемое поведение
         }

@@ -23,6 +23,6 @@ public class ValueContainCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Условие проверки, что значение записи содержит текст: %s", text);
+        return String.format("Условие проверки, что значение записи содержит текст: '%s'", text);
     }
 }

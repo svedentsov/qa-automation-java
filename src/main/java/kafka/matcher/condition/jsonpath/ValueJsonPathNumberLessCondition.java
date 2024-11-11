@@ -19,12 +19,12 @@ public class ValueJsonPathNumberLessCondition implements Condition {
     public void check(ConsumerRecord<String, String> record) {
         Number value = JsonPath.read(record.value(), jsonPath);
         Assertions.assertThat(value.doubleValue())
-                .as("Значение по JSONPath '%s' должно быть меньше %s", jsonPath, threshold)
+                .as("Значение по JSONPath '%s' должно быть меньше '%s'", jsonPath, threshold)
                 .isLessThan(threshold.doubleValue());
     }
 
     @Override
     public String toString() {
-        return String.format("Условие: значение по JSONPath %s должно быть меньше %s", jsonPath, threshold);
+        return String.format("Условие: значение по JSONPath '%s' должно быть меньше '%s'", jsonPath, threshold);
     }
 }

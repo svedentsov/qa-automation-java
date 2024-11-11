@@ -37,6 +37,6 @@ public class RecordsOrderedCondition<T extends Comparable<T>> implements Conditi
 
     @Override
     public String toString() {
-        return String.format("Условие: записи должны быть упорядочены по %s", ascending ? "возрастанию" : "убыванию");
+        return String.format("Условие: записи должны быть упорядочены по '%s'", ascending ? "возрастанию" : "убыванию");
     }
 }

@@ -16,12 +16,12 @@ public class PartitionEqualCondition implements Condition {
     @Override
     public void check(ConsumerRecord<String, String> record) {
         Assertions.assertThat(record.partition())
-                .as("Проверка, что запись принадлежит разделу %d", partition)
+                .as("Проверка, что запись принадлежит разделу '%d'", partition)
                 .isEqualTo(partition);
     }
 
     @Override
     public String toString() {
-        return String.format("Условие: запись должна принадлежать разделу %d", partition);
+        return String.format("Условие: запись должна принадлежать разделу '%d'", partition);
     }
 }

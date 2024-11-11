@@ -22,6 +22,6 @@ public class HeaderKeyExistCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Заголовок должен содержать ключ: %s", headerKey);
+        return String.format("Заголовок должен содержать ключ: '%s'", headerKey);
     }
 }

@@ -30,13 +30,13 @@ public class NofCondition implements Condition {
                 .count();
 
         Assertions.assertThat(successCount)
-                .as("Ожидалось, что хотя бы %d условий выполнятся, но выполнено %d", n, successCount)
+                .as("Ожидалось, что хотя бы '%d' условий выполнятся, но выполнено '%d'", n, successCount)
                 .isGreaterThanOrEqualTo(n);
     }
 
     @Override
     public String toString() {
-        return String.format("Условие: хотя бы %d из следующих условий должны выполниться: %s", n,
+        return String.format("Условие: хотя бы '%d' из следующих условий должны выполниться: '%s'", n,
                 Arrays.toString(conditions));
     }
 }

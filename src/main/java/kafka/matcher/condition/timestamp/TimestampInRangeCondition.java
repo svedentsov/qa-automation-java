@@ -20,12 +20,12 @@ public class TimestampInRangeCondition implements Condition {
     public void check(ConsumerRecord<String, String> record) {
         Instant timestamp = Instant.ofEpochMilli(record.timestamp());
         Assertions.assertThat(timestamp)
-                .as("Временная метка записи должна быть в диапазоне от %s до %s", startTime, endTime)
+                .as("Временная метка записи должна быть в диапазоне от '%s' до '%s'", startTime, endTime)
                 .isBetween(startTime, endTime);
     }
 
     @Override
     public String toString() {
-        return String.format("Условие: временная метка записи должна быть в диапазоне от %s до %s", startTime, endTime);
+        return String.format("Условие: временная метка записи должна быть в диапазоне от '%s' до '%s'", startTime, endTime);
     }
 }

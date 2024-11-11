@@ -28,6 +28,6 @@ public class ValueContainsAnyCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Значение должно содержать хотя бы один из текстов: %s", texts);
+        return String.format("Значение должно содержать хотя бы один из текстов: '%s'", texts);
     }
 }

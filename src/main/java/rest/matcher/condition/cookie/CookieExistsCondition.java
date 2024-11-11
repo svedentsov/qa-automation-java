@@ -2,6 +2,7 @@ package rest.matcher.condition.cookie;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class CookieExistsCondition implements Condition {
     @Override
     public void check(Response response) {
         boolean hasCookie = response.getCookies().containsKey(cookieName);
-        if (!hasCookie) {
-            throw new AssertionError(String.format("Кука '%s' не найдена в ответе.", cookieName));
-        }
+        Assertions.assertThat(hasCookie)
+                .as("Кука '%s' не найдена в ответе.", cookieName)
+                .isTrue();
     }
 
     @Override

@@ -2,6 +2,7 @@ package rest.matcher.condition.header;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,7 +16,10 @@ public class HeaderStringCondition implements Condition {
 
     @Override
     public void check(Response response) {
-        response.then().header(headerName, expectedValue);
+        String headerValue = response.getHeader(headerName);
+        Assertions.assertThat(headerValue)
+                .as("Значение заголовка '%s' должно быть '%s'", headerName, expectedValue)
+                .isEqualTo(expectedValue);
     }
 
     @Override

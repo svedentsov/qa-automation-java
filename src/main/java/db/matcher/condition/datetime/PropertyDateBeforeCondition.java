@@ -22,12 +22,12 @@ public class PropertyDateBeforeCondition<T> implements Condition<T> {
     public void check(T entity) {
         LocalDateTime actualDate = getter.apply(entity);
         Assertions.assertThat(actualDate)
-                .as("Дата должна быть до %s", dateTime)
+                .as("Дата должна быть до '%s'", dateTime)
                 .isBefore(dateTime);
     }
 
     @Override
     public String toString() {
-        return String.format("Дата до %s", dateTime);
+        return String.format("Дата до '%s'", dateTime);
     }
 }

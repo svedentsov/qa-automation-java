@@ -23,7 +23,7 @@ public class PropertyLengthEqualCondition<T> implements Condition<T> {
         Object value = getter.apply(entity);
         int actualLength = getLength(value);
         Assertions.assertThat(actualLength)
-                .as("Длина значения должна быть равна %d", expectedLength)
+                .as("Длина значения должна быть равна '%d'", expectedLength)
                 .isEqualTo(expectedLength);
     }
 
@@ -45,6 +45,6 @@ public class PropertyLengthEqualCondition<T> implements Condition<T> {
 
     @Override
     public String toString() {
-        return String.format("Длина значения равна %d", expectedLength);
+        return String.format("Длина значения равна '%d'", expectedLength);
     }
 }

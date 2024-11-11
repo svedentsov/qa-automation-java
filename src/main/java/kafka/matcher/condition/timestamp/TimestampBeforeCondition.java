@@ -18,12 +18,12 @@ public class TimestampBeforeCondition implements Condition {
     @Override
     public void check(ConsumerRecord<String, String> record) {
         Assertions.assertThat(Instant.ofEpochMilli(record.timestamp()))
-                .as("Временная метка записи должна быть раньше %s", time)
+                .as("Временная метка записи должна быть раньше '%s'", time)
                 .isBefore(time);
     }
 
     @Override
     public String toString() {
-        return String.format("Условие: временная метка записи должна быть раньше %s", time);
+        return String.format("Условие: временная метка записи должна быть раньше '%s'", time);
     }
 }

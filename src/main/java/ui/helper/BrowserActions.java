@@ -29,7 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @Slf4j
 public class BrowserActions {
 
-    private static final String WAIT_PAGE_LOADED_MESSAGE = "Проверка URL текущей страницы: %s";
+    private static final String WAIT_PAGE_LOADED_MESSAGE = "Проверка URL текущей страницы: '%s'";
     private static final String DOCUMENT_READY_STATE = "complete";
     private static final String JS_DOCUMENT_READY_STATE = "return document.readyState";
     private static final String JS_OPEN_NEW_TAB = "window.open()";
@@ -195,8 +195,8 @@ public class BrowserActions {
             }
             return Selenide.open(baseUrl + url, clazz);
         } else {
-            log.error(String.format("Нет аннотации @Url для класса %s", clazz.getCanonicalName()));
-            throw new RuntimeException(String.format("Нет аннотации @Url для класса %s", clazz.getCanonicalName()));
+            log.error(String.format("Нет аннотации @Url для класса '%s'", clazz.getCanonicalName()));
+            throw new RuntimeException(String.format("Нет аннотации @Url для класса '%s'", clazz.getCanonicalName()));
         }
     }
 

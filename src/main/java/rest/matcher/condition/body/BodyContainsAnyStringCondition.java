@@ -2,6 +2,7 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 import java.util.List;
@@ -17,16 +18,14 @@ public class BodyContainsAnyStringCondition implements Condition {
     @Override
     public void check(Response response) {
         String body = response.getBody().asString();
-        for (String expected : expectedStrings) {
-            if (body.contains(expected)) {
-                return;
-            }
-        }
-        throw new AssertionError(String.format("Тело ответа не содержит ни одной из строк %s", expectedStrings));
+        boolean containsAny = expectedStrings.stream().anyMatch(body::contains);
+        Assertions.assertThat(containsAny)
+                .as("Тело ответа не содержит ни одной из строк '%s'", expectedStrings)
+                .isTrue();
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа содержит любую из строк %s", expectedStrings);
+        return String.format("Тело ответа содержит любую из строк '%s'", expectedStrings);
     }
 }

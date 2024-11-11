@@ -2,6 +2,7 @@ package rest.matcher.condition.header;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class HeaderExistsCondition implements Condition {
     @Override
     public void check(Response response) {
         boolean hasHeader = response.headers().hasHeaderWithName(headerName);
-        if (!hasHeader) {
-            throw new AssertionError(String.format("Заголовок '%s' не найден в ответе.", headerName));
-        }
+        Assertions.assertThat(hasHeader)
+                .as("Заголовок '%s' не найден в ответе.", headerName)
+                .isTrue();
     }
 
     @Override

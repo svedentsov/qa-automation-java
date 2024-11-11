@@ -2,6 +2,7 @@ package rest.matcher.condition.cookie;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,7 +16,10 @@ public class CookieStringCondition implements Condition {
 
     @Override
     public void check(Response response) {
-        response.then().cookie(cookieName, expectedValue);
+        String cookieValue = response.getCookie(cookieName);
+        Assertions.assertThat(cookieValue)
+                .as("Значение куки '%s' должно быть '%s'", cookieName, expectedValue)
+                .isEqualTo(expectedValue);
     }
 
     @Override

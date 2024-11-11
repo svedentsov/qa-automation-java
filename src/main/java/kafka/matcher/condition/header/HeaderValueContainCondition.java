@@ -30,6 +30,6 @@ public class HeaderValueContainCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Условие значения заголовка Kafka, содержащего текст: %s", text);
+        return String.format("Условие значения заголовка Kafka, содержащего текст: '%s'", text);
     }
 }

@@ -25,6 +25,6 @@ public class ValueJsonPathIsNumberCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Значение по JSONPath %s должно быть числом", jsonPath);
+        return String.format("Значение по JSONPath '%s' должно быть числом", jsonPath);
     }
 }

@@ -13,6 +13,7 @@ public class BodyIsEmptyCondition implements Condition {
     public void check(Response response) {
         String body = response.getBody().asString();
         Assertions.assertThat(body)
+                .as("Тело ответа должно быть пустым")
                 .isEmpty();
     }
 

@@ -28,7 +28,7 @@ public class OrCondition<T> extends CompositeCondition<T> {
             }
         }
         Assertions.assertThat(anyMatch)
-                .as("Ни одно из условий не выполнено: %s", conditions)
+                .as("Ни одно из условий не выполнено: '%s'", conditions)
                 .isTrue();
     }
 

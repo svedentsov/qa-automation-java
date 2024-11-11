@@ -33,6 +33,6 @@ public class ValueJsonContainsKeysCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Условие: JSON должен содержать ключи %s", keys);
+        return String.format("Условие: JSON должен содержать ключи '%s'", keys);
     }
 }

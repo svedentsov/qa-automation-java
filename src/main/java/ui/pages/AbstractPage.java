@@ -36,7 +36,7 @@ public abstract class AbstractPage<T extends AbstractPage<T>> {
     public T waitPage() {
         if (getClass().isAnnotationPresent(Url.class)) {
             doWaitMedium().untilAsserted(() -> assertThat(browserActions.getCurrentPageUrl())
-                    .as("Страница не загружена: %s", getClass().getSimpleName())
+                    .as("Страница не загружена: '%s'", getClass().getSimpleName())
                     .matches(getClass().getAnnotation(Url.class).pattern())
             );
         }

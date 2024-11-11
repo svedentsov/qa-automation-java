@@ -2,6 +2,7 @@ package rest.matcher.condition.status;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -16,13 +17,13 @@ public class StatusCodeRangeCondition implements Condition {
     @Override
     public void check(Response response) {
         int statusCode = response.getStatusCode();
-        if (statusCode < startInclusive || statusCode > endInclusive) {
-            throw new AssertionError(String.format("Код состояния %d не находится в диапазоне [%d, %d]", statusCode, startInclusive, endInclusive));
-        }
+        Assertions.assertThat(statusCode)
+                .as("Код состояния '%d' не находится в диапазоне ['%d', '%d']", statusCode, startInclusive, endInclusive)
+                .isBetween(startInclusive, endInclusive);
     }
 
     @Override
     public String toString() {
-        return String.format("Код состояния находится в диапазоне от %d до %d", startInclusive, endInclusive);
+        return String.format("Код состояния находится в диапазоне от '%d' до '%d'", startInclusive, endInclusive);
     }
 }

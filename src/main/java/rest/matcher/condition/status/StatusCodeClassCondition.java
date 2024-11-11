@@ -2,6 +2,7 @@ package rest.matcher.condition.status;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -16,13 +17,13 @@ public class StatusCodeClassCondition implements Condition {
     public void check(Response response) {
         int statusCode = response.getStatusCode();
         int codeClass = statusCode / 100;
-        if (codeClass != statusClass) {
-            throw new AssertionError(String.format("Код состояния %d не принадлежит классу %dxx", statusCode, statusClass));
-        }
+        Assertions.assertThat(codeClass)
+                .as("Код состояния '%d' не принадлежит классу '%dxx'", statusCode, statusClass)
+                .isEqualTo(statusClass);
     }
 
     @Override
     public String toString() {
-        return String.format("Код состояния принадлежит классу %dxx", statusClass);
+        return String.format("Код состояния принадлежит классу '%dxx'", statusClass);
     }
 }

@@ -1,6 +1,9 @@
 package rest.matcher.condition.body;
 
-import io.restassured.module.jsv.JsonSchemaValidator;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.github.fge.jackson.JsonLoader;
+import com.github.fge.jsonschema.main.JsonSchema;
+import com.github.fge.jsonschema.main.JsonSchemaFactory;
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
 import rest.matcher.condition.Condition;
@@ -17,7 +20,16 @@ public class JsonSchemaCondition implements Condition {
 
     @Override
     public void check(Response response) {
-        response.then().body(JsonSchemaValidator.matchesJsonSchema(schemaFile));
+        String body = response.getBody().asString();
+        try {
+            JsonSchemaFactory factory = JsonSchemaFactory.byDefault();
+            JsonNode schemaNode = JsonLoader.fromFile(schemaFile);
+            JsonSchema schema = factory.getJsonSchema(schemaNode);
+            JsonNode bodyNode = JsonLoader.fromString(body);
+            schema.validate(bodyNode);
+        } catch (Exception e) {
+            throw new AssertionError("Тело ответа не соответствует JSON-схеме", e);
+        }
     }
 
     @Override

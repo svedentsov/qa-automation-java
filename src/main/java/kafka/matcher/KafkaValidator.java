@@ -78,11 +78,11 @@ public class KafkaValidator {
         try {
             check.run();
         } catch (AssertionError e) {
-            String errorMessage = String.format("Условие '%s' не выполнено для записи с ключом '%s': %s", condition, recordKey, e.getMessage());
+            String errorMessage = String.format("Условие '%s' не выполнено для записи с ключом '%s': '%s'", condition, recordKey, e.getMessage());
             log.error(errorMessage);
             throw new ValidationException(errorMessage, e);
         } catch (Exception e) {
-            String errorMessage = String.format("Ошибка при проверке условия '%s' для записи с ключом '%s': %s", condition, recordKey, e.getMessage());
+            String errorMessage = String.format("Ошибка при проверке условия '%s' для записи с ключом '%s': '%s'", condition, recordKey, e.getMessage());
             log.error(errorMessage, e);
             throw new ValidationException(errorMessage, e);
         }

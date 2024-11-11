@@ -25,6 +25,6 @@ public class ValueJsonPathIsStringCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Значение по JSONPath %s должно быть строкой", jsonPath);
+        return String.format("Значение по JSONPath '%s' должно быть строкой", jsonPath);
     }
 }

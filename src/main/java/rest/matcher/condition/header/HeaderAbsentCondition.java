@@ -2,6 +2,7 @@ package rest.matcher.condition.header;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class HeaderAbsentCondition implements Condition {
     @Override
     public void check(Response response) {
         boolean hasHeader = response.headers().hasHeaderWithName(headerName);
-        if (hasHeader) {
-            throw new AssertionError(String.format("Заголовок '%s' должен отсутствовать, но он присутствует.", headerName));
-        }
+        Assertions.assertThat(hasHeader)
+                .as("Заголовок '%s' должен отсутствовать, но он присутствует.", headerName)
+                .isFalse();
     }
 
     @Override

@@ -29,7 +29,7 @@ public class DurationConverter implements Converter<Duration> {
         return StreamUtils.getFirstInOptional(DurationTags.values(), tag -> text.endsWith(tag.strValue))
                 .map(tag -> Duration.of(numericPart, tag.chronoUnitValue))
                 .orElseThrow(() -> new IllegalStateException(String.format(
-                        "Time unit not specified for %s property. Expected time unit values are: %s",
+                        "Time unit not specified for '%s' property. Expected time unit values are: '%s'",
                         text, StreamUtils.mapEnumToList(DurationTags.class, tag -> tag.strValue))));
     }
 

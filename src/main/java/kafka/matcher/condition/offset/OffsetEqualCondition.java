@@ -16,12 +16,12 @@ public class OffsetEqualCondition implements Condition {
     @Override
     public void check(ConsumerRecord<String, String> record) {
         Assertions.assertThat(record.offset())
-                .as("Проверка, что запись имеет смещение %d", offset)
+                .as("Проверка, что запись имеет смещение '%d'", offset)
                 .isEqualTo(offset);
     }
 
     @Override
     public String toString() {
-        return String.format("Условие: запись должна иметь смещение %d", offset);
+        return String.format("Условие: запись должна иметь смещение '%d'", offset);
     }
 }

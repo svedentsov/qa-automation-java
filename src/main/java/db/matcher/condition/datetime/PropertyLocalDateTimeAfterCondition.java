@@ -22,12 +22,12 @@ public class PropertyLocalDateTimeAfterCondition<T> implements Condition<T> {
     public void check(T entity) {
         LocalDateTime actualDateTime = getter.apply(entity);
         Assertions.assertThat(actualDateTime)
-                .as("Дата и время должны быть после %s", dateTime)
+                .as("Дата и время должны быть после '%s'", dateTime)
                 .isAfter(dateTime);
     }
 
     @Override
     public String toString() {
-        return String.format("Дата и время после %s", dateTime);
+        return String.format("Дата и время после '%s'", dateTime);
     }
 }

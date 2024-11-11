@@ -22,12 +22,12 @@ public class ValueJsonPathArraySizeCondition implements Condition {
         String value = record.value();
         List<?> json = JsonPath.parse(value).read(jsonPath);
         Assertions.assertThat(json.size())
-                .as("Размер массива по JSONPath '%s' должен быть %d", jsonPath, expectedSize)
+                .as("Размер массива по JSONPath '%s' должен быть '%d'", jsonPath, expectedSize)
                 .isEqualTo(expectedSize);
     }
 
     @Override
     public String toString() {
-        return String.format("Размер массива по JSONPath %s должен быть %d", jsonPath, expectedSize);
+        return String.format("Размер массива по JSONPath '%s' должен быть '%d'", jsonPath, expectedSize);
     }
 }

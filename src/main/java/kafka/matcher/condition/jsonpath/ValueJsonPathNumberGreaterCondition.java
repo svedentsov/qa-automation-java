@@ -19,12 +19,12 @@ public class ValueJsonPathNumberGreaterCondition implements Condition {
     public void check(ConsumerRecord<String, String> record) {
         Number value = JsonPath.read(record.value(), jsonPath);
         Assertions.assertThat(value.doubleValue())
-                .as("Значение по JSONPath '%s' должно быть больше %s", jsonPath, threshold)
+                .as("Значение по JSONPath '%s' должно быть больше '%s'", jsonPath, threshold)
                 .isGreaterThan(threshold.doubleValue());
     }
 
     @Override
     public String toString() {
-        return String.format("Условие: значение по JSONPath %s должно быть больше %s", jsonPath, threshold);
+        return String.format("Условие: значение по JSONPath '%s' должно быть больше '%s'", jsonPath, threshold);
     }
 }

@@ -66,7 +66,7 @@ public final class DateUtil {
             return LocalDateTime.parse(date, DateTimeFormatter.ofPattern(pattern));
         } catch (DateTimeParseException e) {
             throw new IllegalArgumentException(
-                    String.format("Ошибка при парсинге даты %s с шаблоном %s", date, pattern), e);
+                    String.format("Ошибка при парсинге даты '%s' с шаблоном '%s'", date, pattern), e);
         }
     }
 

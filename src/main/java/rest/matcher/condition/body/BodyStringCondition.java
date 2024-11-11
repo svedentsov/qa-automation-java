@@ -2,6 +2,7 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class BodyStringCondition implements Condition {
     @Override
     public void check(Response response) {
         String body = response.getBody().asString();
-        if (!body.contains(expectedText)) {
-            throw new AssertionError(String.format("Тело ответа не содержит ожидаемый текст: '%s'", expectedText));
-        }
+        Assertions.assertThat(body)
+                .as("Тело ответа не содержит ожидаемый текст: '%s'", expectedText)
+                .contains(expectedText);
     }
 
     @Override

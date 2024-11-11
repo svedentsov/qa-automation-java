@@ -2,6 +2,7 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class BodyStartsWithCondition implements Condition {
     @Override
     public void check(Response response) {
         String body = response.getBody().asString();
-        if (!body.startsWith(prefix)) {
-            throw new AssertionError(String.format("Тело ответа не начинается с '%s'", prefix));
-        }
+        Assertions.assertThat(body)
+                .as("Тело ответа должно начинаться с '%s'", prefix)
+                .startsWith(prefix);
     }
 
     @Override

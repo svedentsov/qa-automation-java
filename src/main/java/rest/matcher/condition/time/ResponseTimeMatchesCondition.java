@@ -2,6 +2,8 @@ package rest.matcher.condition.time;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
 import rest.matcher.condition.Condition;
 
@@ -16,13 +18,13 @@ public class ResponseTimeMatchesCondition implements Condition {
     @Override
     public void check(Response response) {
         long responseTime = response.getTime();
-        if (!matcher.matches(responseTime)) {
-            throw new AssertionError(String.format("Время ответа %d мс не соответствует условию %s", responseTime, matcher));
-        }
+        Assertions.assertThat(responseTime)
+                .as("Время ответа '%d' мс не соответствует условию '%s'", responseTime, matcher)
+                .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Время ответа соответствует условию %s", matcher);
+        return String.format("Время ответа соответствует условию '%s'", matcher);
     }
 }

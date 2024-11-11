@@ -24,7 +24,7 @@ public class HeaderExistConditions implements Conditions {
         boolean exists = records.stream()
                 .anyMatch(record -> headerValue.equals(getHeaderValue(record, headerKey)));
         Assertions.assertThat(exists)
-                .as("Проверка наличия записи с заголовком %s и значением %s", headerKey, headerValue)
+                .as("Проверка наличия записи с заголовком '%s' и значением '%s'", headerKey, headerValue)
                 .isTrue();
     }
 
@@ -38,6 +38,6 @@ public class HeaderExistConditions implements Conditions {
 
     @Override
     public String toString() {
-        return String.format("Условие наличия записи с заголовком: %s и значением: %s", headerKey, headerValue);
+        return String.format("Условие наличия записи с заголовком: '%s' и значением: '%s'", headerKey, headerValue);
     }
 }

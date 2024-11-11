@@ -2,6 +2,8 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
 import rest.matcher.condition.Condition;
 
@@ -16,11 +18,14 @@ public class BodyMatcherPathCondition implements Condition {
 
     @Override
     public void check(Response response) {
-        response.then().body(path, matcher);
+        Object value = response.getBody().path(path);
+        Assertions.assertThat(value)
+                .as("Значение по пути '%s' не соответствует ожидаемому условию", path)
+                .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Путь в теле ответа '%s' соответствует условию: %s", path, matcher);
+        return String.format("Путь в теле ответа '%s' соответствует условию: '%s'", path, matcher);
     }
 }

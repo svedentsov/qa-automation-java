@@ -1,6 +1,7 @@
 package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 import javax.xml.parsers.DocumentBuilder;

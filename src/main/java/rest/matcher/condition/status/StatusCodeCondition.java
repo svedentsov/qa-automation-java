@@ -2,6 +2,7 @@ package rest.matcher.condition.status;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -14,7 +15,10 @@ public class StatusCodeCondition implements Condition {
 
     @Override
     public void check(Response response) {
-        response.then().statusCode(statusCode);
+        int actualStatusCode = response.getStatusCode();
+        Assertions.assertThat(actualStatusCode)
+                .as("Код состояния должен быть '%d', но получен '%d'", statusCode, actualStatusCode)
+                .isEqualTo(statusCode);
     }
 
     @Override

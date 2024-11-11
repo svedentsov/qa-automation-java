@@ -2,6 +2,8 @@ package rest.matcher.condition.header;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
 import rest.matcher.condition.Condition;
 
@@ -16,11 +18,14 @@ public class HeaderMatcherCondition implements Condition {
 
     @Override
     public void check(Response response) {
-        response.then().header(headerName, matcher);
+        String headerValue = response.getHeader(headerName);
+        Assertions.assertThat(headerValue)
+                .as("Значение заголовка '%s' не соответствует ожидаемому условию", headerName)
+                .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Значение заголовка '%s' соответствует условию: %s", headerName, matcher);
+        return String.format("Значение заголовка '%s' соответствует условию: '%s'", headerName, matcher);
     }
 }

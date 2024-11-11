@@ -2,6 +2,7 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 import java.util.regex.Pattern;
@@ -17,9 +18,9 @@ public class BodyMatchesPatternCondition implements Condition {
     @Override
     public void check(Response response) {
         String body = response.getBody().asString();
-        if (!pattern.matcher(body).matches()) {
-            throw new AssertionError(String.format("Тело ответа не соответствует шаблону '%s'", pattern.pattern()));
-        }
+        Assertions.assertThat(body)
+                .as("Тело ответа не соответствует шаблону '%s'", pattern.pattern())
+                .matches(pattern);
     }
 
     @Override

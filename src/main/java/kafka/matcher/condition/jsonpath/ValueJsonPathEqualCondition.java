@@ -26,6 +26,6 @@ public class ValueJsonPathEqualCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Условие JSONPath с ожидаемым значением: %s", expectedValue);
+        return String.format("Условие JSONPath с ожидаемым значением: '%s'", expectedValue);
     }
 }

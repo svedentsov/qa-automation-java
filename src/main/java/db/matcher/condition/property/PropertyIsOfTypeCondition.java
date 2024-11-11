@@ -24,12 +24,12 @@ public class PropertyIsOfTypeCondition<T> implements Condition<T> {
                 .as("Значение не должно быть null")
                 .isNotNull();
         Assertions.assertThat(value.getClass())
-                .as("Значение должно быть типа %s", expectedType.getName())
+                .as("Значение должно быть типа '%s'", expectedType.getName())
                 .isEqualTo(expectedType);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение является экземпляром %s", expectedType.getName());
+        return String.format("Значение является экземпляром '%s'", expectedType.getName());
     }
 }

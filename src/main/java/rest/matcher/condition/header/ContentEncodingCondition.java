@@ -2,6 +2,7 @@ package rest.matcher.condition.header;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class ContentEncodingCondition implements Condition {
     @Override
     public void check(Response response) {
         String encoding = response.getHeader("Content-Encoding");
-        if (encoding == null || !encoding.equalsIgnoreCase(expectedEncoding)) {
-            throw new AssertionError(String.format("Content-Encoding '%s' не соответствует ожидаемому '%s'", encoding, expectedEncoding));
-        }
+        Assertions.assertThat(encoding)
+                .as("Content-Encoding '%s' не соответствует ожидаемому '%s'", encoding, expectedEncoding)
+                .isEqualToIgnoringCase(expectedEncoding);
     }
 
     @Override

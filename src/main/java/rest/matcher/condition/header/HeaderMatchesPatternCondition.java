@@ -2,6 +2,7 @@ package rest.matcher.condition.header;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 import java.util.regex.Pattern;
@@ -18,9 +19,9 @@ public class HeaderMatchesPatternCondition implements Condition {
     @Override
     public void check(Response response) {
         String headerValue = response.getHeader(headerName);
-        if (headerValue == null || !pattern.matcher(headerValue).matches()) {
-            throw new AssertionError(String.format("Заголовок '%s' со значением '%s' не соответствует шаблону '%s'", headerName, headerValue, pattern.pattern()));
-        }
+        Assertions.assertThat(headerValue)
+                .as("Заголовок '%s' со значением '%s' не соответствует шаблону '%s'", headerName, headerValue, pattern.pattern())
+                .matches(pattern);
     }
 
     @Override

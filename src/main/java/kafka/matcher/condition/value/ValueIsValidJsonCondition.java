@@ -17,7 +17,7 @@ public class ValueIsValidJsonCondition implements Condition {
         try {
             objectMapper.readTree(record.value());
         } catch (Exception e) {
-            Assertions.fail("Значение записи не является валидным JSON: %s", e.getMessage());
+            Assertions.fail("Значение записи не является валидным JSON: '%s'", e.getMessage());
         }
     }
 

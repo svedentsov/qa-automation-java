@@ -24,12 +24,12 @@ public class PropertyIsAssignableFromCondition<T> implements Condition<T> {
                 .as("Значение не должно быть null")
                 .isNotNull();
         Assertions.assertThat(expectedSuperType.isAssignableFrom(value.getClass()))
-                .as("Значение должно быть подклассом %s", expectedSuperType.getName())
+                .as("Значение должно быть подклассом '%s'", expectedSuperType.getName())
                 .isTrue();
     }
 
     @Override
     public String toString() {
-        return String.format("Значение является подклассом %s", expectedSuperType.getName());
+        return String.format("Значение является подклассом '%s'", expectedSuperType.getName());
     }
 }

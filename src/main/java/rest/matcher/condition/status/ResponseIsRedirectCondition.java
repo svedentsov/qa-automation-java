@@ -1,6 +1,7 @@
 package rest.matcher.condition.status;
 
 import io.restassured.response.Response;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -11,9 +12,9 @@ public class ResponseIsRedirectCondition implements Condition {
     @Override
     public void check(Response response) {
         int statusCode = response.getStatusCode();
-        if (statusCode < 300 || statusCode >= 400) {
-            throw new AssertionError(String.format("Ожидался код состояния 3xx, но получен %d", statusCode));
-        }
+        Assertions.assertThat(statusCode)
+                .as("Ожидался код состояния 3xx, но получен '%d'", statusCode)
+                .isBetween(300, 399);
     }
 
     @Override

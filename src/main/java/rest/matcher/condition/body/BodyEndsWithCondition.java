@@ -2,6 +2,7 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,9 +16,9 @@ public class BodyEndsWithCondition implements Condition {
     @Override
     public void check(Response response) {
         String body = response.getBody().asString();
-        if (!body.endsWith(suffix)) {
-            throw new AssertionError(String.format("Тело ответа не заканчивается на '%s'", suffix));
-        }
+        Assertions.assertThat(body)
+                .as("Тело ответа должно заканчиваться на '%s'", suffix)
+                .endsWith(suffix);
     }
 
     @Override

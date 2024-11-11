@@ -24,6 +24,6 @@ public class BodyMatcherListArgsCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Тело ответа с аргументами %s соответствует условию: %s", arguments, matcher);
+        return String.format("Тело ответа с аргументами '%s' соответствует условию: '%s'", arguments, matcher);
     }
 }

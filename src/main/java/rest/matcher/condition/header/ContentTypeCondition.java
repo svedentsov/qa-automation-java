@@ -3,6 +3,7 @@ package rest.matcher.condition.header;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -15,7 +16,10 @@ public class ContentTypeCondition implements Condition {
 
     @Override
     public void check(Response response) {
-        response.then().contentType(contentType);
+        String actualContentType = response.getContentType();
+        Assertions.assertThat(actualContentType)
+                .as("Тип содержимого '%s' не соответствует ожидаемому '%s'", actualContentType, contentType)
+                .isEqualToIgnoringCase(contentType.toString());
     }
 
     @Override

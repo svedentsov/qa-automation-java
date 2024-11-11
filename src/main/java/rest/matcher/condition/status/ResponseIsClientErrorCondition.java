@@ -1,6 +1,7 @@
 package rest.matcher.condition.status;
 
 import io.restassured.response.Response;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 /**
@@ -11,9 +12,9 @@ public class ResponseIsClientErrorCondition implements Condition {
     @Override
     public void check(Response response) {
         int statusCode = response.getStatusCode();
-        if (statusCode < 400 || statusCode >= 500) {
-            throw new AssertionError(String.format("Ожидался код состояния ошибки клиента (4xx), но получен %d", statusCode));
-        }
+        Assertions.assertThat(statusCode)
+                .as("Ожидался код состояния ошибки клиента (4xx), но получен '%d'", statusCode)
+                .isBetween(400, 499);
     }
 
     @Override

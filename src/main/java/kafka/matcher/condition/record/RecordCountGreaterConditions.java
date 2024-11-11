@@ -25,6 +25,6 @@ public class RecordCountGreaterConditions implements Conditions {
 
     @Override
     public String toString() {
-        return String.format("Условие, что количество записей больше %d", count);
+        return String.format("Условие, что количество записей больше '%d'", count);
     }
 }

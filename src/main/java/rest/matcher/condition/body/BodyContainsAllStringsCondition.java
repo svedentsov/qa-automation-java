@@ -2,6 +2,7 @@ package rest.matcher.condition.body;
 
 import io.restassured.response.Response;
 import lombok.AllArgsConstructor;
+import org.assertj.core.api.Assertions;
 import rest.matcher.condition.Condition;
 
 import java.util.List;
@@ -18,14 +19,14 @@ public class BodyContainsAllStringsCondition implements Condition {
     public void check(Response response) {
         String body = response.getBody().asString();
         for (String expected : expectedStrings) {
-            if (!body.contains(expected)) {
-                throw new AssertionError(String.format("Тело ответа не содержит строку '%s'", expected));
-            }
+            Assertions.assertThat(body)
+                    .as("Тело ответа должно содержать строку '%s'", expected)
+                    .contains(expected);
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа содержит все строки %s", expectedStrings);
+        return String.format("Тело ответа содержит все строки '%s'", expectedStrings);
     }
 }

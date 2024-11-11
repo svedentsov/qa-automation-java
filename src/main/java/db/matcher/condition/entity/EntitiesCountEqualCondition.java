@@ -19,12 +19,12 @@ public class EntitiesCountEqualCondition<T> implements Conditions<T> {
     @Override
     public void check(List<T> entities) {
         Assertions.assertThat(entities)
-                .as("Проверка, что количество сущностей равно %d", count)
+                .as("Проверка, что количество сущностей равно '%d'", count)
                 .hasSize(count);
     }
 
     @Override
     public String toString() {
-        return String.format("Количество сущностей равно %d", count);
+        return String.format("Количество сущностей равно '%d'", count);
     }
 }

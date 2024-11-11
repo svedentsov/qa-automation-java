@@ -27,6 +27,6 @@ public class KeyExistConditions implements Conditions {
 
     @Override
     public String toString() {
-        return String.format("Условие, что в записях присутствует хотя бы одна запись с ключом %s", key);
+        return String.format("Условие, что в записях присутствует хотя бы одна запись с ключом '%s'", key);
     }
 }
