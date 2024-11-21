@@ -1,9 +1,9 @@
 package ui.pages;
 
-import core.annotations.Url;
+import common.annotations.Url;
 import org.openqa.selenium.By;
-import ui.widgets.Button;
-import ui.widgets.TextArea;
+import ui.element.Button;
+import ui.element.TextArea;
 
 /**
  * Класс предоставляет элементы страницы WYSIWYG Editor.

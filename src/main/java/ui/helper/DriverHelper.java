@@ -1,7 +1,7 @@
 package ui.helper;
 
 import com.codeborne.selenide.Configuration;
-import core.config.ProjectConfig;
+import common.config.ProjectConfig;
 import io.qameta.allure.selenide.AllureSelenide;
 import org.aeonbits.owner.ConfigFactory;
 import org.openqa.selenium.chrome.ChromeOptions;

@@ -1,10 +1,10 @@
 package ui.pages;
 
-import core.annotations.Url;
+import common.annotations.Url;
 import org.openqa.selenium.By;
-import ui.widgets.Button;
-import ui.widgets.InputLine;
-import ui.widgets.LineRead;
+import ui.element.Button;
+import ui.element.InputLine;
+import ui.element.LineRead;
 
 /**
  * Класс предоставляет элементы страницы Forgot Password.

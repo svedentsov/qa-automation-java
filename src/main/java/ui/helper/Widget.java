@@ -4,7 +4,7 @@ import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.WebDriverRunner;
-import core.utils.DateUtil;
+import common.utils.DateUtil;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
@@ -17,8 +17,8 @@ import java.util.List;
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
-import static core.utils.WaitUtils.TIMEOUT;
-import static core.utils.WaitUtils.doWait;
+import static common.utils.WaitUtils.TIMEOUT;
+import static common.utils.WaitUtils.doWait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**

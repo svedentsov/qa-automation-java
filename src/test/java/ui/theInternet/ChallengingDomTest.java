@@ -1,7 +1,7 @@
 package ui.theInternet;
 
 import common.UITest;
-import core.annotations.Layer;
+import common.annotations.Layer;
 import io.qameta.allure.Description;
 import io.qameta.allure.Feature;
 import org.junit.jupiter.api.DisplayName;

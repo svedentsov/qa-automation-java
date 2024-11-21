@@ -1,7 +1,7 @@
 package ui.helper;
 
 import com.codeborne.selenide.Configuration;
-import core.config.ConfigManager;
+import common.config.ConfigManager;
 
 /**
  * Класс для инициализации конфигурации Selenide.

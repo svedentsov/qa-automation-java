@@ -1,19 +1,17 @@
 package common;
 
-import core.allure.AttachmentHelper;
+import common.allure.AttachmentHelper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Test;
 import ui.helper.SelenideProvider;
 
-import static com.codeborne.selenide.Selenide.open;
 import static com.codeborne.selenide.WebDriverRunner.closeWebDriver;
 
 /**
  * Класс для UI-тестов, расширяющий базовый тестовый класс и включающий методы настройки, завершения и выполнения тестов.
  */
-public class UITest extends BaseTest {
+public abstract class UITest extends BaseTest {
 
     /**
      * Метод, выполняемый перед всеми тестами. Инициализирует Selenide.

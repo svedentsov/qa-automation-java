@@ -24,7 +24,7 @@ import rest.matcher.condition.Condition;
 import java.util.List;
 import java.util.Map;
 
-import static core.allure.AllureRestAssuredFilter.withCustomTemplates;
+import static common.allure.AllureRestAssuredFilter.withCustomTemplates;
 
 /**
  * Класс для выполнения REST-запросов с использованием библиотеки RestAssured.

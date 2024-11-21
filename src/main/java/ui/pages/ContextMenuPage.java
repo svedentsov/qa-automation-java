@@ -1,8 +1,8 @@
 package ui.pages;
 
-import core.annotations.Url;
+import common.annotations.Url;
 import org.openqa.selenium.By;
-import ui.widgets.Button;
+import ui.element.Button;
 
 /**
  * Класс предоставляет элементы страницы Context Menu.

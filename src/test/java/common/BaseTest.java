@@ -6,7 +6,7 @@ import ui.AppTheInternet;
 /**
  * Базовый класс для всех тестов, содержащий общие объекты для работы с приложениями PetStore и TheInternet.
  */
-public class BaseTest {
+public abstract class BaseTest {
 
     /**
      * Экземпляр приложения PetStore для работы с API магазина питомцев.

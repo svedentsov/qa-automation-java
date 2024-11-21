@@ -11,7 +11,7 @@ import java.util.Properties;
 /**
  * Класс для REST-тестов, расширяющий базовый тестовый класс и включающий методы установки и завершения тестов.
  */
-public class RestTest extends BaseTest {
+public abstract class RestTest extends BaseTest {
 
     /**
      * Метод, выполняемый перед всеми тестами. Может быть использован для настройки окружения тестов.

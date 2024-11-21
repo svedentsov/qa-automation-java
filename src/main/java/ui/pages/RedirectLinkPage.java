@@ -1,8 +1,8 @@
 package ui.pages;
 
-import core.annotations.Url;
+import common.annotations.Url;
 import org.openqa.selenium.By;
-import ui.widgets.Link;
+import ui.element.Link;
 
 /**
  * Класс предоставляет элементы страницы Redirect Link.

@@ -1,10 +1,10 @@
 package ui.pages;
 
-import core.annotations.Url;
+import common.annotations.Url;
 import org.openqa.selenium.By;
-import ui.widgets.Button;
-import ui.widgets.LineRead;
-import ui.widgets.Table;
+import ui.element.Button;
+import ui.element.LineRead;
+import ui.element.Table;
 
 /**
  * Класс предоставляет элементы страницы Challenging DOM.

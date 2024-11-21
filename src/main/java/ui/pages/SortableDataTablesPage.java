@@ -1,8 +1,8 @@
 package ui.pages;
 
-import core.annotations.Url;
+import common.annotations.Url;
 import org.openqa.selenium.By;
-import ui.widgets.Table;
+import ui.element.Table;
 
 /**
  * Класс представляет элементы страницы "Sortable Data Tables".

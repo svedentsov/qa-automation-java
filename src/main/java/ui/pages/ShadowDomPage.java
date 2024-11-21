@@ -1,9 +1,9 @@
 package ui.pages;
 
-import core.annotations.Url;
+import common.annotations.Url;
 import org.openqa.selenium.By;
-import ui.widgets.LineRead;
-import ui.widgets.partials.Block;
+import ui.element.LineRead;
+import ui.element.partials.Block;
 
 /**
  * Класс предоставляет элементы страницы Shadow DOM.

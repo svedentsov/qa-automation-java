@@ -1,8 +1,8 @@
 package ui.pages;
 
-import core.annotations.Url;
+import common.annotations.Url;
 import org.openqa.selenium.By;
-import ui.widgets.DropdownList;
+import ui.element.DropdownList;
 
 /**
  * Класс предоставляет элементы страницы Dropdown.

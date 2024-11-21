@@ -2,8 +2,8 @@ package ui.helper;
 
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
-import core.annotations.Url;
-import core.utils.BeanTools;
+import common.annotations.Url;
+import common.utils.BeanTools;
 import lombok.extern.slf4j.Slf4j;
 import org.awaitility.core.ConditionTimeoutException;
 import org.openqa.selenium.Cookie;
@@ -17,8 +17,8 @@ import java.util.Set;
 
 import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
-import static core.utils.StrUtil.EMPTY;
-import static core.utils.WaitUtils.*;
+import static common.utils.StrUtil.EMPTY;
+import static common.utils.WaitUtils.*;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**

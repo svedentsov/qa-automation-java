@@ -1,7 +1,7 @@
 package ui.helper;
 
 import com.codeborne.selenide.Selenide;
-import core.config.Project;
+import common.config.Project;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.remote.RemoteWebDriver;
