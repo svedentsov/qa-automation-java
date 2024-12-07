@@ -5,11 +5,15 @@ import lombok.RequiredArgsConstructor;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.assertj.core.api.Assertions;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Проверка, что записи упорядочены по заданному полю.
+ *
+ * @param <T> тип поля, по которому осуществляется сортировка. Должен реализовывать Comparable.
  */
 @RequiredArgsConstructor
 public class RecordsOrderedCondition<T extends Comparable<T>> implements Conditions {
@@ -19,24 +23,26 @@ public class RecordsOrderedCondition<T extends Comparable<T>> implements Conditi
 
     @Override
     public void check(List<ConsumerRecord<String, String>> records) {
-        for (int i = 1; i < records.size(); i++) {
-            T previousValue = fieldExtractor.apply(records.get(i - 1));
-            T currentValue = fieldExtractor.apply(records.get(i));
-            int comparison = previousValue.compareTo(currentValue);
-            if (ascending) {
-                Assertions.assertThat(comparison)
-                        .as("Записи не упорядочены по возрастанию по полю")
-                        .isLessThanOrEqualTo(0);
-            } else {
-                Assertions.assertThat(comparison)
-                        .as("Записи не упорядочены по убыванию по полю")
-                        .isGreaterThanOrEqualTo(0);
-            }
-        }
+        // Извлекаем значения поля из всех записей
+        List<T> extractedFields = records.stream()
+                .map(fieldExtractor)
+                .collect(Collectors.toList());
+
+        // Определяем компаратор в зависимости от направления сортировки
+        Comparator<T> comparator = ascending ? Comparator.naturalOrder() : Comparator.reverseOrder();
+
+        // Формируем описание проверки
+        String orderDescription = ascending ? "возрастанию" : "убыванию";
+
+        // Выполняем проверку с использованием AssertJ
+        Assertions.assertThat(extractedFields)
+                .as("Проверка, что записи упорядочены по %s", orderDescription)
+                .isSortedAccordingTo(comparator);
     }
 
     @Override
     public String toString() {
-        return String.format("Условие: записи должны быть упорядочены по '%s'", ascending ? "возрастанию" : "убыванию");
+        String orderDescription = ascending ? "возрастанию" : "убыванию";
+        return String.format("Условие: записи должны быть упорядочены по %s", orderDescription);
     }
 }

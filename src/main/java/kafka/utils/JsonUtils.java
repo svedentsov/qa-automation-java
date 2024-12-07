@@ -1,6 +1,7 @@
 package kafka.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import kafka.exception.JsonDeserializationException;
 import kafka.exception.JsonSerializationException;
@@ -45,6 +46,24 @@ public class JsonUtils {
         } catch (JsonProcessingException e) {
             log.error("Ошибка десериализации JSON строки {}: {}", json, e.getMessage());
             throw new JsonDeserializationException("Ошибка при десериализации JSON строки", e);
+        }
+    }
+
+    /**
+     * Десериализует JSON строку в объект заданного типа с использованием TypeReference.
+     *
+     * @param json    JSON строка для десериализации
+     * @param typeRef TypeReference, определяющий целевой тип
+     * @param <T>     тип объекта
+     * @return объект заданного типа, созданный из JSON строки
+     * @throws JsonDeserializationException если возникает ошибка в процессе десериализации
+     */
+    public static <T> T fromJson(String json, TypeReference<T> typeRef) {
+        try {
+            return objectMapper.readValue(json, typeRef);
+        } catch (JsonProcessingException e) {
+            log.error("Ошибка десериализации JSON строки с TypeReference {}: {}", json, e.getMessage());
+            throw new JsonDeserializationException("Ошибка при десериализации JSON строки с TypeReference", e);
         }
     }
 }
