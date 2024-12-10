@@ -18,12 +18,12 @@ public class StatusCodeRangeCondition implements Condition {
     public void check(Response response) {
         int statusCode = response.getStatusCode();
         Assertions.assertThat(statusCode)
-                .as("Код состояния '%d' не находится в диапазоне ['%d', '%d']", statusCode, startInclusive, endInclusive)
+                .as("Код состояния %d не находится в диапазоне [%d, %d]", statusCode, startInclusive, endInclusive)
                 .isBetween(startInclusive, endInclusive);
     }
 
     @Override
     public String toString() {
-        return String.format("Код состояния находится в диапазоне от '%d' до '%d'", startInclusive, endInclusive);
+        return String.format("Код состояния находится в диапазоне от %d до %d", startInclusive, endInclusive);
     }
 }

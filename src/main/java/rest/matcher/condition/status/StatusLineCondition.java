@@ -17,12 +17,12 @@ public class StatusLineCondition implements Condition {
     public void check(Response response) {
         String actualStatusLine = response.getStatusLine();
         Assertions.assertThat(actualStatusLine)
-                .as("Строка состояния должна быть '%s', но получена '%s'", statusLine, actualStatusLine)
+                .as("Строка состояния должна быть %s, но получена %s", statusLine, actualStatusLine)
                 .isEqualTo(statusLine);
     }
 
     @Override
     public String toString() {
-        return String.format("Строка состояния: '%s'", statusLine);
+        return String.format("Строка состояния: %s", statusLine);
     }
 }

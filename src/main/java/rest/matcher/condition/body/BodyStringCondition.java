@@ -17,12 +17,12 @@ public class BodyStringCondition implements Condition {
     public void check(Response response) {
         String body = response.getBody().asString();
         Assertions.assertThat(body)
-                .as("Тело ответа не содержит ожидаемый текст: '%s'", expectedText)
+                .as("Тело ответа не содержит ожидаемый текст: %s", expectedText)
                 .contains(expectedText);
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа содержит '%s'", expectedText);
+        return String.format("Тело ответа содержит %s", expectedText);
     }
 }

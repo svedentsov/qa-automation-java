@@ -13,7 +13,7 @@ public class ResponseIsServerErrorCondition implements Condition {
     public void check(Response response) {
         int statusCode = response.getStatusCode();
         Assertions.assertThat(statusCode)
-                .as("Ожидался код состояния ошибки сервера (5xx), но получен '%d'", statusCode)
+                .as("Ожидался код состояния ошибки сервера (5xx), но получен %d", statusCode)
                 .isBetween(500, 599);
     }
 

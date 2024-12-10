@@ -13,7 +13,7 @@ public class ResponseIsClientErrorCondition implements Condition {
     public void check(Response response) {
         int statusCode = response.getStatusCode();
         Assertions.assertThat(statusCode)
-                .as("Ожидался код состояния ошибки клиента (4xx), но получен '%d'", statusCode)
+                .as("Ожидался код состояния ошибки клиента (4xx), но получен %d", statusCode)
                 .isBetween(400, 499);
     }
 

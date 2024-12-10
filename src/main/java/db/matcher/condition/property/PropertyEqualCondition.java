@@ -21,12 +21,12 @@ public class PropertyEqualCondition<T> implements Condition<T> {
     public void check(T entity) {
         Object actualValue = getter.apply(entity);
         Assertions.assertThat(actualValue)
-                .as("Проверка, что значение равно '%s'", expectedValue)
+                .as("Проверка, что значение равно %s", expectedValue)
                 .isEqualTo(expectedValue);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение равно '%s'", expectedValue);
+        return String.format("Значение равно %s", expectedValue);
     }
 }

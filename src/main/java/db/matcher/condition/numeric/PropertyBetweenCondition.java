@@ -27,12 +27,12 @@ public class PropertyBetweenCondition<T> implements Condition<T> {
                 .isInstanceOf(Number.class);
         BigDecimal actualNumber = new BigDecimal(actualValue.toString());
         Assertions.assertThat(actualNumber)
-                .as("Проверка, что значение между '%s' и '%s'", start, end)
+                .as("Проверка, что значение между %s и %s", start, end)
                 .isBetween(start, end);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение между '%s' и '%s'", start, end);
+        return String.format("Значение между %s и %s", start, end);
     }
 }

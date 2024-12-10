@@ -15,6 +15,9 @@ import org.apache.kafka.common.header.Header;
 import java.util.List;
 
 import static kafka.matcher.KafkaMatcher.*;
+import static kafka.matcher.condition.record.RecordConditions.exists;
+import static kafka.matcher.condition.record.RecordConditions.*;
+import static kafka.matcher.condition.string.StringConditions.*;
 
 /**
  * Класс {@code KafkaSteps} предоставляет методы для взаимодействия с Kafka,
@@ -99,55 +102,55 @@ public class KafkaSteps {
 
     @Step("Проверить в топике '{topic}', что есть записи")
     public KafkaSteps checkRecordsPresence(String topic) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(recordsExists());
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(records(exists()));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что число записей равно '{count}'")
     public KafkaSteps checkRecordsCountEquals(String topic, int count) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(recordsCountEqual(count));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(records(countEqual(count)));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что число записей больше '{count}'")
     public KafkaSteps checkRecordsCountGreaterThan(String topic, int count) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(recordsCountGreater(count));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(records(countGreater(count)));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что есть запись с ключом '{key}'")
     public KafkaSteps checkRecordPresenceByKey(String topic, String key) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(keysExists(key));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(records(keysExists(key)));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что все записи имеют текст '{value}'")
     public KafkaSteps checkRecordsValueEquals(String topic, String value) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(valueEquals(value));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(equalsTo(value)));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что все записи содержат текст '{text}'")
     public KafkaSteps checkRecordsContainText(String topic, String text) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(valueContains(text));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(contains(text)));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что все записи содержат текста '{texts}'")
-    public KafkaSteps checkRecordsContainTexts(String topic, List<String> texts) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(valueContains(texts));
+    public KafkaSteps checkRecordsContainTexts(String topic, String... texts) {
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(containsAll(texts)));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что все записи имеют ключ '{key}'")
     public KafkaSteps checkRecordsKeyEquals(String topic, String key) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(keyEquals(key));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(key(equalsTo(key)));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что все записи имеют ключ, содержащий текст '{keySubstring}'")
     public KafkaSteps checkRecordsKeyContains(String topic, String keySubstring) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(keyContains(keySubstring));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(key(contains(keySubstring)));
         return this;
     }
 

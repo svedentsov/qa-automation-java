@@ -3,14 +3,14 @@ package kafka.matcher.condition;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**
- * Интерфейс Condition для проверки записи Kafka.
+ * Базовый функциональный интерфейс для условий проверки одной записи.
  */
+@FunctionalInterface
 public interface Condition {
-
     /**
-     * Метод для проверки записи.
+     * Проверяет условие для одной записи.
      *
-     * @param record запись Kafka для проверки
+     * @param record запись для проверки
      */
     void check(ConsumerRecord<String, String> record);
 }

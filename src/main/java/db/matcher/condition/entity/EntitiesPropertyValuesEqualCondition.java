@@ -23,13 +23,13 @@ public class EntitiesPropertyValuesEqualCondition<T> implements Conditions<T> {
         for (T entity : entities) {
             Object actualValue = getter.apply(entity);
             Assertions.assertThat(actualValue)
-                    .as("Значение должно быть равно '%s'", expectedValue)
+                    .as("Значение должно быть равно %s", expectedValue)
                     .isEqualTo(expectedValue);
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Все сущности имеют значение, равное '%s'", expectedValue);
+        return String.format("Все сущности имеют значение, равное %s", expectedValue);
     }
 }

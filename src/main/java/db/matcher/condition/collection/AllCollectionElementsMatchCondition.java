@@ -32,6 +32,6 @@ public class AllCollectionElementsMatchCondition<T, E> implements Condition<T> {
 
     @Override
     public String toString() {
-        return String.format("Все элементы коллекции соответствуют условию '%s'", elementCondition);
+        return String.format("Все элементы коллекции соответствуют условию %s", elementCondition);
     }
 }

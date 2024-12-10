@@ -24,12 +24,12 @@ public class PropertyEndsWithCondition<T> implements Condition<T> {
                 .as("Значение должно быть строкой")
                 .isInstanceOf(String.class);
         Assertions.assertThat(actualValue)
-                .as("Проверка, что значение заканчивается на '%s'", suffix)
+                .as("Проверка, что значение заканчивается на %s", suffix)
                 .endsWith(suffix);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение заканчивается на '%s'", suffix);
+        return String.format("Значение заканчивается на %s", suffix);
     }
 }

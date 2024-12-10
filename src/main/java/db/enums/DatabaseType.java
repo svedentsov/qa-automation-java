@@ -41,7 +41,7 @@ public enum DatabaseType {
      */
     @Override
     public String toString() {
-        return String.format("DatabaseType{id='%s', configFile='%s', entityClasses=%s}",
+        return String.format("DatabaseType{id=%s, configFile=%s, entityClasses=%s}",
                 identifier, configFilePath, formatEntityClasses());
     }
 

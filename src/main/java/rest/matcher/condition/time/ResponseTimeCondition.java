@@ -19,12 +19,12 @@ public class ResponseTimeCondition implements Condition {
     public void check(Response response) {
         long responseTime = response.getTime();
         Assertions.assertThat(responseTime)
-                .as("Время ответа '%d' мс превышает максимум '%d' мс", responseTime, maxDuration.toMillis())
+                .as("Время ответа %d мс превышает максимум %d мс", responseTime, maxDuration.toMillis())
                 .isLessThanOrEqualTo(maxDuration.toMillis());
     }
 
     @Override
     public String toString() {
-        return String.format("Время ответа меньше '%d' мс", maxDuration.toMillis());
+        return String.format("Время ответа меньше %d мс", maxDuration.toMillis());
     }
 }

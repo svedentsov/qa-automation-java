@@ -65,7 +65,7 @@ public class KafkaRecordsPrinter {
             record.headers().forEach(header ->
                     System.out.println(header.key() + ": " + new String(header.value(), StandardCharsets.UTF_8))
             );
-            System.out.printf("Смещение: '%d', ключ: %s, значение: %s%n", record.offset(), record.key(), record.value());
+            System.out.printf("Смещение: %d, ключ: %s, значение: %s%n", record.offset(), record.key(), record.value());
         } catch (Exception e) {
             System.err.println("Ошибка при печати записи: " + e.getMessage());
             e.printStackTrace();

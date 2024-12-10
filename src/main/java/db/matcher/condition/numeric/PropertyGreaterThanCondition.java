@@ -26,12 +26,12 @@ public class PropertyGreaterThanCondition<T> implements Condition<T> {
                 .isInstanceOf(Number.class);
         BigDecimal actualNumber = new BigDecimal(actualValue.toString());
         Assertions.assertThat(actualNumber)
-                .as("Проверка, что значение больше '%s'", value)
+                .as("Проверка, что значение больше %s", value)
                 .isGreaterThan(value);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение больше '%s'", value);
+        return String.format("Значение больше %s", value);
     }
 }

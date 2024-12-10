@@ -26,12 +26,12 @@ public class PropertyLessThanCondition<T> implements Condition<T> {
                 .isInstanceOf(Number.class);
         BigDecimal actualNumber = new BigDecimal(actualValue.toString());
         Assertions.assertThat(actualNumber)
-                .as("Проверка, что значение меньше '%s'", value)
+                .as("Проверка, что значение меньше %s", value)
                 .isLessThan(value);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение меньше '%s'", value);
+        return String.format("Значение меньше %s", value);
     }
 }

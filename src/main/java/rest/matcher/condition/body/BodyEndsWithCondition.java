@@ -17,12 +17,12 @@ public class BodyEndsWithCondition implements Condition {
     public void check(Response response) {
         String body = response.getBody().asString();
         Assertions.assertThat(body)
-                .as("Тело ответа должно заканчиваться на '%s'", suffix)
+                .as("Тело ответа должно заканчиваться на %s", suffix)
                 .endsWith(suffix);
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа заканчивается на '%s'", suffix);
+        return String.format("Тело ответа заканчивается на %s", suffix);
     }
 }

@@ -20,12 +20,12 @@ public class BodyContainsAnyStringCondition implements Condition {
         String body = response.getBody().asString();
         boolean containsAny = expectedStrings.stream().anyMatch(body::contains);
         Assertions.assertThat(containsAny)
-                .as("Тело ответа не содержит ни одной из строк '%s'", expectedStrings)
+                .as("Тело ответа не содержит ни одной из строк %s", expectedStrings)
                 .isTrue();
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа содержит любую из строк '%s'", expectedStrings);
+        return String.format("Тело ответа содержит любую из строк %s", expectedStrings);
     }
 }

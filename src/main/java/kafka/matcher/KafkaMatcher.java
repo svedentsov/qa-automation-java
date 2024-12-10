@@ -1,493 +1,150 @@
 package kafka.matcher;
 
-import com.jayway.jsonpath.internal.filter.LogicalOperator;
-import kafka.matcher.condition.*;
-import kafka.matcher.condition.composite.CompositeCondition;
-import kafka.matcher.condition.composite.NofCondition;
-import kafka.matcher.condition.composite.NotCondition;
-import kafka.matcher.condition.header.*;
-import kafka.matcher.condition.jsonpath.*;
-import kafka.matcher.condition.key.KeyContainCondition;
-import kafka.matcher.condition.key.KeyEqualCondition;
-import kafka.matcher.condition.key.KeyExistConditions;
-import kafka.matcher.condition.offset.OffsetEqualCondition;
-import kafka.matcher.condition.partition.PartitionEqualCondition;
-import kafka.matcher.condition.record.*;
-import kafka.matcher.condition.timestamp.TimestampAfterCondition;
-import kafka.matcher.condition.timestamp.TimestampBeforeCondition;
-import kafka.matcher.condition.timestamp.TimestampInRangeCondition;
-import kafka.matcher.condition.topic.TopicEqualCondition;
-import kafka.matcher.condition.value.*;
-import lombok.NonNull;
+import com.jayway.jsonpath.JsonPath;
+import kafka.matcher.condition.Condition;
+import kafka.matcher.condition.Conditions;
+import kafka.matcher.condition.composite.CompositeConditions;
+import kafka.matcher.condition.jsonpath.JsonPathCondition;
+import kafka.matcher.condition.number.NumberCondition;
+import kafka.matcher.condition.record.RecordCondition;
+import kafka.matcher.condition.string.StringCondition;
+import kafka.matcher.condition.timestamp.TimestampCondition;
 import lombok.experimental.UtilityClass;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.function.Function;
 
 /**
- * Утилитный класс для создания условий проверки сообщений Kafka.
- * Предоставляет методы для создания различных условий проверки записей, ключей, заголовков, значений и т.д.
+ * Основной класс, предоставляющий DSL для проверки Kafka записей.
+ * Предоставляет статические методы для создания и комбинирования условий.
  */
 @UtilityClass
 public class KafkaMatcher {
 
-    // ------------------- Record-level Conditions -------------------
-
     /**
-     * Проверяет наличие хотя бы одной записи.
+     * Создает {@link Conditions} из {@link RecordCondition}.
      *
-     * @return условие для проверки наличия записей
+     * @param rc условие для списка записей
+     * @return обертка для проверки списка записей
      */
-    public static Conditions recordsExists() {
-        return new RecordExistConditions();
+    public static Conditions records(RecordCondition rc) {
+        return rc::check;
     }
 
     /**
-     * Проверяет, что количество записей равно указанному значению.
+     * Создает {@link Condition} для проверки значения записи строковыми условиями.
      *
-     * @param count точное количество записей
-     * @return условие для проверки количества записей
+     * @param sc строковое условие
+     * @return условие для одной записи
      */
-    public static Conditions recordsCountEqual(int count) {
-        return new RecordCountEqualConditions(count);
+    public static Condition value(StringCondition sc) {
+        return record -> sc.check(record.value());
     }
 
     /**
-     * Проверяет, что количество записей больше указанного.
+     * Создает {@link Condition} для проверки значения записи, извлеченного по JsonPath.
      *
-     * @param count минимальное количество записей
-     * @return условие для проверки количества записей
+     * @param jsonPath путь JsonPath
+     * @param jc       условие для значения, извлеченного по JsonPath
+     * @return условие для одной записи
      */
-    public static Conditions recordsCountGreater(int count) {
-        return new RecordCountGreaterConditions(count);
+    public static Condition value(String jsonPath, JsonPathCondition jc) {
+        return record -> {
+            String actual = record.value();
+            Object val = JsonPath.parse(actual).read(jsonPath);
+            jc.check(val, jsonPath);
+        };
     }
 
     /**
-     * Проверяет, что все ключи уникальны среди записей.
+     * Создает {@link Condition} для проверки ключа записи строковыми условиями.
      *
-     * @return условие для проверки уникальности ключей
+     * @param sc строковое условие
+     * @return условие для одной записи
      */
-    public static Conditions allKeysUnique() {
-        return new AllKeysUniqueCondition();
+    public static Condition key(StringCondition sc) {
+        return record -> sc.check(record.key());
     }
 
     /**
-     * Проверяет, что все значения уникальны среди записей.
+     * Создает {@link Condition} для проверки топика записи строковыми условиями.
      *
-     * @return условие для проверки уникальности значений
+     * @param sc строковое условие
+     * @return условие для одной записи
      */
-    public static Conditions allValuesUnique() {
-        return new AllValuesUniqueCondition();
+    public static Condition topic(StringCondition sc) {
+        return record -> sc.check(record.topic());
     }
 
     /**
-     * Проверяет, что записи упорядочены по заданному полю.
+     * Создает {@link Condition} для проверки партиции записи числовыми условиями.
      *
-     * @param fieldExtractor функция извлечения поля
-     * @param ascending      true для проверки по возрастанию, false для убывания
-     * @param <T>            тип поля, должен реализовывать Comparable
-     * @return условие для проверки порядка записей
+     * @param nc числовое условие
+     * @return условие для одной записи
      */
-    public static <T extends Comparable<T>> Conditions recordsOrdered(@NonNull Function<ConsumerRecord<String, String>, T> fieldExtractor, boolean ascending) {
-        return new RecordsOrderedCondition<>(fieldExtractor, ascending);
+    public static Condition partition(NumberCondition<Integer> nc) {
+        return record -> nc.check(record.partition());
     }
 
-    // ------------------- Key Conditions -------------------
-
     /**
-     * Проверяет наличие записи с указанным ключом.
+     * Создает {@link Condition} для проверки смещения записи числовыми условиями.
      *
-     * @param key ключ для проверки
-     * @return условие для проверки наличия ключа
+     * @param nc числовое условие
+     * @return условие для одной записи
      */
-    public static Conditions keysExists(@NonNull String key) {
-        return new KeyExistConditions(key);
+    public static Condition offset(NumberCondition<Long> nc) {
+        return record -> nc.check(record.offset());
     }
 
     /**
-     * Проверяет, что ключ записи равен ожидаемому значению.
+     * Создает {@link Condition} для проверки временной метки записи.
      *
-     * @param expectedKey ожидаемый ключ
-     * @return условие для проверки равенства ключа
+     * @param tc условие для временной метки
+     * @return условие для одной записи
      */
-    public static Condition keyEquals(@NonNull String expectedKey) {
-        return new KeyEqualCondition(expectedKey);
+    public static Condition timestamp(TimestampCondition tc) {
+        return record -> tc.check(Instant.ofEpochMilli(record.timestamp()));
     }
 
+    // ------------------- Композиционные условия -------------------
+
     /**
-     * Проверяет, что ключ записи содержит указанный текст.
+     * Объединяет несколько условий логической операцией AND.
      *
-     * @param text текст для проверки
-     * @return условие для проверки содержимого ключа
+     * @param conditions условия для объединения
+     * @return условие, которое пройдет только если все условия будут истинны
      */
-    public static Condition keyContains(@NonNull String text) {
-        return new KeyContainCondition(text);
+    public static Condition allOf(Condition... conditions) {
+        return CompositeConditions.and(conditions);
     }
 
-    // ------------------- Header Conditions -------------------
-
     /**
-     * Проверяет наличие записи с указанным заголовком и значением.
+     * Объединяет несколько условий логической операцией OR.
      *
-     * @param headerKey   ключ заголовка
-     * @param headerValue значение заголовка
-     * @return условие для проверки наличия заголовка с указанным значением
+     * @param conditions условия для объединения
+     * @return условие, которое пройдет если хотя бы одно условие будет истинно
      */
-    public static Conditions headersExists(@NonNull String headerKey, @NonNull String headerValue) {
-        return new HeaderExistConditions(headerKey, headerValue);
+    public static Condition anyOf(Condition... conditions) {
+        return CompositeConditions.or(conditions);
     }
 
     /**
-     * Проверяет, что ключ заголовка записи существует.
+     * Инвертирует результаты указанных условий.
      *
-     * @param headerKey ключ заголовка
-     * @return условие для проверки наличия ключа заголовка
+     * @param conditions условия для инвертирования
+     * @return условие, которое пройдет только если все указанные условия будут ложны
      */
-    public static Condition headerKeyExists(@NonNull String headerKey) {
-        return new HeaderKeyExistCondition(headerKey);
+    public static Condition not(Condition... conditions) {
+        return CompositeConditions.not(conditions);
     }
 
     /**
-     * Проверяет, что ключ заголовка записи равен ожидаемому значению.
+     * Проверяет, что хотя бы N из указанных условий истинны.
      *
-     * @param expectedKey ожидаемый ключ заголовка
-     * @return условие для проверки равенства ключа заголовка
+     * @param n          минимальное количество истинных условий
+     * @param conditions условия для проверки
+     * @return условие для одной записи
      */
-    public static Condition headerKeyEquals(@NonNull String expectedKey) {
-        return new HeaderKeyEqualCondition(expectedKey);
-    }
-
-    /**
-     * Проверяет, что ключ заголовка записи содержит указанный текст.
-     *
-     * @param text текст для проверки
-     * @return условие для проверки содержимого ключа заголовка
-     */
-    public static Condition headerKeyContains(@NonNull String text) {
-        return new HeaderKeyContainCondition(text);
-    }
-
-    /**
-     * Проверяет, что значение заголовка записи содержит указанный текст.
-     *
-     * @param headerKey ключ заголовка
-     * @param text      текст для проверки
-     * @return условие для проверки содержимого значения заголовка
-     */
-    public static Condition headerValueContains(@NonNull String headerKey, @NonNull String text) {
-        return new HeaderValueContainCondition(headerKey, text);
-    }
-
-    /**
-     * Проверяет, что значение заголовка записи равно ожидаемому значению.
-     *
-     * @param headerKey     ключ заголовка
-     * @param expectedValue ожидаемое значение заголовка
-     * @return условие для проверки равенства значения заголовка
-     */
-    public static Condition headerValueEquals(@NonNull String headerKey, @NonNull String expectedValue) {
-        return new HeaderValueEqualCondition(headerKey, expectedValue);
-    }
-
-    // ------------------- Value Conditions -------------------
-
-    /**
-     * Проверяет, что значение записи равно ожидаемому значению.
-     *
-     * @param expectedValue ожидаемое значение
-     * @return условие для проверки равенства значения
-     */
-    public static Condition valueEquals(@NonNull String expectedValue) {
-        return new ValueEqualCondition(expectedValue);
-    }
-
-    /**
-     * Проверяет, что значение записи содержит указанный текст.
-     *
-     * @param text текст для проверки
-     * @return условие для проверки содержимого значения
-     */
-    public static Condition valueContains(@NonNull String text) {
-        return new ValueContainCondition(text);
-    }
-
-    /**
-     * Проверяет, что значение записи содержит все указанные тексты.
-     *
-     * @param texts список текстов для проверки
-     * @return условие для проверки содержимого значения
-     */
-    public static Condition valueContains(@NonNull List<String> texts) {
-        return new ValueContainsCondition(texts);
-    }
-
-    /**
-     * Проверяет, что значение записи содержит хотя бы один из указанных текстов.
-     *
-     * @param texts список текстов для проверки
-     * @return условие для проверки наличия любого текста в значении
-     */
-    public static Condition valueContainsAny(@NonNull List<String> texts) {
-        return new ValueContainsAnyCondition(texts);
-    }
-
-    /**
-     * Проверяет, что значение записи начинается с указанного текста.
-     *
-     * @param prefix текст-префикс
-     * @return условие для проверки начала значения
-     */
-    public static Condition valueStartsWith(@NonNull String prefix) {
-        return new ValueStartsWithCondition(prefix);
-    }
-
-    /**
-     * Проверяет, что значение записи заканчивается указанным текстом.
-     *
-     * @param suffix текст-суффикс
-     * @return условие для проверки конца значения
-     */
-    public static Condition valueEndsWith(@NonNull String suffix) {
-        return new ValueEndsWithCondition(suffix);
-    }
-
-    /**
-     * Проверяет, что значение записи соответствует регулярному выражению.
-     *
-     * @param regex регулярное выражение
-     * @return условие для проверки значения по регулярному выражению
-     */
-    public static Condition valueMatchesRegex(@NonNull String regex) {
-        return new ValueMatchesRegexCondition(regex);
-    }
-
-    /**
-     * Проверяет порядок слов в значении записи.
-     *
-     * @param words список слов для проверки порядка
-     * @return условие для проверки порядка слов в значении
-     */
-    public static Condition valueWordsOrder(@NonNull List<String> words) {
-        return new ValueWordsOrderCondition(words);
-    }
-
-    /**
-     * Проверяет, что значение записи является валидным JSON.
-     *
-     * @return условие для проверки валидности JSON
-     */
-    public static Condition valueIsValidJson() {
-        return new ValueIsValidJsonCondition();
-    }
-
-    /**
-     * Проверяет, что JSON значение содержит указанные ключи.
-     *
-     * @param keys список ключей
-     * @return условие для проверки наличия ключей в JSON
-     */
-    public static Condition valueJsonContainsKeys(@NonNull List<String> keys) {
-        return new ValueJsonContainsKeysCondition(keys);
-    }
-
-    // ------------------- Value JSONPath Conditions -------------------
-
-    /**
-     * Проверяет значение записи с помощью JSONPath.
-     *
-     * @param jsonPath      JSONPath выражение
-     * @param expectedValue ожидаемое значение
-     * @return условие для проверки значения по JSONPath
-     */
-    public static Condition valueJsonPathEquals(@NonNull String jsonPath, @NonNull String expectedValue) {
-        return new ValueJsonPathEqualCondition(jsonPath, expectedValue);
-    }
-
-    /**
-     * Проверяет, что значение записи содержит указанный текст по JSONPath.
-     *
-     * @param jsonPath      JSONPath выражение
-     * @param expectedValue ожидаемый текст
-     * @return условие для проверки содержания по JSONPath
-     */
-    public static Condition valueJsonPathContains(@NonNull String jsonPath, @NonNull String expectedValue) {
-        return new ValueJsonPathContainCondition(jsonPath, expectedValue);
-    }
-
-    /**
-     * Проверяет, что значение по JSONPath соответствует регулярному выражению.
-     *
-     * @param jsonPath JSONPath выражение
-     * @param regex    регулярное выражение
-     * @return условие для проверки значения по регулярному выражению
-     */
-    public static Condition valueJsonPathMatchesRegex(@NonNull String jsonPath, @NonNull String regex) {
-        return new ValueJsonPathMatchesRegexCondition(jsonPath, regex);
-    }
-
-    /**
-     * Проверяет, что значение по JSONPath является булевым значением.
-     *
-     * @param jsonPath JSONPath выражение
-     * @return условие для проверки типа булевого значения по JSONPath
-     */
-    public static Condition valueJsonPathIsBoolean(@NonNull String jsonPath) {
-        return new ValueJsonPathIsBooleanCondition(jsonPath);
-    }
-
-    /**
-     * Проверяет, что значение по JSONPath является числом.
-     *
-     * @param jsonPath JSONPath выражение
-     * @return условие для проверки типа числа по JSONPath
-     */
-    public static Condition valueJsonPathIsNumber(@NonNull String jsonPath) {
-        return new ValueJsonPathIsNumberCondition(jsonPath);
-    }
-
-    /**
-     * Проверяет, что значение по JSONPath является строкой.
-     *
-     * @param jsonPath JSONPath выражение
-     * @return условие для проверки типа строки по JSONPath
-     */
-    public static Condition valueJsonPathIsString(@NonNull String jsonPath) {
-        return new ValueJsonPathIsStringCondition(jsonPath);
-    }
-
-    /**
-     * Проверяет, что значение по JSONPath является массивом.
-     *
-     * @param jsonPath JSONPath выражение
-     * @return условие для проверки типа массива по JSONPath
-     */
-    public static Condition valueJsonPathIsArray(@NonNull String jsonPath) {
-        return new ValueJsonPathIsArrayCondition(jsonPath);
-    }
-
-    /**
-     * Проверяет размер массива по JSONPath.
-     *
-     * @param jsonPath     JSONPath выражение
-     * @param expectedSize ожидаемый размер массива
-     * @return условие для проверки размера массива
-     */
-    public static Condition valueJsonPathArraySize(@NonNull String jsonPath, int expectedSize) {
-        return new ValueJsonPathArraySizeCondition(jsonPath, expectedSize);
-    }
-
-    /**
-     * Проверяет, что числовое значение по JSONPath больше указанного.
-     *
-     * @param jsonPath  JSONPath выражение
-     * @param threshold пороговое значение
-     * @return условие для проверки числового значения
-     */
-    public static Condition valueJsonPathNumberGreater(@NonNull String jsonPath, @NonNull Number threshold) {
-        return new ValueJsonPathNumberGreaterCondition(jsonPath, threshold);
-    }
-
-    /**
-     * Проверяет, что числовое значение по JSONPath меньше указанного.
-     *
-     * @param jsonPath  JSONPath выражение
-     * @param threshold пороговое значение
-     * @return условие для проверки числового значения
-     */
-    public static Condition valueJsonPathNumberLess(@NonNull String jsonPath, @NonNull Number threshold) {
-        return new ValueJsonPathNumberLessCondition(jsonPath, threshold);
-    }
-
-    // ------------------- Timestamp Conditions -------------------
-
-    /**
-     * Создает условие, проверяющее, что временная метка записи раньше указанного времени.
-     */
-    public static Condition timestampBefore(@NonNull Instant time) {
-        return new TimestampBeforeCondition(time);
-    }
-
-    /**
-     * Создает условие, проверяющее, что временная метка записи позже указанного времени.
-     */
-    public static Condition timestampAfter(@NonNull Instant time) {
-        return new TimestampAfterCondition(time);
-    }
-
-    /**
-     * Проверяет, что временная метка записи находится в заданном диапазоне.
-     *
-     * @param startTime начало диапазона
-     * @param endTime   конец диапазона
-     * @return условие для проверки диапазона временной метки
-     */
-    public static Condition timestampInRange(@NonNull Instant startTime, @NonNull Instant endTime) {
-        return new TimestampInRangeCondition(startTime, endTime);
-    }
-
-    // ------------------- Partition Conditions -------------------
-
-    /**
-     * Создает условие, проверяющее, что запись принадлежит указанному разделу.
-     */
-    public static Condition partitionEquals(int partition) {
-        return new PartitionEqualCondition(partition);
-    }
-
-    // ------------------- Offset Conditions -------------------
-
-    /**
-     * Создает условие, проверяющее, что запись имеет указанное смещение.
-     */
-    public static Condition offsetEquals(long offset) {
-        return new OffsetEqualCondition(offset);
-    }
-
-    // ------------------- Topic Conditions -------------------
-
-    /**
-     * Проверяет, что запись принадлежит указанному топику.
-     *
-     * @param topic название топика
-     * @return условие для проверки топика записи
-     */
-    public static Condition topicEquals(@NonNull String topic) {
-        return new TopicEqualCondition(topic);
-    }
-
-    // ------------------- Composite Conditions -------------------
-
-    /**
-     * Создает композитное условие с логической операцией AND.
-     */
-    public static Condition allOf(@NonNull Condition... conditions) {
-        return new CompositeCondition(LogicalOperator.AND, conditions);
-    }
-
-    /**
-     * Создает композитное условие с логической операцией OR.
-     */
-    public static Condition anyOf(@NonNull Condition... conditions) {
-        return new CompositeCondition(LogicalOperator.OR, conditions);
-    }
-
-    /**
-     * Создает условие, инвертирующее результат других условий.
-     */
-    public static Condition not(@NonNull Condition... conditions) {
-        return new NotCondition(conditions);
-    }
-
-    /**
-     * Создает условие, которое проходит, если выполняются хотя бы N из заданных условий.
-     *
-     * @param n          минимальное количество выполняющихся условий
-     * @param conditions массив условий
-     * @return условие для проверки N из M условий
-     */
-    public static Condition nOf(int n, @NonNull Condition... conditions) {
-        return new NofCondition(n, conditions);
+    public static Condition nOf(int n, Condition... conditions) {
+        return CompositeConditions.nOf(n, conditions);
     }
 }

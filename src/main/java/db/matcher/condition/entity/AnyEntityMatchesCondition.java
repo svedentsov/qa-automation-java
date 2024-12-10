@@ -30,12 +30,12 @@ public class AnyEntityMatchesCondition<T> implements Conditions<T> {
             }
         }
         Assertions.assertThat(matchFound)
-                .as("Проверка, что хотя бы одна сущность соответствует условию '%s'", condition)
+                .as("Проверка, что хотя бы одна сущность соответствует условию %s", condition)
                 .isTrue();
     }
 
     @Override
     public String toString() {
-        return String.format("Хотя бы одна сущность соответствует условию '%s'", condition);
+        return String.format("Хотя бы одна сущность соответствует условию %s", condition);
     }
 }

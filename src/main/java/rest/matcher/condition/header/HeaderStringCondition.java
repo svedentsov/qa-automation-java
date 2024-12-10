@@ -18,12 +18,12 @@ public class HeaderStringCondition implements Condition {
     public void check(Response response) {
         String headerValue = response.getHeader(headerName);
         Assertions.assertThat(headerValue)
-                .as("Значение заголовка '%s' должно быть '%s'", headerName, expectedValue)
+                .as("Значение заголовка %s должно быть %s", headerName, expectedValue)
                 .isEqualTo(expectedValue);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение заголовка '%s' равно '%s'", headerName, expectedValue);
+        return String.format("Значение заголовка %s равно %s", headerName, expectedValue);
     }
 }

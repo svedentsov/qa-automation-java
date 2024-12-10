@@ -17,12 +17,12 @@ public class HeaderExistsCondition implements Condition {
     public void check(Response response) {
         boolean hasHeader = response.headers().hasHeaderWithName(headerName);
         Assertions.assertThat(hasHeader)
-                .as("Заголовок '%s' не найден в ответе.", headerName)
+                .as("Заголовок %s не найден в ответе.", headerName)
                 .isTrue();
     }
 
     @Override
     public String toString() {
-        return String.format("Заголовок '%s' присутствует", headerName);
+        return String.format("Заголовок %s присутствует", headerName);
     }
 }

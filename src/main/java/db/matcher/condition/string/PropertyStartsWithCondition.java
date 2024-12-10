@@ -24,12 +24,12 @@ public class PropertyStartsWithCondition<T> implements Condition<T> {
                 .as("Значение должно быть строкой")
                 .isInstanceOf(String.class);
         Assertions.assertThat(value)
-                .as("Проверка, что значение начинается с '%s'", prefix)
+                .as("Проверка, что значение начинается с %s", prefix)
                 .startsWith(prefix);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение начинается с '%s'", prefix);
+        return String.format("Значение начинается с %s", prefix);
     }
 }

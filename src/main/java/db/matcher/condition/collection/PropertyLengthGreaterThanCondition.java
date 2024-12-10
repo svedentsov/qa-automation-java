@@ -23,7 +23,7 @@ public class PropertyLengthGreaterThanCondition<T> implements Condition<T> {
         Object value = getter.apply(entity);
         int actualLength = getLength(value);
         Assertions.assertThat(actualLength)
-                .as("Длина значения должна быть больше '%d'", minLength)
+                .as("Длина значения должна быть больше %d", minLength)
                 .isGreaterThan(minLength);
     }
 
@@ -45,6 +45,6 @@ public class PropertyLengthGreaterThanCondition<T> implements Condition<T> {
 
     @Override
     public String toString() {
-        return String.format("Длина значения больше '%d'", minLength);
+        return String.format("Длина значения больше %d", minLength);
     }
 }

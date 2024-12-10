@@ -17,12 +17,12 @@ public class CookieExistsCondition implements Condition {
     public void check(Response response) {
         boolean hasCookie = response.getCookies().containsKey(cookieName);
         Assertions.assertThat(hasCookie)
-                .as("Кука '%s' не найдена в ответе.", cookieName)
+                .as("Кука %s не найдена в ответе.", cookieName)
                 .isTrue();
     }
 
     @Override
     public String toString() {
-        return String.format("Кука '%s' присутствует", cookieName);
+        return String.format("Кука %s присутствует", cookieName);
     }
 }

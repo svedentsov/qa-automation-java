@@ -20,13 +20,13 @@ public class BodyContainsAllStringsCondition implements Condition {
         String body = response.getBody().asString();
         for (String expected : expectedStrings) {
             Assertions.assertThat(body)
-                    .as("Тело ответа должно содержать строку '%s'", expected)
+                    .as("Тело ответа должно содержать строку %s", expected)
                     .contains(expected);
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа содержит все строки '%s'", expectedStrings);
+        return String.format("Тело ответа содержит все строки %s", expectedStrings);
     }
 }

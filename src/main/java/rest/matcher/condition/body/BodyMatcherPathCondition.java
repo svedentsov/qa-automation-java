@@ -20,12 +20,12 @@ public class BodyMatcherPathCondition implements Condition {
     public void check(Response response) {
         Object value = response.getBody().path(path);
         Assertions.assertThat(value)
-                .as("Значение по пути '%s' не соответствует ожидаемому условию", path)
+                .as("Значение по пути %s не соответствует ожидаемому условию", path)
                 .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Путь в теле ответа '%s' соответствует условию: '%s'", path, matcher);
+        return String.format("Путь в теле ответа %s соответствует условию: %s", path, matcher);
     }
 }

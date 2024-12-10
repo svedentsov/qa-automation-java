@@ -18,12 +18,12 @@ public class CookieStringCondition implements Condition {
     public void check(Response response) {
         String cookieValue = response.getCookie(cookieName);
         Assertions.assertThat(cookieValue)
-                .as("Значение куки '%s' должно быть '%s'", cookieName, expectedValue)
+                .as("Значение куки %s должно быть %s", cookieName, expectedValue)
                 .isEqualTo(expectedValue);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение куки '%s' равно '%s'", cookieName, expectedValue);
+        return String.format("Значение куки %s равно %s", cookieName, expectedValue);
     }
 }

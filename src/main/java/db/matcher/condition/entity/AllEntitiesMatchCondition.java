@@ -25,6 +25,6 @@ public class AllEntitiesMatchCondition<T> implements Conditions<T> {
 
     @Override
     public String toString() {
-        return String.format("Все сущности соответствуют условию '%s'", condition);
+        return String.format("Все сущности соответствуют условию %s", condition);
     }
 }

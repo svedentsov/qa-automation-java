@@ -26,12 +26,12 @@ public class PropertyMatchesRegexCondition<T> implements Condition<T> {
                 .as("Значение должно быть строкой")
                 .isInstanceOf(String.class);
         Assertions.assertThat(actualValue)
-                .as("Проверка, что значение соответствует регулярному выражению '%s'", regex)
+                .as("Проверка, что значение соответствует регулярному выражению %s", regex)
                 .matches(pattern);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение соответствует регулярному выражению '%s'", regex);
+        return String.format("Значение соответствует регулярному выражению %s", regex);
     }
 }

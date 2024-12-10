@@ -18,12 +18,12 @@ public class ContentTypeCondition implements Condition {
     public void check(Response response) {
         String actualContentType = response.getContentType();
         Assertions.assertThat(actualContentType)
-                .as("Тип содержимого '%s' не соответствует ожидаемому '%s'", actualContentType, contentType)
+                .as("Тип содержимого %s не соответствует ожидаемому %s", actualContentType, contentType)
                 .isEqualToIgnoringCase(contentType.toString());
     }
 
     @Override
     public String toString() {
-        return String.format("Тип содержимого: '%s'", contentType);
+        return String.format("Тип содержимого: %s", contentType);
     }
 }

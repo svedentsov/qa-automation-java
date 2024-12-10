@@ -22,7 +22,7 @@ public class NoEntitiesMatchCondition<T> implements Conditions<T> {
         for (T entity : entities) {
             try {
                 condition.check(entity);
-                Assertions.fail("Найдена сущность, соответствующая условию '%s'", condition);
+                Assertions.fail("Найдена сущность, соответствующая условию %s", condition);
             } catch (AssertionError e) {
                 // Ожидаемое поведение, сущность не должна соответствовать условию
             }
@@ -31,6 +31,6 @@ public class NoEntitiesMatchCondition<T> implements Conditions<T> {
 
     @Override
     public String toString() {
-        return String.format("Ни одна сущность не соответствует условию '%s'", condition);
+        return String.format("Ни одна сущность не соответствует условию %s", condition);
     }
 }

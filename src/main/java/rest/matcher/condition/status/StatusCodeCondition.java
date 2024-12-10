@@ -17,12 +17,12 @@ public class StatusCodeCondition implements Condition {
     public void check(Response response) {
         int actualStatusCode = response.getStatusCode();
         Assertions.assertThat(actualStatusCode)
-                .as("Код состояния должен быть '%d', но получен '%d'", statusCode, actualStatusCode)
+                .as("Код состояния должен быть %d, но получен %d", statusCode, actualStatusCode)
                 .isEqualTo(statusCode);
     }
 
     @Override
     public String toString() {
-        return String.format("Код состояния: '%d'", statusCode);
+        return String.format("Код состояния: %d", statusCode);
     }
 }

@@ -19,12 +19,12 @@ public class BodyMatchesPatternCondition implements Condition {
     public void check(Response response) {
         String body = response.getBody().asString();
         Assertions.assertThat(body)
-                .as("Тело ответа не соответствует шаблону '%s'", pattern.pattern())
+                .as("Тело ответа не соответствует шаблону %s", pattern.pattern())
                 .matches(pattern);
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа соответствует шаблону '%s'", pattern.pattern());
+        return String.format("Тело ответа соответствует шаблону %s", pattern.pattern());
     }
 }

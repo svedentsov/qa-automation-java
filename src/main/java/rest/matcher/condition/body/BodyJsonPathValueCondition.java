@@ -20,12 +20,12 @@ public class BodyJsonPathValueCondition implements Condition {
     public void check(Response response) {
         Object value = response.getBody().path(jsonPath);
         Assertions.assertThat(value)
-                .as("Значение по JSON-пути '%s' не соответствует ожидаемому", jsonPath)
+                .as("Значение по JSON-пути %s не соответствует ожидаемому", jsonPath)
                 .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Значение по JSON-пути '%s' соответствует условию: '%s'", jsonPath, matcher);
+        return String.format("Значение по JSON-пути %s соответствует условию: %s", jsonPath, matcher);
     }
 }

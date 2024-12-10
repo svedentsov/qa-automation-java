@@ -19,12 +19,12 @@ public class ResponseTimeMatchesCondition implements Condition {
     public void check(Response response) {
         long responseTime = response.getTime();
         Assertions.assertThat(responseTime)
-                .as("Время ответа '%d' мс не соответствует условию '%s'", responseTime, matcher)
+                .as("Время ответа %d мс не соответствует условию %s", responseTime, matcher)
                 .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Время ответа соответствует условию '%s'", matcher);
+        return String.format("Время ответа соответствует условию %s", matcher);
     }
 }

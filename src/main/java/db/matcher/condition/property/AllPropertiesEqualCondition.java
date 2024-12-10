@@ -24,13 +24,13 @@ public class AllPropertiesEqualCondition<T> implements Condition<T> {
             Object expectedValue = entry.getValue();
             Object actualValue = getter.apply(entity);
             Assertions.assertThat(actualValue)
-                    .as("Проверка, что значение равно '%s'", expectedValue)
+                    .as("Проверка, что значение равно %s", expectedValue)
                     .isEqualTo(expectedValue);
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Свойства равны ожидаемым значениям '%s'", expectedProperties);
+        return String.format("Свойства равны ожидаемым значениям %s", expectedProperties);
     }
 }

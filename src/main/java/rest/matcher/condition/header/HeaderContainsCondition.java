@@ -17,12 +17,12 @@ public class HeaderContainsCondition implements Condition {
     public void check(Response response) {
         boolean hasHeader = response.headers().hasHeaderWithName(expectedHeaderName);
         Assertions.assertThat(hasHeader)
-                .as("Заголовок с именем '%s' не найден.", expectedHeaderName)
+                .as("Заголовок с именем %s не найден.", expectedHeaderName)
                 .isTrue();
     }
 
     @Override
     public String toString() {
-        return String.format("Заголовок '%s' должен присутствовать.", expectedHeaderName);
+        return String.format("Заголовок %s должен присутствовать.", expectedHeaderName);
     }
 }

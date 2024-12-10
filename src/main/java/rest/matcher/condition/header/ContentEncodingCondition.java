@@ -17,12 +17,12 @@ public class ContentEncodingCondition implements Condition {
     public void check(Response response) {
         String encoding = response.getHeader("Content-Encoding");
         Assertions.assertThat(encoding)
-                .as("Content-Encoding '%s' не соответствует ожидаемому '%s'", encoding, expectedEncoding)
+                .as("Content-Encoding %s не соответствует ожидаемому %s", encoding, expectedEncoding)
                 .isEqualToIgnoringCase(expectedEncoding);
     }
 
     @Override
     public String toString() {
-        return String.format("Content-Encoding равен '%s'", expectedEncoding);
+        return String.format("Content-Encoding равен %s", expectedEncoding);
     }
 }

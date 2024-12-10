@@ -20,12 +20,12 @@ public class HeaderMatchesPatternCondition implements Condition {
     public void check(Response response) {
         String headerValue = response.getHeader(headerName);
         Assertions.assertThat(headerValue)
-                .as("Заголовок '%s' со значением '%s' не соответствует шаблону '%s'", headerName, headerValue, pattern.pattern())
+                .as("Заголовок %s со значением %s не соответствует шаблону %s", headerName, headerValue, pattern.pattern())
                 .matches(pattern);
     }
 
     @Override
     public String toString() {
-        return String.format("Заголовок '%s' соответствует шаблону '%s'", headerName, pattern.pattern());
+        return String.format("Заголовок %s соответствует шаблону %s", headerName, pattern.pattern());
     }
 }

@@ -20,12 +20,12 @@ public class HeaderMatcherCondition implements Condition {
     public void check(Response response) {
         String headerValue = response.getHeader(headerName);
         Assertions.assertThat(headerValue)
-                .as("Значение заголовка '%s' не соответствует ожидаемому условию", headerName)
+                .as("Значение заголовка %s не соответствует ожидаемому условию", headerName)
                 .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Значение заголовка '%s' соответствует условию: '%s'", headerName, matcher);
+        return String.format("Значение заголовка %s соответствует условию: %s", headerName, matcher);
     }
 }

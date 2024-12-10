@@ -30,14 +30,14 @@ public class NOfCondition implements Condition {
                 .count();
 
         if (passedCount < n) {
-            throw new AssertionError(String.format("Только '%d' из '%d' условий выполнено, а требуется как минимум '%d'.",
+            throw new AssertionError(String.format("Только %d из %d условий выполнено, а требуется как минимум %d.",
                     passedCount, conditions.length, n));
         }
     }
 
     @Override
     public String toString() {
-        return String.format("Как минимум '%d' из условий: '%s'",
+        return String.format("Как минимум %d из условий: %s",
                 n,
                 Arrays.stream(conditions)
                         .map(Condition::toString)

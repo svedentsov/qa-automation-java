@@ -13,7 +13,7 @@ public class ResponseIsSuccessCondition implements Condition {
     public void check(Response response) {
         int statusCode = response.getStatusCode();
         Assertions.assertThat(statusCode)
-                .as("Ожидался успешный код состояния (2xx), но получен '%d'", statusCode)
+                .as("Ожидался успешный код состояния (2xx), но получен %d", statusCode)
                 .isBetween(200, 299);
     }
 

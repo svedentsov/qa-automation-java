@@ -25,6 +25,6 @@ public class BodyMatcherPathArgsCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Путь в теле ответа '%s' с аргументами '%s' соответствует условию: '%s'", path, arguments, matcher);
+        return String.format("Путь в теле ответа %s с аргументами %s соответствует условию: %s", path, arguments, matcher);
     }
 }

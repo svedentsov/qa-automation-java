@@ -21,13 +21,13 @@ public class PropertyContainsIgnoreCaseCondition<T> implements Condition<T> {
     public void check(T entity) {
         String actualValue = getter.apply(entity);
         Assertions.assertThat(actualValue)
-                .as("Значение должно содержать '%s' без учета регистра", text)
+                .as("Значение должно содержать %s без учета регистра", text)
                 .isNotNull()
                 .containsIgnoringCase(text);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение содержит '%s' без учета регистра", text);
+        return String.format("Значение содержит %s без учета регистра", text);
     }
 }

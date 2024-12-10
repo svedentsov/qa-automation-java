@@ -18,7 +18,7 @@ public class StatusCodeClassCondition implements Condition {
         int statusCode = response.getStatusCode();
         int codeClass = statusCode / 100;
         Assertions.assertThat(codeClass)
-                .as("Код состояния '%d' не принадлежит классу '%dxx'", statusCode, statusClass)
+                .as("Код состояния %d не принадлежит классу '%dxx'", statusCode, statusClass)
                 .isEqualTo(statusClass);
     }
 

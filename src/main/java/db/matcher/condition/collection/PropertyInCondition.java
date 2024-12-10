@@ -31,6 +31,6 @@ public class PropertyInCondition<T> implements Condition<T> {
 
     @Override
     public String toString() {
-        return String.format("Значение входит в список значений '%s'", values);
+        return String.format("Значение входит в список значений %s", values);
     }
 }

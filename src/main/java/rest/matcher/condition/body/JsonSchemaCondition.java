@@ -34,6 +34,6 @@ public class JsonSchemaCondition implements Condition {
 
     @Override
     public String toString() {
-        return String.format("Тело ответа соответствует JSON-схеме из файла '%s'", schemaFile.getName());
+        return String.format("Тело ответа соответствует JSON-схеме из файла %s", schemaFile.getName());
     }
 }

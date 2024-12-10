@@ -17,12 +17,12 @@ public class BodyStartsWithCondition implements Condition {
     public void check(Response response) {
         String body = response.getBody().asString();
         Assertions.assertThat(body)
-                .as("Тело ответа должно начинаться с '%s'", prefix)
+                .as("Тело ответа должно начинаться с %s", prefix)
                 .startsWith(prefix);
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа начинается с '%s'", prefix);
+        return String.format("Тело ответа начинается с %s", prefix);
     }
 }

@@ -20,12 +20,12 @@ public class CookieMatcherCondition implements Condition {
     public void check(Response response) {
         String cookieValue = response.getCookie(cookieName);
         Assertions.assertThat(cookieValue)
-                .as("Значение куки '%s' не соответствует ожидаемому условию", cookieName)
+                .as("Значение куки %s не соответствует ожидаемому условию", cookieName)
                 .is(new HamcrestCondition<>(matcher));
     }
 
     @Override
     public String toString() {
-        return String.format("Значение куки '%s' соответствует условию: '%s'", cookieName, matcher);
+        return String.format("Значение куки %s соответствует условию: %s", cookieName, matcher);
     }
 }

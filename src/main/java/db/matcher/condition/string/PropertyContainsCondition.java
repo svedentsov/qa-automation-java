@@ -24,12 +24,12 @@ public class PropertyContainsCondition<T> implements Condition<T> {
                 .as("Значение должно быть строкой")
                 .isInstanceOf(String.class);
         Assertions.assertThat(actualValue)
-                .as("Проверка, что значение содержит '%s'", text)
+                .as("Проверка, что значение содержит %s", text)
                 .contains(text);
     }
 
     @Override
     public String toString() {
-        return String.format("Значение содержит '%s'", text);
+        return String.format("Значение содержит %s", text);
     }
 }

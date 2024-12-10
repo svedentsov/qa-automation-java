@@ -17,12 +17,12 @@ public class BodyContainsStringIgnoringCaseCondition implements Condition {
     public void check(Response response) {
         String body = response.getBody().asString();
         Assertions.assertThat(body)
-                .as("Тело ответа не содержит '%s' (без учета регистра)", expectedText)
+                .as("Тело ответа не содержит %s (без учета регистра)", expectedText)
                 .containsIgnoringCase(expectedText);
     }
 
     @Override
     public String toString() {
-        return String.format("Тело ответа содержит '%s' (без учета регистра)", expectedText);
+        return String.format("Тело ответа содержит %s (без учета регистра)", expectedText);
     }
 }

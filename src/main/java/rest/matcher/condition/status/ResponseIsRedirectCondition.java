@@ -13,7 +13,7 @@ public class ResponseIsRedirectCondition implements Condition {
     public void check(Response response) {
         int statusCode = response.getStatusCode();
         Assertions.assertThat(statusCode)
-                .as("Ожидался код состояния 3xx, но получен '%d'", statusCode)
+                .as("Ожидался код состояния 3xx, но получен %d", statusCode)
                 .isBetween(300, 399);
     }
 
