@@ -1,7 +1,6 @@
 package kafka.helper;
 
-import kafka.enums.ConsumerType;
-import kafka.enums.ProducerType;
+import kafka.enums.ContentType;
 import kafka.factory.KafkaServiceFactory;
 import kafka.matcher.condition.Condition;
 import kafka.matcher.condition.Conditions;
@@ -40,7 +39,7 @@ public class KafkaExecutor {
      * @param type тип продюсера (например, String или Avro)
      * @return экземпляр текущего объекта {@code KafkaExecutor} для цепочки вызовов
      */
-    public KafkaExecutor setProducerType(ProducerType type) {
+    public KafkaExecutor setProducerType(ContentType type) {
         this.producer = KafkaServiceFactory.createProducer(type);
         return this;
     }
@@ -51,7 +50,7 @@ public class KafkaExecutor {
      * @param type тип консьюмера (например, String или Avro)
      * @return экземпляр текущего объекта {@code KafkaExecutor} для цепочки вызовов
      */
-    public KafkaExecutor setConsumerType(ConsumerType type) {
+    public KafkaExecutor setConsumerType(ContentType type) {
         this.consumer = KafkaServiceFactory.createConsumer(type);
         return this;
     }

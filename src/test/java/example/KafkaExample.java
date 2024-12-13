@@ -7,14 +7,14 @@ import java.time.Instant;
 import java.util.List;
 
 import static kafka.matcher.KafkaMatcher.*;
-import static kafka.matcher.condition.jsonpath.JsonPathConditions.*;
-import static kafka.matcher.condition.number.NumberConditions.*;
-import static kafka.matcher.condition.record.RecordConditions.*;
-import static kafka.matcher.condition.string.StringConditions.equalsTo;
-import static kafka.matcher.condition.string.StringConditions.*;
-import static kafka.matcher.condition.timestamp.TimestampConditions.equalsTo;
-import static kafka.matcher.condition.timestamp.TimestampConditions.inRange;
-import static kafka.matcher.condition.timestamp.TimestampConditions.*;
+import static kafka.matcher.assertions.JsonPathConditions.*;
+import static kafka.matcher.assertions.NumberAssertions.*;
+import static kafka.matcher.assertions.RecordAssertions.*;
+import static kafka.matcher.assertions.StringAssertions.equalsTo;
+import static kafka.matcher.assertions.StringAssertions.*;
+import static kafka.matcher.assertions.TimestampAssertions.equalsTo;
+import static kafka.matcher.assertions.TimestampAssertions.inRange;
+import static kafka.matcher.assertions.TimestampAssertions.*;
 
 /**
  * Пример использования DSL для проверки Kafka записей.

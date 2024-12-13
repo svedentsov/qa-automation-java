@@ -1,254 +1,383 @@
 package example;
 
 import io.restassured.RestAssured;
-import io.restassured.http.ContentType;
-import org.junit.jupiter.api.DisplayName;
+import io.restassured.response.Response;
+import org.hamcrest.Matchers;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import rest.matcher.RestValidator;
+import rest.matcher.assertions.BodyAssertions;
+import rest.matcher.condition.Condition;
 
 import java.io.File;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.Map;
 
-import static org.hamcrest.Matchers.*;
-import static rest.matcher.RestMatcher.allOf;
-import static rest.matcher.RestMatcher.anyOf;
-import static rest.matcher.RestMatcher.not;
 import static rest.matcher.RestMatcher.*;
+import static rest.matcher.assertions.BodyAssertions.*;
+import static rest.matcher.assertions.CookieAssertions.*;
+import static rest.matcher.assertions.HeaderAssertions.*;
+import static rest.matcher.assertions.StatusAssertions.*;
+import static rest.matcher.assertions.TimeAssertions.*;
 
 public class RestExample {
 
-    @Test
-    @DisplayName("Проверка десериализации тела ответа в объект")
-    public void testCanDeserializeTo() {
-        var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts/1");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(canDeserializeTo(Post.class));
+    @BeforeAll
+    public static void setup() {
+        // Настройка базового URI для RestAssured
+        RestAssured.baseURI = "https://jsonplaceholder.typicode.com";
     }
 
+    /**
+     * Пример проверки кода состояния ответа.
+     */
     @Test
-    @DisplayName("Проверка существования JSON-пути в теле ответа")
-    public void testBodyJsonPathExists() {
-        var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts/1");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(bodyJsonPathExists("$.title"));
+    public void testStatusCode() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                status(statusCode(200)),
+                status(isSuccessful2xx()),
+                status(statusCodeBetween(200, 299)),
+                status(statusLineContains("OK")));
     }
 
+    /**
+     * Пример проверки заголовков ответа.
+     */
     @Test
-    @DisplayName("Проверка значения по JSON-пути в теле ответа")
-    public void testBodyJsonPath() {
-        var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts/1");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(
-                bodyJsonPath("$.userId", equalTo(1)),
-                bodyJsonPath("$.id", greaterThan(0))
+    public void testHeaders() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                header(headerExists("Content-Type")),
+                header(headerEqualsIgnoringCase("Content-Type", "application/json; charset=utf-8")),
+                header(headerContains("Content-Type", "application/json")),
+                header(headerStartsWith("Content-Type", "application")),
+                header(headerEndsWith("Content-Type", "utf-8")),
+                header(headerValueNotEmpty("Content-Type")),
+                header(headerValueMatchesRegex("Content-Type", "application/json.*")),
+                header(contentType(io.restassured.http.ContentType.JSON))
         );
     }
 
+    /**
+     * Пример проверки тела ответа.
+     */
     @Test
-    @DisplayName("Проверка размера тела ответа")
-    public void testBodySize() {
-        var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(
-                bodySize(greaterThan(0))
+    public void testBody() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                body(bodyContains("sunt aut facere repellat provident occaecati excepturi optio reprehenderit")),
+                body(bodyContainsIgnoringCase("SUNT AUT FACERE REPELLAT PROVIDENT")),
+                body(BodyAssertions.bodyIsJson()),
+                body(bodyJsonPathEquals("userId", 1)),
+                body(bodyJsonPathMatches("title", Matchers.containsString("sunt"))),
+                body(bodyJsonPathDoesNotMatch("body", Matchers.containsString("error"))),
+                body(bodyCanDeserializeTo(Post.class)),
+                body(bodySizeGreaterThan(100)),
+                body(bodyEndsWith("est rerum tempore vitae")),
+                body(bodyStartsWith("{")),
+                body(bodyContainsAll(Arrays.asList("\"id\": 1", "\"title\": \"sunt aut facere\""))),
+                body(bodyContainsAny(Arrays.asList("\"id\": 1", "\"id\": 2"))),
+                body(bodyExists()),
+                body(bodyIsNotBlank())
         );
     }
 
+    /**
+     * Пример проверки куки в ответе.
+     * Примечание: JSONPlaceholder не устанавливает куки, поэтому этот пример иллюстративен.
+     */
     @Test
-    @DisplayName("Проверка, что тело ответа является JSON")
-    public void testBodyIsJson() {
-        var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts/1");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(bodyIsJson());
-    }
-
-    @Test
-    @DisplayName("Проверка, что тело ответа является XML")
-    public void testBodyIsXml() {
-        var response = RestAssured.get("https://httpbin.org/xml");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(bodyIsXml());
-    }
-
-    @Test
-    @DisplayName("Проверка основных матчеров для тела ответа")
-    public void testBodyMatchers() {
-        var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts/1");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(
-                body(notNullValue()),
-                body("userId", equalTo(1)),
-                body("title", containsString("sunt aut facere")),
-                bodyEndsWith("architecto"),
-                bodyStartsWith("{"),
-                bodyContains("sunt aut facere"),
-                bodyContainsIgnoringCase("SUNT AUT FACERE")
-        );
-
-        validator.shouldHave(bodyMatchesPattern(Pattern.compile("\\{.*\\}", Pattern.DOTALL)));
-        validator.shouldHave(bodyContainsAll(Arrays.asList("userId", "id", "title", "body")));
-        validator.shouldHave(bodyContainsAny(Arrays.asList("nonexistent", "title")));
-    }
-
-    @Test
-    @DisplayName("Проверка матчеров для заголовков ответа")
-    public void testHeaderMatchers() {
-        var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts/1");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(
-                header("Content-Type", "application/json; charset=utf-8"),
-                header("Content-Type", containsString("application/json")),
-                headerExists("Content-Type"),
-                headerAbsent("Nonexistent-Header")
-        );
-
-        validator.shouldHave(
-                headerMatchesPattern("Content-Type", Pattern.compile("application/json.*")));
-
-        validator.shouldHave(
-                headerContains("Content-Type"),
-                contentType(ContentType.JSON)
-        );
-
-        var gzipResponse = RestAssured.get("https://httpbin.org/gzip");
-        new RestValidator(gzipResponse)
-                .shouldHave(contentEncoding("gzip"));
-    }
-
-    @Test
-    @DisplayName("Проверка матчеров для cookies")
-    public void testCookieMatchers() {
-        var response = RestAssured.given()
-                .cookie("sessionid", "12345")
-                .get("https://httpbin.org/cookies");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(
-                cookie("sessionid", "12345"),
-                cookie("sessionid", equalTo("12345")),
-                cookieExists("sessionid")
+    public void testCookies() {
+        Response response = RestAssured.given().get("/posts/1");
+        new RestValidator(response).shouldHave(
+                cookie(cookieExists("sessionId")),
+                cookie(cookieEquals("sessionId", "abc123")),
+                cookie(cookieStartsWith("sessionId", "abc")),
+                cookie(cookieEndsWith("sessionId", "123")),
+                cookie(cookieValueNotEmpty("sessionId")),
+                cookie(cookieValueMatchesRegex("sessionId", "abc\\d+"))
         );
     }
 
+    /**
+     * Пример проверки времени ответа.
+     */
     @Test
-    @DisplayName("Проверка матчеров для кода состояния")
-    public void testStatusCodeMatchers() {
-        var response = RestAssured.get("https://httpbin.org/status/200");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(
-                statusCode(200),
-                statusCodeInRange(200, 299),
-                statusCodeClass(2),
-                isSuccessful2xx(),
-                statusLine("HTTP/1.1 200 OK"));
-
-        var redirectResponse = RestAssured.get("https://httpbin.org/redirect/1");
-        new RestValidator(redirectResponse)
-                .shouldHave(isRedirect3xx());
-
-        var clientErrorResponse = RestAssured.get("https://httpbin.org/status/404");
-        new RestValidator(clientErrorResponse)
-                .shouldHave(isClientError4xx());
-
-        var serverErrorResponse = RestAssured.get("https://httpbin.org/status/500");
-        new RestValidator(serverErrorResponse)
-                .shouldHave(isServerError5xx());
+    public void testResponseTime() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                responseTime(responseTimeLessThan(Duration.ofSeconds(2))),
+                responseTime(responseTimeGreaterThan(Duration.ofMillis(100))),
+                responseTime(responseTimeBetween(Duration.ofMillis(100), Duration.ofSeconds(2))),
+                responseTime(responseTimeMatches(Matchers.lessThan(2000L))),
+                responseTime(responseTimeWithinTolerance(Duration.ofMillis(500), Duration.ofMillis(100))),
+                responseTime(responseTimeDeviationExceeds(Duration.ofMillis(500), 200)));
     }
 
+    /**
+     * Пример использования композитных условий (логические операции).
+     */
     @Test
-    @DisplayName("Проверка матчеров для времени ответа")
-    public void testTimeMatchers() {
-        var response = RestAssured.get("https://httpbin.org/delay/1");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(
-                responseTimeLessThan(Duration.ofSeconds(2)),
-                responseTime(lessThan(2000L)));
-    }
-
-    @Test
-    @DisplayName("Проверка соответствия тела JSON-схеме")
-    public void testJsonSchemaMatcher() {
-        File schemaFile = new File("src/test/resources/post-schema.json");
-        if (schemaFile.exists()) {
-            var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts/1");
-            var validator = new RestValidator(response);
-            validator.shouldHave(
-                    bodyMatchesJsonSchema(schemaFile)
-            );
-        } else {
-            System.out.println("JSON-схема не найдена по пути: " + schemaFile.getPath());
-        }
-    }
-
-    @Test
-    @DisplayName("Composite Conditions Example")
     public void testCompositeConditions() {
-        var response = RestAssured.get("https://jsonplaceholder.typicode.com/posts/1");
-        var validator = new RestValidator(response);
-
-        validator.shouldHave(allOf(
-                statusCode(200),
-                bodyContains("userId"),
-                headerExists("Content-Type")));
-
-        validator.shouldHave(anyOf(
-                statusCode(404),
-                bodyContains("nonexistent text"),
-                headerExists("Content-Type")));
-
-        validator.shouldHave(not(statusCode(500)));
-
-        validator.shouldHave(nOf(2,
-                statusCode(200),
-                bodyContains("userId"),
-                headerExists("Nonexistent-Header")));
+        Response response = RestAssured.get("/posts/1");
+        Condition allConditions = allOf(
+                status(statusCode(200)),
+                header(headerExists("Content-Type")),
+                body(bodyIsJson())
+        );
+        Condition anyCondition = anyOf(
+                status(isClientError4xx()),
+                status(isServerError5xx())
+        );
+        new RestValidator(response).shouldHave(
+                allConditions,
+                not(anyCondition));
     }
 
-    // Вспомогательный класс Post для десериализации в объект
+    /**
+     * Пример проверки соответствия JSON-схеме.
+     * Примечание: Требуется файл JSON-схемы `post-schema.json` в ресурсах проекта.
+     */
+    @Test
+    public void testJsonSchema() {
+        Response response = RestAssured.get("/posts/1");
+        File schemaFile = new File("src/test/resources/post-schema.json");
+        new RestValidator(response).shouldHave(
+                body(bodyMatchesJsonSchema(schemaFile)));
+    }
+
+    /**
+     * Пример проверки уникальных значений в массиве по JSONPath.
+     * Примечание: Используется JSONPlaceholder, но JSON-ответ не содержит массивов для этого примера.
+     */
+    @Test
+    public void testUniqueValuesInArray() {
+        Response response = RestAssured.get("/posts");
+        new RestValidator(response).shouldHave(
+                body(bodyJsonPathUniqueCount("[*].id", 100))
+        );
+    }
+
+    /**
+     * Пример проверки валидного URL в теле ответа.
+     * Примечание: JSONPlaceholder не содержит URL в теле ответа, поэтому этот пример иллюстративен.
+     */
+    @Test
+    public void testValidUrlInBody() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                body(bodyContainsValidUrl("url"))
+        );
+    }
+
+    /**
+     * Пример проверки валидной даты в теле ответа.
+     * Примечание: JSONPlaceholder не содержит дат в теле ответа, поэтому этот пример иллюстративен.
+     */
+    @Test
+    public void testValidDateInBody() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                body(bodyContainsValidDate("date", "yyyy-MM-dd"))
+        );
+    }
+
+    /**
+     * Пример проверки валидного email в теле ответа.
+     * Примечание: JSONPlaceholder не содержит email в теле ответа, поэтому этот пример иллюстративен.
+     */
+    @Test
+    public void testValidEmailInBody() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                body(bodyContainsValidEmail("email"))
+        );
+    }
+
+    /**
+     * Пример проверки наличия определенных ключей в JSON-объекте по JSONPath.
+     */
+    @Test
+    public void testJsonPathHasKeys() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                body(bodyJsonPathHasKeys("", Arrays.asList("userId", "id", "title", "body"))));
+    }
+
+    /**
+     * Пример проверки наличия полей с заданными значениями в теле ответа.
+     */
+    @Test
+    public void testFieldsWithValues() {
+        Response response = RestAssured.get("/posts/1");
+
+        Map<String, Object> fieldValues = new HashMap<>();
+        fieldValues.put("userId", 1);
+        fieldValues.put("id", 1);
+
+        new RestValidator(response).shouldHave(
+                body(bodyContainsFieldsWithValues(fieldValues))
+        );
+    }
+
+    /**
+     * Пример проверки валидного Base64-кода в теле ответа.
+     * Примечание: JSONPlaceholder не содержит Base64 в теле ответа, поэтому этот пример иллюстративен.
+     */
+    @Test
+    public void testValidBase64InBody() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                body(bodyContainsValidBase64("base64Field"))
+        );
+    }
+
+    /**
+     * Пример проверки наличия HTML-тега в теле ответа.
+     * Примечание: JSONPlaceholder не содержит HTML в теле ответа, поэтому этот пример иллюстративен.
+     */
+    @Test
+    public void testHtmlTagInBody() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                body(bodyContainsHtmlTag("htmlContent", "div"))
+        );
+    }
+
+    /**
+     * Пример проверки наличия заголовков с множественными значениями.
+     */
+    @Test
+    public void testMultipleHeaderValues() {
+        // Пример запроса, который возвращает несколько заголовков с одним именем
+        Response response = RestAssured.given()
+                .header("Accept", "application/json")
+                .header("Accept", "text/plain")
+                .get("/posts/1");
+        new RestValidator(response).shouldHave(
+                header(headerValueCountEquals("Accept", 2)),
+                header(headerContainsAll("Accept", Arrays.asList("application/json", "text/plain"))),
+                header(headerContainsAny("Accept", Arrays.asList("application/xml", "text/plain")))
+        );
+    }
+
+    /**
+     * Пример проверки отсутствия определенных заголовков.
+     */
+    @Test
+    public void testAbsentHeader() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                header(headerAbsent("X-Non-Existent-Header"))
+        );
+    }
+
+    /**
+     * Пример проверки наличия определенных куки с атрибутами.
+     * Примечание: JSONPlaceholder не устанавливает куки, поэтому этот пример иллюстративен.
+     */
+    @Test
+    public void testCookieAttributes() {
+        Response response = RestAssured.given().get("/posts/1");
+        new RestValidator(response).shouldHave(
+                cookie(cookieDomainEquals("sessionId", "example.com")),
+                cookie(cookiePathEquals("sessionId", "/")),
+                cookie(cookieDoesNotHaveAttribute("sessionId", "HttpOnly"))
+        );
+    }
+
+    /**
+     * Пример проверки размера тела ответа.
+     */
+    @Test
+    public void testBodySize() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                body(bodySize(Matchers.greaterThan(50))),
+                body(bodySizeEqualTo(292)),
+                body(bodySizeGreaterThan(100)),
+                body(bodySizeLessThan(500))
+        );
+    }
+
+    /**
+     * Пример проверки длины строки в заголовке.
+     */
+    @Test
+    public void testHeaderValueLength() {
+        Response response = RestAssured.get("/posts/1");
+        new RestValidator(response).shouldHave(
+                header(headerValueLengthMatches("Content-Type", Matchers.greaterThan(10))));
+    }
+
+    /**
+     * Пример проверки наличия списка по JSONPath с определенной длиной.
+     */
+    @Test
+    public void testJsonPathListSize() {
+        Response response = RestAssured.get("/posts");
+        new RestValidator(response).shouldHave(
+                body(bodyJsonPathListSize("[*].id", 100)),
+                body(bodyJsonPathListSizeGreaterThan("[*].id", 50)),
+                body(bodyJsonPathListSizeLessThan("[*].id", 150)));
+    }
+
+    /**
+     * Пример проверки уникальности и размера списка по JSONPath.
+     */
+    @Test
+    public void testUniqueAndSizeList() {
+        Response response = RestAssured.get("/posts");
+        new RestValidator(response).shouldHave(
+                body(bodyJsonPathListIsUniqueAndSize("[*].id", 100)));
+    }
+
+    // Дополнительные примеры можно добавить по аналогии с вышеуказанными методами.
+
+    /**
+     * Класс модели для десериализации JSON-ответа.
+     */
     public static class Post {
-        public int userId;
-        public int id;
-        public String title;
-        public String body;
+        private int userId;
+        private int id;
+        private String title;
+        private String body;
 
-        public Post() {
+        // Геттеры и сеттеры
+
+        public int getUserId() {
+            return userId;
         }
 
-        public Post(int userId, int id, String title, String body) {
+        public void setUserId(int userId) {
             this.userId = userId;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
             this.id = id;
+        }
+
+        public String getTitle() {
+            return title;
+        }
+
+        public void setTitle(String title) {
             this.title = title;
+        }
+
+        public String getBody() {
+            return body;
+        }
+
+        public void setBody(String body) {
             this.body = body;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof Post)) return false;
-            Post post = (Post) o;
-            return userId == post.userId && id == post.id &&
-                    title.equals(post.title) && body.equals(post.body);
-        }
-
-        @Override
-        public int hashCode() {
-            int result = userId;
-            result = 31 * result + id;
-            result = 31 * result + title.hashCode();
-            result = 31 * result + body.hashCode();
-            return result;
         }
     }
 }

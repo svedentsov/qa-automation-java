@@ -3,15 +3,15 @@ package rest.matcher.condition;
 import io.restassured.response.Response;
 
 /**
- * Интерфейс Condition представляет условие проверки ответа HTTP.
- * Классы, реализующие этот интерфейс, могут быть использованы для выполнения различных проверок на ответ HTTP.
+ * Функциональный интерфейс для условия проверки HTTP ответа.
  */
+@FunctionalInterface
 public interface Condition {
 
     /**
-     * Проверяет ответ HTTP согласно определенному условию.
+     * Проверяет условие на заданном ответе.
      *
-     * @param response Объект Response для проверки.
+     * @param response ответ HTTP для проверки
      */
     void check(Response response);
 }

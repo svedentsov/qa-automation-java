@@ -1,17 +1,17 @@
 package kafka.matcher;
 
 import com.jayway.jsonpath.JsonPath;
-import kafka.matcher.condition.Condition;
-import kafka.matcher.condition.Conditions;
-import kafka.matcher.condition.composite.CompositeConditions;
-import kafka.matcher.condition.jsonpath.JsonPathCondition;
-import kafka.matcher.condition.number.NumberCondition;
-import kafka.matcher.condition.record.RecordCondition;
-import kafka.matcher.condition.string.StringCondition;
-import kafka.matcher.condition.timestamp.TimestampCondition;
+import kafka.matcher.assertions.CompositeAssertions;
+import kafka.matcher.assertions.NumberAssertions.NumberCondition;
+import kafka.matcher.condition.*;
 import lombok.experimental.UtilityClass;
 
 import java.time.Instant;
+
+import static kafka.matcher.assertions.JsonPathConditions.JsonPathCondition;
+import static kafka.matcher.assertions.RecordAssertions.RecordCondition;
+import static kafka.matcher.assertions.StringAssertions.StringCondition;
+import static kafka.matcher.assertions.TimestampAssertions.TimestampCondition;
 
 /**
  * Основной класс, предоставляющий DSL для проверки Kafka записей.
@@ -27,7 +27,7 @@ public class KafkaMatcher {
      * @return обертка для проверки списка записей
      */
     public static Conditions records(RecordCondition rc) {
-        return rc::check;
+        return records -> rc.check(records);
     }
 
     /**
@@ -48,11 +48,7 @@ public class KafkaMatcher {
      * @return условие для одной записи
      */
     public static Condition value(String jsonPath, JsonPathCondition jc) {
-        return record -> {
-            String actual = record.value();
-            Object val = JsonPath.parse(actual).read(jsonPath);
-            jc.check(val, jsonPath);
-        };
+        return record -> jc.check(JsonPath.parse(record.value()).read(jsonPath), jsonPath);
     }
 
     /**
@@ -114,7 +110,7 @@ public class KafkaMatcher {
      * @return условие, которое пройдет только если все условия будут истинны
      */
     public static Condition allOf(Condition... conditions) {
-        return CompositeConditions.and(conditions);
+        return CompositeAssertions.and(conditions);
     }
 
     /**
@@ -124,7 +120,7 @@ public class KafkaMatcher {
      * @return условие, которое пройдет если хотя бы одно условие будет истинно
      */
     public static Condition anyOf(Condition... conditions) {
-        return CompositeConditions.or(conditions);
+        return CompositeAssertions.or(conditions);
     }
 
     /**
@@ -134,7 +130,7 @@ public class KafkaMatcher {
      * @return условие, которое пройдет только если все указанные условия будут ложны
      */
     public static Condition not(Condition... conditions) {
-        return CompositeConditions.not(conditions);
+        return CompositeAssertions.not(conditions);
     }
 
     /**
@@ -145,6 +141,6 @@ public class KafkaMatcher {
      * @return условие для одной записи
      */
     public static Condition nOf(int n, Condition... conditions) {
-        return CompositeConditions.nOf(n, conditions);
+        return CompositeAssertions.nOf(n, conditions);
     }
 }

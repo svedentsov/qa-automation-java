@@ -9,6 +9,7 @@ import java.util.List;
  */
 @FunctionalInterface
 public interface Conditions {
+
     /**
      * Проверяет условие для списка записей.
      *

@@ -7,8 +7,8 @@ import java.util.List;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static rest.matcher.RestMatcher.contentType;
-import static rest.matcher.RestMatcher.statusCode;
+import static rest.matcher.assertions.HeaderAssertions.contentType;
+import static rest.matcher.assertions.StatusAssertions.statusCode;
 
 /**
  * Класс для выполнения шагов, связанных с операциями над пользователями.

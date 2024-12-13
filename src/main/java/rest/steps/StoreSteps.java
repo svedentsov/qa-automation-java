@@ -7,8 +7,8 @@ import java.util.Map;
 
 import static io.restassured.http.ContentType.JSON;
 import static org.junit.jupiter.api.Assertions.*;
-import static rest.matcher.RestMatcher.contentType;
-import static rest.matcher.RestMatcher.statusCode;
+import static rest.matcher.assertions.HeaderAssertions.contentType;
+import static rest.matcher.assertions.StatusAssertions.statusCode;
 
 /**
  * Класс для выполнения шагов, связанных с операциями над заказами и инвентарем в магазине.

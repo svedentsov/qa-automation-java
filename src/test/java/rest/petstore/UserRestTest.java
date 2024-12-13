@@ -13,7 +13,7 @@ import java.util.List;
 import static io.qameta.allure.SeverityLevel.CRITICAL;
 import static io.qameta.allure.SeverityLevel.NORMAL;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static rest.matcher.RestMatcher.*;
+import static rest.matcher.assertions.StatusAssertions.statusCode;
 
 @Layer("rest")
 @Owner("svedentsov")
@@ -115,7 +115,8 @@ public class UserRestTest extends RestTest {
     public void loginUserTest() {
         // Arrange
         User user = DataGenerator.generateValidUser();
-        petStore.userSteps().createUser(user);
+        petStore.userSteps()
+                .createUser(user);
 
         // Act
         String sessionId = petStore.userSteps()

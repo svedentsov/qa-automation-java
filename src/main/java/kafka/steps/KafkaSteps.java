@@ -1,8 +1,7 @@
 package kafka.steps;
 
 import io.qameta.allure.Step;
-import kafka.enums.ConsumerType;
-import kafka.enums.ProducerType;
+import kafka.enums.ContentType;
 import kafka.helper.KafkaExecutor;
 import kafka.matcher.KafkaValidator;
 import kafka.matcher.condition.Condition;
@@ -15,9 +14,9 @@ import org.apache.kafka.common.header.Header;
 import java.util.List;
 
 import static kafka.matcher.KafkaMatcher.*;
-import static kafka.matcher.condition.record.RecordConditions.exists;
-import static kafka.matcher.condition.record.RecordConditions.*;
-import static kafka.matcher.condition.string.StringConditions.*;
+import static kafka.matcher.assertions.RecordAssertions.exists;
+import static kafka.matcher.assertions.RecordAssertions.*;
+import static kafka.matcher.assertions.StringAssertions.*;
 
 /**
  * Класс {@code KafkaSteps} предоставляет методы для взаимодействия с Kafka,
@@ -29,14 +28,14 @@ public class KafkaSteps {
     private final KafkaExecutor kafkaExecutor = new KafkaExecutor();
 
     @Step("Установить продюсер с типом '{producerType}'")
-    public KafkaSteps setProducerType(ProducerType producerType) {
+    public KafkaSteps setProducerType(ContentType producerType) {
         kafkaExecutor.setProducerType(producerType);
         return this;
     }
 
     @Step("Установить консюмер с типом '{consumerType}'")
-    public KafkaSteps setConsumerType(ConsumerType consumerType) {
-        kafkaExecutor.setConsumerType(consumerType);
+    public KafkaSteps setConsumerType(ContentType contentType) {
+        kafkaExecutor.setConsumerType(contentType);
         return this;
     }
 

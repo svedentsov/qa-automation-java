@@ -1,7 +1,6 @@
 package kafka.factory;
 
-import kafka.enums.ConsumerType;
-import kafka.enums.ProducerType;
+import kafka.enums.ContentType;
 import kafka.service.*;
 
 /**
@@ -18,7 +17,7 @@ public class KafkaServiceFactory {
      * @return экземпляр {@link KafkaProducerService} соответствующий указанному типу
      * @throws IllegalArgumentException если передан неизвестный тип продюсера
      */
-    public static KafkaProducerService createProducer(ProducerType type) {
+    public static KafkaProducerService createProducer(ContentType type) {
         return switch (type) {
             case STRING_FORMAT -> new KafkaProducerServiceString();
             case AVRO_FORMAT -> new KafkaProducerServiceAvro();
@@ -33,7 +32,7 @@ public class KafkaServiceFactory {
      * @return экземпляр {@link KafkaConsumerService} соответствующий указанному типу
      * @throws IllegalArgumentException если передан неизвестный тип потребителя
      */
-    public static KafkaConsumerService createConsumer(ConsumerType type) {
+    public static KafkaConsumerService createConsumer(ContentType type) {
         return switch (type) {
             case STRING_FORMAT -> new KafkaConsumerServiceString();
             case AVRO_FORMAT -> new KafkaConsumerServiceAvro();
