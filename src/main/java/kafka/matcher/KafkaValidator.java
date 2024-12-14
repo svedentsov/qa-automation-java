@@ -96,7 +96,7 @@ public class KafkaValidator {
     /**
      * Проверяет, что список записей не является null или пустым.
      *
-     * @param records Список записей для проверки.
+     * @param records список записей для проверки
      */
     private void validateRecords(@NonNull List<ConsumerRecord<String, String>> records) {
         Assertions.assertThat(records)

@@ -5,8 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import rest.matcher.condition.Condition;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Objects;
 
 /**
  * Этот класс предоставляет методы для проверки, что ответ соответствует определённым условиям.
@@ -22,31 +21,23 @@ public class RestValidator {
     private final Response response;
 
     /**
-     * Проверяет, что ответ соответствует одному условию.
+     * Проверяет, что ответ соответствует одному или нескольким условиям.
      * Логирует информацию о проверяемом условии и выполняет проверку.
      *
-     * @param condition Условие, которое необходимо проверить
+     * @param conditions Условия, которые необходимо проверить
      * @return Ссылка на текущий экземпляр {@link RestValidator}
-     */
-    public RestValidator shouldHave(Condition condition) {
-        log.debug("Проверка условия: {}", condition.toString());
-        condition.check(response);
-        return this;
-    }
-
-    /**
-     * Проверяет, что ответ соответствует нескольким условиям.
-     * Логирует информацию о каждом проверяемом условии и выполняет проверки.
-     *
-     * @param conditions Массив условий, которые необходимо проверить
-     * @return Ссылка на текущий экземпляр {@link RestValidator}
+     * @throws IllegalArgumentException если conditions равны null или пусты
      */
     public RestValidator shouldHave(Condition... conditions) {
-        List<Condition> conds = Arrays.asList(conditions);
-        conds.forEach(condition -> {
-            log.debug("Проверка условия: {}", condition.toString());
+        Objects.requireNonNull(conditions, "Условия проверки не могут быть null.");
+        if (conditions.length == 0) {
+            throw new IllegalArgumentException("Условия проверки не могут быть пустыми.");
+        }
+        for (Condition condition : conditions) {
+            Objects.requireNonNull(condition, "Условие проверки не может быть null.");
+            log.debug("Проверка условия: {}", condition);
             condition.check(response);
-        });
+        }
         return this;
     }
 }

@@ -7,7 +7,7 @@ import org.assertj.core.api.Assertions;
  * Утилитный класс для создания числовых условий.
  */
 @UtilityClass
-public final class NumberAssertions {
+public class NumberAssertions {
 
     /**
      * Функциональный интерфейс для числовых условий.
@@ -70,6 +70,42 @@ public final class NumberAssertions {
     }
 
     /**
+     * Проверяет, что число не равно указанному целочисленному значению.
+     */
+    public static NumberCondition<Integer> notEqualTo(int expected) {
+        return actual -> Assertions.assertThat(actual)
+                .as("Значение не должно быть равно %d", expected)
+                .isNotEqualTo(expected);
+    }
+
+    /**
+     * Проверяет, что число находится в указанном целочисленном диапазоне включительно.
+     */
+    public static NumberCondition<Integer> inRange(int start, int end) {
+        return actual -> Assertions.assertThat(actual)
+                .as("Значение должно быть в диапазоне [%d, %d]", start, end)
+                .isBetween(start, end);
+    }
+
+    /**
+     * Проверяет, что число целочисленное и положительное.
+     */
+    public static NumberCondition<Integer> isPositive() {
+        return actual -> Assertions.assertThat(actual)
+                .as("Значение должно быть положительным")
+                .isGreaterThan(0);
+    }
+
+    /**
+     * Проверяет, что число целочисленное и отрицательное.
+     */
+    public static NumberCondition<Integer> isNegative() {
+        return actual -> Assertions.assertThat(actual)
+                .as("Значение должно быть отрицательным")
+                .isLessThan(0);
+    }
+
+    /**
      * Проверяет, что число (Long) равно ожидаемому значению.
      */
     public static NumberCondition<Long> equalToLong(long expected) {
@@ -115,24 +151,6 @@ public final class NumberAssertions {
     }
 
     /**
-     * Проверяет, что число не равно указанному целочисленному значению.
-     */
-    public static NumberCondition<Integer> notEqualTo(int expected) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение не должно быть равно %d", expected)
-                .isNotEqualTo(expected);
-    }
-
-    /**
-     * Проверяет, что число находится в указанном целочисленном диапазоне включительно.
-     */
-    public static NumberCondition<Integer> inRange(int start, int end) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть в диапазоне [%d, %d]", start, end)
-                .isBetween(start, end);
-    }
-
-    /**
      * Проверяет, что число (Long) не равно указанному значению.
      */
     public static NumberCondition<Long> notEqualTo(long expected) {
@@ -148,23 +166,5 @@ public final class NumberAssertions {
         return actual -> Assertions.assertThat(actual)
                 .as("Значение должно быть в диапазоне [%d, %d]", start, end)
                 .isBetween(start, end);
-    }
-
-    /**
-     * Проверяет, что число целочисленное и положительное.
-     */
-    public static NumberCondition<Integer> isPositive() {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть положительным")
-                .isGreaterThan(0);
-    }
-
-    /**
-     * Проверяет, что число целочисленное и отрицательное.
-     */
-    public static NumberCondition<Integer> isNegative() {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть отрицательным")
-                .isLessThan(0);
     }
 }

@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
  * Утилитный класс для создания различных условий, применяемых к списку записей Kafka.
  */
 @UtilityClass
-public final class RecordAssertions {
+public class RecordAssertions {
 
     /**
      * Функциональный интерфейс для условий, проверяющих список записей целиком.
@@ -109,7 +109,10 @@ public final class RecordAssertions {
     }
 
     /**
-     * Проверяет, что в списке существует запись с указанным ключом.
+     * Проверяет, что существует запись с указанным ключом.
+     *
+     * @param key ключ для поиска
+     * @return условие для одной записи
      */
     public static RecordCondition keysExists(String key) {
         return records -> {
@@ -122,6 +125,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что ни в одной записи не встречается указанный ключ.
+     *
+     * @param key ключ для проверки отсутствия
+     * @return условие для одной записи
      */
     public static RecordCondition keysNotExists(String key) {
         return records -> {
@@ -134,6 +140,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что существует запись с указанным значением.
+     *
+     * @param value значение для поиска
+     * @return условие для одной записи
      */
     public static RecordCondition valuesExists(String value) {
         return records -> {
@@ -146,6 +155,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что ни в одной записи не встречается указанное значение.
+     *
+     * @param value значение для проверки отсутствия
+     * @return условие для одной записи
      */
     public static RecordCondition valuesNotExists(String value) {
         return records -> {
@@ -158,6 +170,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что хотя бы один ключ содержит указанную подстроку.
+     *
+     * @param substring подстрока для поиска
+     * @return условие для одной записи
      */
     public static RecordCondition anyKeyContains(String substring) {
         return records -> {
@@ -173,6 +188,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что хотя бы одно значение содержит указанную подстроку.
+     *
+     * @param substring подстрока для поиска
+     * @return условие для одной записи
      */
     public static RecordCondition anyValueContains(String substring) {
         return records -> {
@@ -188,6 +206,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что все ключи соответствуют заданному регулярному выражению.
+     *
+     * @param regex регулярное выражение
+     * @return условие для одной записи
      */
     public static RecordCondition allKeysMatchRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
@@ -204,6 +225,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что все значения соответствуют заданному регулярному выражению.
+     *
+     * @param regex регулярное выражение
+     * @return условие для одной записи
      */
     public static RecordCondition allValuesMatchRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
@@ -220,6 +244,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что все записи принадлежат указанной партиции.
+     *
+     * @param partition номер партиции
+     * @return условие для одной записи
      */
     public static RecordCondition partitionsAllEqual(int partition) {
         return records -> {
@@ -232,6 +259,10 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что все записи имеют партицию в указанном диапазоне.
+     *
+     * @param startInclusive начало диапазона (включительно)
+     * @param endInclusive   конец диапазона (включительно)
+     * @return условие для одной записи
      */
     public static RecordCondition partitionsAllInRange(int startInclusive, int endInclusive) {
         return records -> {
@@ -245,6 +276,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что все смещения (offset) больше указанного значения.
+     *
+     * @param offset пороговое значение
+     * @return условие для одной записи
      */
     public static RecordCondition offsetsAllGreaterThan(long offset) {
         return records -> {
@@ -257,6 +291,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что все смещения (offset) меньше указанного значения.
+     *
+     * @param offset пороговое значение
+     * @return условие для одной записи
      */
     public static RecordCondition offsetsAllLessThan(long offset) {
         return records -> {
@@ -269,6 +306,10 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что все смещения (offset) находятся в указанном диапазоне.
+     *
+     * @param startInclusive начало диапазона (включительно)
+     * @param endInclusive   конец диапазона (включительно)
+     * @return условие для одной записи
      */
     public static RecordCondition offsetsAllInRange(long startInclusive, long endInclusive) {
         return records -> {
@@ -282,6 +323,9 @@ public final class RecordAssertions {
 
     /**
      * Проверяет, что все записи принадлежат указанному топику.
+     *
+     * @param topic имя топика
+     * @return условие для одной записи
      */
     public static RecordCondition topicsAllEqual(String topic) {
         return records -> {

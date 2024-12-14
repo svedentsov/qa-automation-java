@@ -26,7 +26,7 @@ public class RestMatcher {
      * @return {@link Condition} для проверки статусного кода
      */
     public static Condition status(StatusCondition sc) {
-        return response -> sc.check(response);
+        return sc;
     }
 
     /**
@@ -36,7 +36,7 @@ public class RestMatcher {
      * @return {@link Condition} для проверки заголовков
      */
     public static Condition header(HeaderCondition hc) {
-        return response -> hc.check(response);
+        return hc;
     }
 
     /**
@@ -46,7 +46,7 @@ public class RestMatcher {
      * @return {@link Condition} для проверки куки
      */
     public static Condition cookie(CookieCondition cc) {
-        return response -> cc.check(response);
+        return cc;
     }
 
     /**
@@ -56,7 +56,7 @@ public class RestMatcher {
      * @return {@link Condition} для проверки тела ответа
      */
     public static Condition body(BodyCondition bc) {
-        return response -> bc.check(response);
+        return bc;
     }
 
     /**
@@ -66,7 +66,7 @@ public class RestMatcher {
      * @return {@link Condition} для проверки времени ответа
      */
     public static Condition responseTime(TimeCondition tc) {
-        return response -> tc.check(response);
+        return tc;
     }
 
     // ------------------- Композитные Условия -------------------
@@ -111,7 +111,7 @@ public class RestMatcher {
      * @param conditions массив условий, из которых должно быть выполнено {@code n} штук
      * @return композитное условие, требующее выполнения не менее {@code n} условий
      * @throws NullPointerException     если {@code conditions} содержит {@code null}
-     * @throws IllegalArgumentException если {@code n} меньше или равно нулю
+     * @throws IllegalArgumentException если {@code n} меньше или равно нулю или превышает количество условий
      */
     public static Condition nOf(int n, @NonNull Condition... conditions) {
         return CompositeAssertions.nOf(n, conditions);

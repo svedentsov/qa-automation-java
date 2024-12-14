@@ -11,7 +11,7 @@ import java.util.regex.Pattern;
  * Утилитный класс для создания строковых условий.
  */
 @UtilityClass
-public final class StringAssertions {
+public class StringAssertions {
 
     /**
      * Функциональный интерфейс для строковых условий.
@@ -64,42 +64,52 @@ public final class StringAssertions {
 
     /**
      * Проверяет, что строка равна ожидаемой.
+     *
+     * @param expected ожидаемое значение строки
      */
     public static StringCondition equalsTo(String expected) {
         return actual -> Assertions.assertThat(actual)
-                .as("Строка должна быть равна %s", expected)
+                .as("Строка должна быть равна '%s'", expected)
                 .isEqualTo(expected);
     }
 
     /**
      * Проверяет, что строка содержит указанный текст.
+     *
+     * @param text текст для поиска
      */
     public static StringCondition contains(String text) {
         return actual -> Assertions.assertThat(actual)
-                .as("Строка должна содержать %s", text)
+                .as("Строка должна содержать '%s'", text)
                 .contains(text);
     }
 
     /**
      * Проверяет, что строка начинается с указанного префикса.
+     *
+     * @param prefix префикс для поиска
      */
     public static StringCondition startsWith(String prefix) {
         return actual -> Assertions.assertThat(actual)
-                .as("Строка должна начинаться с %s", prefix)
+                .as("Строка должна начинаться с '%s'", prefix)
                 .startsWith(prefix);
     }
 
     /**
      * Проверяет, что строка заканчивается указанным суффиксом.
+     *
+     * @param suffix суффикс для поиска
      */
     public static StringCondition endsWith(String suffix) {
         return actual -> Assertions.assertThat(actual)
-                .as("Строка должна заканчиваться %s", suffix)
+                .as("Строка должна заканчиваться '%s'", suffix)
                 .endsWith(suffix);
     }
 
     /**
      * Проверяет, что длина строки равна указанному числу.
+     *
+     * @param length ожидаемая длина строки
      */
     public static StringCondition lengthEqualTo(int length) {
         return actual -> Assertions.assertThat(actual)
@@ -109,6 +119,8 @@ public final class StringAssertions {
 
     /**
      * Проверяет, что длина строки больше указанного значения.
+     *
+     * @param length минимальная длина строки
      */
     public static StringCondition lengthGreaterThan(int length) {
         return actual -> Assertions.assertThat(actual.length())
@@ -118,6 +130,8 @@ public final class StringAssertions {
 
     /**
      * Проверяет, что длина строки меньше указанного значения.
+     *
+     * @param length максимальная длина строки
      */
     public static StringCondition lengthLessThan(int length) {
         return actual -> Assertions.assertThat(actual.length())
@@ -127,44 +141,54 @@ public final class StringAssertions {
 
     /**
      * Проверяет, что строка содержит указанный текст без учета регистра.
+     *
+     * @param text текст для поиска
      */
     public static StringCondition containsIgnoringCase(String text) {
         return actual -> Assertions.assertThat(actual.toLowerCase())
-                .as("Строка должна содержать %s без учета регистра", text)
+                .as("Строка должна содержать '%s' без учета регистра", text)
                 .contains(text.toLowerCase());
     }
 
     /**
      * Проверяет, что строка соответствует указанному регулярному выражению.
+     *
+     * @param regex регулярное выражение
      */
     public static StringCondition matchesRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
         return actual -> Assertions.assertThat(actual)
-                .as("Строка должна соответствовать рег. выражению %s", regex)
+                .as("Строка должна соответствовать рег. выражению '%s'", regex)
                 .matches(pattern);
     }
 
     /**
      * Проверяет, что строка соответствует указанному регулярному выражению без учета регистра.
+     *
+     * @param regex регулярное выражение
      */
     public static StringCondition matchesCaseInsensitive(String regex) {
         Pattern pattern = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
         return actual -> Assertions.assertThat(pattern.matcher(actual).matches())
-                .as("Строка должна соответствовать рег. выражению %s без учета регистра", regex)
+                .as("Строка должна соответствовать рег. выражению '%s' без учета регистра", regex)
                 .isTrue();
     }
 
     /**
      * Проверяет, что строка содержит все указанные подстроки.
+     *
+     * @param texts подстроки для поиска
      */
     public static StringCondition containsAll(String... texts) {
         return actual -> Arrays.stream(texts).forEach(text -> Assertions.assertThat(actual)
-                .as("Строка должна содержать %s", text)
+                .as("Строка должна содержать '%s'", text)
                 .contains(text));
     }
 
     /**
      * Проверяет, что строка содержит заданные слова в указанном порядке.
+     *
+     * @param words слова для поиска
      */
     public static StringCondition wordsOrder(String... words) {
         return actual -> {
@@ -178,16 +202,12 @@ public final class StringAssertions {
 
     /**
      * Проверяет, что строка содержит хотя бы одну из указанных подстрок.
+     *
+     * @param texts подстроки для поиска
      */
     public static StringCondition containsAny(String... texts) {
         return actual -> {
-            boolean found = false;
-            for (String text : texts) {
-                if (actual.contains(text)) {
-                    found = true;
-                    break;
-                }
-            }
+            boolean found = Arrays.stream(texts).anyMatch(actual::contains);
             Assertions.assertThat(found)
                     .as("Строка должна содержать хотя бы один из %s", List.of(texts))
                     .isTrue();
@@ -195,11 +215,11 @@ public final class StringAssertions {
     }
 
     /**
-     * Проверяет, что строка не пуста и не является null, а также не содержит только пробелы.
+     * Проверяет, что строка не пуста и не состоит только из пробелов.
      */
     public static StringCondition isNonBlank() {
         return actual -> Assertions.assertThat(actual)
-                .as("Строка не должна быть пустой, null или состоять только из пробелов")
+                .as("Строка не должна быть пустой или состоять только из пробелов")
                 .isNotBlank();
     }
 }

@@ -6,14 +6,17 @@ import org.assertj.core.api.Assertions;
 
 import java.util.Arrays;
 
+/**
+ * Утилитный класс для создания композитных условий (логические операции).
+ */
 @UtilityClass
-public final class CompositeAssertions {
+public class CompositeAssertions {
 
     /**
-     * Проверяет, что все перечисленные условия должны быть выполнены (логическое И).
+     * Проверяет, что все перечисленные условия выполнены (логическое И).
      *
      * @param conditions набор условий
-     * @return условие, которое будет выполнено, если все условия истинны
+     * @return условие, которое проходит только если все условия истинны
      */
     public static Condition and(Condition... conditions) {
         return record -> {
@@ -24,10 +27,10 @@ public final class CompositeAssertions {
     }
 
     /**
-     * Проверяет, что хотя бы одно из перечисленных условий должно быть выполнено (логическое ИЛИ).
+     * Проверяет, что хотя бы одно из перечисленных условий выполнено (логическое ИЛИ).
      *
      * @param conditions набор условий
-     * @return условие, которое будет выполнено, если хотя бы одно условие истинно
+     * @return условие, которое проходит, если хотя бы одно условие истинно
      */
     public static Condition or(Condition... conditions) {
         return record -> {
@@ -50,7 +53,7 @@ public final class CompositeAssertions {
      *
      * @param n          минимальное число условий, которые должны быть выполнены
      * @param conditions набор условий
-     * @return условие, которое будет выполнено, если хотя бы n условий истинны
+     * @return условие, которое проходит, если хотя бы {@code n} условий истинны
      */
     public static Condition nOf(int n, Condition... conditions) {
         return record -> {
@@ -72,10 +75,10 @@ public final class CompositeAssertions {
     }
 
     /**
-     * Проверяет, что ни одно из указанных условий не должно быть выполнено (логическое НЕ).
+     * Проверяет, что ни одно из указанных условий не выполнено (логическое НЕ).
      *
      * @param conditions набор условий
-     * @return условие, которое будет выполнено, если все условия ложны
+     * @return условие, которое проходит только если все условия ложны
      */
     public static Condition not(Condition... conditions) {
         return record -> {

@@ -826,7 +826,6 @@ public class RestExecutor {
      * @return текущий экземпляр RestExecutor
      */
     public RestExecutor shouldHave(Condition condition) {
-        log.info("Проверка условия: " + condition.toString());
         condition.check(response);
         return this;
     }

@@ -3,7 +3,7 @@ package kafka.matcher.condition;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 /**
- * Базовый функциональный интерфейс для условий проверки одной записи.
+ * Функциональный интерфейс для условий проверки одной записи.
  */
 @FunctionalInterface
 public interface Condition {

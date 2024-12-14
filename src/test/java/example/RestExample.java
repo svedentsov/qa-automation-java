@@ -6,7 +6,6 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import rest.matcher.RestValidator;
-import rest.matcher.assertions.BodyAssertions;
 import rest.matcher.condition.Condition;
 
 import java.io.File;
@@ -22,6 +21,9 @@ import static rest.matcher.assertions.HeaderAssertions.*;
 import static rest.matcher.assertions.StatusAssertions.*;
 import static rest.matcher.assertions.TimeAssertions.*;
 
+/**
+ * Класс примерных тестов для демонстрации использования утилитных классов rest.matcher.
+ */
 public class RestExample {
 
     @BeforeAll
@@ -40,7 +42,8 @@ public class RestExample {
                 status(statusCode(200)),
                 status(isSuccessful2xx()),
                 status(statusCodeBetween(200, 299)),
-                status(statusLineContains("OK")));
+                status(statusLineContains("OK"))
+        );
     }
 
     /**
@@ -70,7 +73,7 @@ public class RestExample {
         new RestValidator(response).shouldHave(
                 body(bodyContains("sunt aut facere repellat provident occaecati excepturi optio reprehenderit")),
                 body(bodyContainsIgnoringCase("SUNT AUT FACERE REPELLAT PROVIDENT")),
-                body(BodyAssertions.bodyIsJson()),
+                body(bodyIsJson()),
                 body(bodyJsonPathEquals("userId", 1)),
                 body(bodyJsonPathMatches("title", Matchers.containsString("sunt"))),
                 body(bodyJsonPathDoesNotMatch("body", Matchers.containsString("error"))),
@@ -98,7 +101,7 @@ public class RestExample {
                 cookie(cookieStartsWith("sessionId", "abc")),
                 cookie(cookieEndsWith("sessionId", "123")),
                 cookie(cookieValueNotEmpty("sessionId")),
-                cookie(cookieValueMatchesRegex("sessionId", "abc\\d+"))
+                cookie(cookieValueMatchesPattern("sessionId", "abc\\d+"))
         );
     }
 
@@ -114,7 +117,8 @@ public class RestExample {
                 responseTime(responseTimeBetween(Duration.ofMillis(100), Duration.ofSeconds(2))),
                 responseTime(responseTimeMatches(Matchers.lessThan(2000L))),
                 responseTime(responseTimeWithinTolerance(Duration.ofMillis(500), Duration.ofMillis(100))),
-                responseTime(responseTimeDeviationExceeds(Duration.ofMillis(500), 200)));
+                responseTime(responseTimeDeviationExceeds(Duration.ofMillis(500), 200))
+        );
     }
 
     /**
@@ -134,7 +138,8 @@ public class RestExample {
         );
         new RestValidator(response).shouldHave(
                 allConditions,
-                not(anyCondition));
+                not(anyCondition)
+        );
     }
 
     /**
@@ -146,7 +151,8 @@ public class RestExample {
         Response response = RestAssured.get("/posts/1");
         File schemaFile = new File("src/test/resources/post-schema.json");
         new RestValidator(response).shouldHave(
-                body(bodyMatchesJsonSchema(schemaFile)));
+                body(bodyMatchesJsonSchema(schemaFile))
+        );
     }
 
     /**
@@ -157,7 +163,7 @@ public class RestExample {
     public void testUniqueValuesInArray() {
         Response response = RestAssured.get("/posts");
         new RestValidator(response).shouldHave(
-                body(bodyJsonPathUniqueCount("[*].id", 100))
+                body(bodyJsonPathListIsUniqueAndSize("[*].id", 100))
         );
     }
 
@@ -204,7 +210,8 @@ public class RestExample {
     public void testJsonPathHasKeys() {
         Response response = RestAssured.get("/posts/1");
         new RestValidator(response).shouldHave(
-                body(bodyJsonPathHasKeys("", Arrays.asList("userId", "id", "title", "body"))));
+                body(bodyJsonPathObjectHasKeys("", Arrays.asList("userId", "id", "title", "body")))
+        );
     }
 
     /**
@@ -310,7 +317,8 @@ public class RestExample {
     public void testHeaderValueLength() {
         Response response = RestAssured.get("/posts/1");
         new RestValidator(response).shouldHave(
-                header(headerValueLengthMatches("Content-Type", Matchers.greaterThan(10))));
+                header(headerValueLengthMatches("Content-Type", Matchers.greaterThan(10)))
+        );
     }
 
     /**
@@ -322,7 +330,8 @@ public class RestExample {
         new RestValidator(response).shouldHave(
                 body(bodyJsonPathListSize("[*].id", 100)),
                 body(bodyJsonPathListSizeGreaterThan("[*].id", 50)),
-                body(bodyJsonPathListSizeLessThan("[*].id", 150)));
+                body(bodyJsonPathListSizeLessThan("[*].id", 150))
+        );
     }
 
     /**
@@ -332,7 +341,8 @@ public class RestExample {
     public void testUniqueAndSizeList() {
         Response response = RestAssured.get("/posts");
         new RestValidator(response).shouldHave(
-                body(bodyJsonPathListIsUniqueAndSize("[*].id", 100)));
+                body(bodyJsonPathListIsUniqueAndSize("[*].id", 100))
+        );
     }
 
     // Дополнительные примеры можно добавить по аналогии с вышеуказанными методами.

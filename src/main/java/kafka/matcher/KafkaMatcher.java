@@ -2,16 +2,16 @@ package kafka.matcher;
 
 import com.jayway.jsonpath.JsonPath;
 import kafka.matcher.assertions.CompositeAssertions;
+import kafka.matcher.assertions.JsonPathConditions.JsonPathCondition;
 import kafka.matcher.assertions.NumberAssertions.NumberCondition;
-import kafka.matcher.condition.*;
+import kafka.matcher.assertions.RecordAssertions.RecordCondition;
+import kafka.matcher.assertions.StringAssertions.StringCondition;
+import kafka.matcher.assertions.TimestampAssertions.TimestampCondition;
+import kafka.matcher.condition.Condition;
+import kafka.matcher.condition.Conditions;
 import lombok.experimental.UtilityClass;
 
 import java.time.Instant;
-
-import static kafka.matcher.assertions.JsonPathConditions.JsonPathCondition;
-import static kafka.matcher.assertions.RecordAssertions.RecordCondition;
-import static kafka.matcher.assertions.StringAssertions.StringCondition;
-import static kafka.matcher.assertions.TimestampAssertions.TimestampCondition;
 
 /**
  * Основной класс, предоставляющий DSL для проверки Kafka записей.
@@ -23,7 +23,7 @@ public class KafkaMatcher {
     /**
      * Создает {@link Conditions} из {@link RecordCondition}.
      *
-     * @param rc условие для списка записей
+     * @param rc условие для проверки списка записей
      * @return обертка для проверки списка записей
      */
     public static Conditions records(RecordCondition rc) {

@@ -1,5 +1,6 @@
 package rest.matcher.assertions;
 
+import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
@@ -11,6 +12,7 @@ import java.util.Objects;
 /**
  * Класс для утверждений, связанных с временем ответа.
  */
+@UtilityClass
 public class TimeAssertions {
 
     /**

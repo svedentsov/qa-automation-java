@@ -3,7 +3,6 @@ package kafka.matcher.assertions;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -11,7 +10,7 @@ import java.util.regex.Pattern;
  * Утилитный класс для создания условий, применяемых к значениям JsonPath.
  */
 @UtilityClass
-public final class JsonPathConditions {
+public class JsonPathConditions {
 
     /**
      * Функциональный интерфейс для условий, применяемых к значению, извлеченному по JsonPath.
@@ -120,10 +119,14 @@ public final class JsonPathConditions {
      * Проверяет, что значение по JsonPath соответствует заданному регулярному выражению.
      */
     public static JsonPathCondition matchesRegexJson(String regex) {
+        Pattern pattern = Pattern.compile(regex);
         return (val, jsonPath) -> {
-            Pattern p = Pattern.compile(regex);
-            Assertions.assertThat(p.matcher(val.toString()).matches())
+            Assertions.assertThat(val)
                     .as("Значение по JsonPath %s должно соответствовать %s", jsonPath, regex)
+                    .isInstanceOf(String.class);
+            String str = (String) val;
+            Assertions.assertThat(pattern.matcher(str).matches())
+                    .as("Значение по JsonPath %s должно соответствовать рег. выражению %s", jsonPath, regex)
                     .isTrue();
         };
     }
@@ -133,7 +136,11 @@ public final class JsonPathConditions {
      */
     public static JsonPathCondition containsJson(String text) {
         return (val, jsonPath) -> {
-            Assertions.assertThat(val.toString())
+            Assertions.assertThat(val)
+                    .as("Значение по JsonPath %s должно содержать %s", jsonPath, text)
+                    .isInstanceOf(String.class);
+            String str = (String) val;
+            Assertions.assertThat(str)
                     .as("Значение по JsonPath %s должно содержать %s", jsonPath, text)
                     .contains(text);
         };
@@ -185,8 +192,8 @@ public final class JsonPathConditions {
                     .as("Массив по JsonPath %s не должен быть пустым", jsonPath)
                     .isNotEmpty();
 
-            HashSet<Object> uniqueSet = new HashSet<>(arr);
-            Assertions.assertThat(uniqueSet.size())
+            long uniqueCount = arr.stream().distinct().count();
+            Assertions.assertThat(uniqueCount)
                     .as("Все элементы массива по JsonPath %s должны быть уникальными", jsonPath)
                     .isEqualTo(arr.size());
         };
