@@ -7,7 +7,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
  */
 @FunctionalInterface
 public interface Condition {
-
     /**
      * Проверяет условие для одной записи.
      *

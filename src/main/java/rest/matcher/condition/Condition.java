@@ -7,7 +7,6 @@ import io.restassured.response.Response;
  */
 @FunctionalInterface
 public interface Condition {
-
     /**
      * Проверяет условие на заданном ответе.
      *

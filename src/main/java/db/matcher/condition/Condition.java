@@ -6,7 +6,6 @@ package db.matcher.condition;
  * @param <T> тип сущности
  */
 public interface Condition<T> {
-
     /**
      * Метод для проверки сущности.
      *

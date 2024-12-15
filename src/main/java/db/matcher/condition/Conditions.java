@@ -8,7 +8,6 @@ import java.util.List;
  * @param <T> тип сущности
  */
 public interface Conditions<T> {
-
     /**
      * Метод для проверки списка сущностей.
      *

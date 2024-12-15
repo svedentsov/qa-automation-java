@@ -19,6 +19,7 @@ import io.restassured.response.Response;
 import io.restassured.specification.ProxySpecification;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
+import rest.matcher.RestValidator;
 import rest.matcher.condition.Condition;
 
 import java.util.List;
@@ -820,13 +821,13 @@ public class RestExecutor {
     }
 
     /**
-     * Проверяет, соответствует ли ответ заданному условию.
+     * Проверяет, соответствует ли ответ заданным условиям.
      *
-     * @param condition условие для проверки
+     * @param conditions условия для проверки
      * @return текущий экземпляр RestExecutor
      */
-    public RestExecutor shouldHave(Condition condition) {
-        condition.check(response);
+    public RestExecutor shouldHave(Condition... conditions) {
+        new RestValidator(response).shouldHave(conditions);
         return this;
     }
 }
