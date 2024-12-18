@@ -1,22 +1,22 @@
 package kafka.helper;
 
-import kafka.pool.KafkaClientPool;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import kafka.pool.KafkaClientPool;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,22 +31,18 @@ public class KafkaListener {
     private static final int SHUTDOWN_TIMEOUT = 10;
 
     /**
-     * Запускает процесс прослушивания сообщений из указанного топика.
-     * Если процесс прослушивания для данного топика уже запущен, метод ничего не делает.
-     *
-     * @param topic   название топика, из которого нужно слушать сообщения
-     * @param timeout максимальная продолжительность ожидания сообщений от Kafka
-     * @param isAvro  указывает, используется ли формат Avro для сообщений (если {@code true}, иначе используется строковый формат)
+     * Запускает процесс прослушивания топика.
+     * Если топик уже прослушивается, выводит предупреждение.
      */
     public static void startListening(String topic, Duration timeout, boolean isAvro) {
-        // Создаем и запускаем задачу прослушивания, если она еще не запущена
-        LISTENER_EXECUTORS.computeIfAbsent(topic, t -> {
-            // Создаем однопоточный executor
-            ExecutorService executor = Executors.newSingleThreadExecutor();
-            // Отправляем задачу на выполнение
-            executor.submit(createListenerTask(topic, timeout, isAvro));
-            return executor;
-        });
+        if (LISTENER_EXECUTORS.containsKey(topic)) {
+            log.warn("Попытка повторного запуска прослушивания для топика {}. Топик уже прослушивается.", topic);
+            return;
+        }
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.submit(createListenerTask(topic, timeout, isAvro));
+        LISTENER_EXECUTORS.put(topic, executor);
+        log.info("Запущено прослушивание топика {}", topic);
     }
 
     /**
@@ -56,7 +52,6 @@ public class KafkaListener {
      * @param topic название топика, для которого нужно остановить прослушивание
      */
     public static void stopListening(String topic) {
-        KafkaClientPool.closeConsumer(topic); // Закрываем потребителя, если он был открыт
         ExecutorService executor = LISTENER_EXECUTORS.remove(topic); // Получаем и удаляем ExecutorService для указанного топика
         shutdownExecutorService(executor, topic); // Завершаем работу executor
     }
@@ -97,14 +92,18 @@ public class KafkaListener {
      */
     private static Runnable createListenerTask(String topic, Duration timeout, boolean isAvro) {
         return () -> {
-            try (KafkaConsumer<String, ?> consumer = isAvro
-                    ? KafkaClientPool.getAvroConsumer(topic)
-                    : KafkaClientPool.getStringConsumer(topic)) {
+            KafkaConsumer<String, ?> consumer = null;
+            try {
+                consumer = isAvro
+                        ? KafkaClientPool.createAvroConsumer(topic)
+                        : KafkaClientPool.createStringConsumer(topic);
+
                 consumer.subscribe(Collections.singletonList(topic));
                 // Обеспечиваем начало чтения с текущего конца топика
                 consumer.poll(Duration.ZERO); // Первоначальный poll для назначения разделов
                 Set<TopicPartition> partitions = consumer.assignment(); // Получаем назначенные разделы
                 consumer.seekToEnd(partitions); // Устанавливаем смещение на конец разделов
+
                 processRecords(topic, consumer, timeout);
             } catch (WakeupException e) {
                 handleWakeupException(topic, e);

@@ -8,12 +8,11 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * Реализация сервиса потребителя Kafka для строковых данных.
  * Этот класс предоставляет методы для запуска и остановки прослушивания топиков,
- * а также для получения всех записей в формате строк из топиков.
+ * а также для получения всех уникальных записей в формате строк из топиков.
  */
 @Slf4j
 public class KafkaConsumerServiceString implements KafkaConsumerService {
@@ -40,15 +39,14 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     }
 
     /**
-     * Получает все записи из указанного топика в формате строк.
+     * Получает все уникальные записи из указанного топика в формате строк.
      *
      * @param topic название топика, из которого нужно получить записи
-     * @return список записей в формате строк, полученных из топика
+     * @return список уникальных записей в формате строк, полученных из топика
      */
     @Override
     public List<ConsumerRecord<String, String>> getAllRecords(String topic) {
         return KafkaRecordsManager.getRecords(topic).stream()
-                .flatMap(records -> StreamSupport.stream(records.spliterator(), false))
                 .map(record -> (ConsumerRecord<String, String>) record)
                 .collect(Collectors.toList());
     }

@@ -1,22 +1,29 @@
 package kafka.helper;
 
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Менеджер для хранения и управления записями, полученными из Kafka.
- * Этот класс предоставляет методы для добавления, получения и очистки записей для разных топиков.
+ * Обеспечивает хранение уникальных записей для каждого топика.
  */
 public class KafkaRecordsManager {
 
-    private static final Map<String, List<ConsumerRecords<?, ?>>> RECORDS = new ConcurrentHashMap<>();
+    /**
+     * Структура для хранения уникальных записей по топикам.
+     * Ключ: название топика
+     * Значение: Map, где ключ — уникальная пара (partition, offset), значение — ConsumerRecord.
+     * Это гарантирует, что в рамках одного топика не будет дубликатов по сочетанию partition и offset.
+     */
+    private static final Map<String, Map<PartitionOffset, ConsumerRecord<?, ?>>> RECORDS = new ConcurrentHashMap<>();
 
     /**
      * Добавляет записи для указанного топика.
-     * Если записи для данного топика отсутствуют, они создаются.
+     * Каждая запись идентифицируется парой partition-offset.
+     * Если такая запись уже существует, она не будет добавлена повторно.
      *
      * @param topic   название топика, для которого добавляются записи
      * @param records записи, которые необходимо добавить
@@ -24,29 +31,35 @@ public class KafkaRecordsManager {
      */
     public static void addRecords(String topic, ConsumerRecords<?, ?> records) {
         Objects.requireNonNull(records, "records не должны быть null");
-        RECORDS.computeIfAbsent(topic, k -> new CopyOnWriteArrayList<>()).add(records);
+        RECORDS.computeIfAbsent(topic, k -> new ConcurrentHashMap<>());
+        Map<PartitionOffset, ConsumerRecord<?, ?>> topicRecords = RECORDS.get(topic);
+
+        for (ConsumerRecord<?, ?> record : records) {
+            PartitionOffset key = new PartitionOffset(record.partition(), record.offset());
+            // putIfAbsent добавляет запись только если ключа нет, гарантируя уникальность
+            topicRecords.putIfAbsent(key, record);
+        }
     }
 
     /**
-     * Получает список всех записей для указанного топика.
+     * Получает список всех уникальных записей для указанного топика.
      * Если для указанного топика записей нет, возвращается пустой список.
      *
      * @param topic название топика, записи для которого нужно получить
-     * @return список записей для указанного топика (или пустой список, если записей нет)
+     * @return список уникальных записей для указанного топика
      */
-    public static List<ConsumerRecords<?, ?>> getRecords(String topic) {
-        return new ArrayList<>(RECORDS.getOrDefault(topic, Collections.emptyList()));
+    public static List<ConsumerRecord<?, ?>> getRecords(String topic) {
+        return new ArrayList<>(RECORDS.getOrDefault(topic, Collections.emptyMap()).values());
     }
 
     /**
-     * Получает все записи для всех топиков.
-     * Возвращает копию карты, где ключи — это названия топиков, а значения — списки записей.
+     * Получает все записи для всех топиков в формате Map<topic, список уникальных записей>.
      *
-     * @return карта всех записей для всех топиков
+     * @return карта всех уникальных записей для всех топиков
      */
-    public static Map<String, List<ConsumerRecords<?, ?>>> getAllRecords() {
-        Map<String, List<ConsumerRecords<?, ?>>> result = new HashMap<>();
-        RECORDS.forEach((key, value) -> result.put(key, new ArrayList<>(value)));
+    public static Map<String, List<ConsumerRecord<?, ?>>> getAllRecords() {
+        Map<String, List<ConsumerRecord<?, ?>>> result = new HashMap<>();
+        RECORDS.forEach((topic, recordsMap) -> result.put(topic, new ArrayList<>(recordsMap.values())));
         return result;
     }
 
@@ -66,5 +79,31 @@ public class KafkaRecordsManager {
      */
     public static void clearRecords(String topic) {
         RECORDS.remove(topic);
+    }
+
+    /**
+     * Вспомогательный класс для идентификации записи по partition и offset.
+     */
+    private static class PartitionOffset {
+        private final int partition;
+        private final long offset;
+
+        PartitionOffset(int partition, long offset) {
+            this.partition = partition;
+            this.offset = offset;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof PartitionOffset)) return false;
+            PartitionOffset that = (PartitionOffset) o;
+            return partition == that.partition && offset == that.offset;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(partition, offset);
+        }
     }
 }
