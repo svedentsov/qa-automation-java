@@ -18,7 +18,6 @@ import static rest.enums.PetStatus.AVAILABLE;
  * методы для создания как валидных, так и невалидных экземпляров этих объектов.
  */
 public class DataGenerator {
-
     /**
      * Некорректный JSON для тестирования случаев с ошибками.
      */

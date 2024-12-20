@@ -14,7 +14,6 @@ import java.util.regex.Pattern;
  */
 @UtilityClass
 public class CookieAssertions {
-
     /**
      * Функциональный интерфейс для условий проверки куки в ответе.
      */

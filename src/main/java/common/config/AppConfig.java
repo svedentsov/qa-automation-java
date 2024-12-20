@@ -15,7 +15,6 @@ import static org.aeonbits.owner.Config.Sources;
         "system:properties",
         "classpath:config/config.properties"})
 public interface AppConfig extends Config {
-
     /**
      * URL веб-приложения.
      */

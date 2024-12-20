@@ -11,7 +11,6 @@ import java.util.Arrays;
  */
 @UtilityClass
 public class CompositeAssertions {
-
     /**
      * Проверяет, что все перечисленные условия выполнены (логическое И).
      *

@@ -14,7 +14,6 @@ import java.util.Objects;
 @Slf4j
 @RequiredArgsConstructor
 public class RestValidator {
-
     /**
      * HTTP-ответ для проверки.
      */

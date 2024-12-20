@@ -14,7 +14,6 @@ import java.util.Objects;
  */
 @UtilityClass
 public class TimeAssertions {
-
     /**
      * Функциональный интерфейс для условий проверки времени ответа.
      */

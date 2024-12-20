@@ -10,7 +10,6 @@ import java.util.Objects;
  */
 @UtilityClass
 public class CompositeAssertions {
-
     /**
      * Функциональный интерфейс для композитных условий.
      */

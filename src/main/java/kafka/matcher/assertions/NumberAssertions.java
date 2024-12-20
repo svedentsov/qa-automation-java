@@ -8,7 +8,6 @@ import org.assertj.core.api.Assertions;
  */
 @UtilityClass
 public class NumberAssertions {
-
     /**
      * Функциональный интерфейс для числовых условий.
      *

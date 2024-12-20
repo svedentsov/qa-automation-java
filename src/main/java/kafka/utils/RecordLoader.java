@@ -12,7 +12,6 @@ import java.util.Objects;
  */
 @Slf4j
 public class RecordLoader {
-
     /**
      * Загружает значение записи из указанного файла.
      *

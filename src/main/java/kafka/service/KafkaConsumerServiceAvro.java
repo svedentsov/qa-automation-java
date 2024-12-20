@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class KafkaConsumerServiceAvro implements KafkaConsumerService {
-
     /**
      * Запускает прослушивание указанного топика для данных в формате Avro.
      *

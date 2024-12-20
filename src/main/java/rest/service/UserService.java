@@ -13,7 +13,6 @@ import static rest.enums.Endpoints.*;
  * Сервис для взаимодействия с API пользователей.
  */
 public class UserService extends BaseService {
-
     /**
      * Создание нового пользователя.
      *

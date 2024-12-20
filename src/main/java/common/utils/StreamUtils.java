@@ -18,7 +18,6 @@ import static java.util.stream.Collectors.toList;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class StreamUtils {
-
     /**
      * Преобразует элементы входного потока с использованием заданной функции.
      *

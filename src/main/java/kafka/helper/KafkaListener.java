@@ -95,8 +95,8 @@ public class KafkaListener {
             KafkaConsumer<String, ?> consumer = null;
             try {
                 consumer = isAvro
-                        ? KafkaClientPool.createAvroConsumer(topic)
-                        : KafkaClientPool.createStringConsumer(topic);
+                        ? KafkaClientPool.getAvroConsumer(topic)
+                        : KafkaClientPool.getStringConsumer(topic);
 
                 consumer.subscribe(Collections.singletonList(topic));
                 // Обеспечиваем начало чтения с текущего конца топика

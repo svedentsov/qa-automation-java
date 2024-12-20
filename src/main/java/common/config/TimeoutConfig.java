@@ -15,7 +15,6 @@ import static org.aeonbits.owner.Config.LoadType.MERGE;
 @LoadPolicy(MERGE)
 @Sources("file:src/main/resources/properties/timeout.properties")
 public interface TimeoutConfig extends Config {
-
     /**
      * Время ожидания для WebDriver.
      */

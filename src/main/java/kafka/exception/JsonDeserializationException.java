@@ -4,7 +4,6 @@ package kafka.exception;
  * Исключение, возникающее при ошибках десериализации JSON.
  */
 public class JsonDeserializationException extends RuntimeException {
-
     /**
      * Конструктор для создания исключения с сообщением и причиной.
      *

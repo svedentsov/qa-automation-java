@@ -18,7 +18,6 @@ import java.util.Optional;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BeanTools {
-
     /**
      * Копирует свойства из одного объекта в другой.
      *

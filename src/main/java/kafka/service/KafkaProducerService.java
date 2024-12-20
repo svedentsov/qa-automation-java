@@ -6,7 +6,6 @@ import kafka.model.Record;
  * Интерфейс для сервиса отправки записей в Kafka.
  */
 public interface KafkaProducerService {
-
     /**
      * Отправляет запись в Kafka.
      *

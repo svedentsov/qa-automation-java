@@ -8,7 +8,6 @@ import org.aeonbits.owner.Config.Sources;
  */
 @Sources("file:src/main/resources/properties/allure.properties")
 public interface AllureConfig extends Config {
-
     /**
      * Директория для хранения результатов Allure.
      */

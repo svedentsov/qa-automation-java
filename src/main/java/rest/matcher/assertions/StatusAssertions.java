@@ -15,7 +15,6 @@ import java.util.Objects;
  */
 @UtilityClass
 public class StatusAssertions {
-
     /**
      * Функциональный интерфейс для условий проверки кода состояния ответа.
      */

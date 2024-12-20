@@ -23,7 +23,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileUtil {
-
     /**
      * Читает содержимое файла по указанному пути.
      *

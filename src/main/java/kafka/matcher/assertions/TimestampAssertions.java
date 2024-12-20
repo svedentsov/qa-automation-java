@@ -10,7 +10,6 @@ import java.time.Instant;
  */
 @UtilityClass
 public class TimestampAssertions {
-
     /**
      * Функциональный интерфейс для условий, проверяющих временную метку.
      */

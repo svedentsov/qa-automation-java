@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
  */
 @UtilityClass
 public class RecordAssertions {
-
     /**
      * Функциональный интерфейс для условий, проверяющих список записей целиком.
      */

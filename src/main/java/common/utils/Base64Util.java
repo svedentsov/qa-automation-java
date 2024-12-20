@@ -10,7 +10,6 @@ import java.util.Base64;
  */
 @UtilityClass
 public class Base64Util {
-
     /**
      * Кодирует строку в формате Base64.
      *

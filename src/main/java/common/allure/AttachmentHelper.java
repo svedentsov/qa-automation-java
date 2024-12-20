@@ -15,7 +15,6 @@ import static org.openqa.selenium.logging.LogType.BROWSER;
  * Вспомогательный класс для прикрепления различных типов данных к Allure отчету.
  */
 public class AttachmentHelper {
-
     /**
      * Прикрепляет текстовое сообщение к отчету Allure.
      *

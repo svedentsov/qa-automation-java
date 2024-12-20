@@ -8,7 +8,6 @@ import org.aeonbits.owner.Config;
  */
 @Config.Sources("file:resources/kafka.properties")
 public interface KafkaConfig extends Config {
-
     /**
      * Адреса Kafka брокеров для подключения, разделенные запятыми.
      */

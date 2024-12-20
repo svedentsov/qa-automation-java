@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
  */
 @UtilityClass
 public class StringAssertions {
-
     /**
      * Функциональный интерфейс для строковых условий.
      */

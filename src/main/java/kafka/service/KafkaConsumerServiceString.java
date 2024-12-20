@@ -16,7 +16,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class KafkaConsumerServiceString implements KafkaConsumerService {
-
     /**
      * Запускает прослушивание указанного топика для строковых данных.
      *

@@ -13,7 +13,6 @@ import java.time.temporal.ChronoUnit;
  * Класс-конвертер для преобразования строкового представления в объект Duration.
  */
 public class DurationConverter implements Converter<Duration> {
-
     /**
      * Преобразует строку в объект типа Duration.
      *

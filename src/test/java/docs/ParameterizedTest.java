@@ -17,7 +17,6 @@ import static io.qameta.allure.Allure.step;
  * Класс для параметризованных тестов с использованием библиотеки Selenide.
  */
 public class ParameterizedTest {
-
     /**
      * Общий тест поиска в Яндексе для различных запросов.
      *

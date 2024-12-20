@@ -16,7 +16,6 @@ import java.util.Objects;
  */
 @Slf4j
 public class KafkaProducerServiceAvro implements KafkaProducerService {
-
     /**
      * Отправляет строковую запись в Kafka.
      *

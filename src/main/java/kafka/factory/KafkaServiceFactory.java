@@ -9,7 +9,6 @@ import kafka.service.*;
  * {@link KafkaProducerService} и {@link KafkaConsumerService}, в зависимости от переданного типа.
  */
 public class KafkaServiceFactory {
-
     /**
      * Создает экземпляр {@link KafkaProducerService} на основе указанного типа продюсера.
      *

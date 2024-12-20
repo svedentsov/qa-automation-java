@@ -16,7 +16,6 @@ import static org.aeonbits.owner.Config.LoadType.MERGE;
         "classpath:config/local.properties",
         "classpath:config/remote.properties"})
 public interface SystemConfig extends Config {
-
     /**
      * Имя браузера.
      */
