@@ -83,9 +83,9 @@ public class KafkaExample {
         validateRecord.shouldHave(partition(lessThan(10)));
 
         // Проверки смещения
-        validateRecord.shouldHave(offset(equalToLong(0L)));
-        validateRecord.shouldHave(offset(greaterThanLong(-1L)));
-        validateRecord.shouldHave(offset(lessOrEqualToLong(0L)));
+        validateRecord.shouldHave(offset(equalTo(0L)));
+        validateRecord.shouldHave(offset(greaterThan(-1L)));
+        validateRecord.shouldHave(offset(lessOrEqualTo(0L)));
 
         // Проверки топика
         validateRecord.shouldHave(topic(equalsTo("topic")));

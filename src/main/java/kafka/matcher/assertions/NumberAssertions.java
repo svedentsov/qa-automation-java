@@ -8,10 +8,11 @@ import org.assertj.core.api.Assertions;
  */
 @UtilityClass
 public class NumberAssertions {
+
     /**
      * Функциональный интерфейс для числовых условий.
      *
-     * @param <T> тип числа (например, Integer, Long)
+     * @param <T> тип числа (например, Integer, Long, Float, Double, BigDecimal, BigInteger и т.д.)
      */
     @FunctionalInterface
     public interface NumberCondition<T extends Number & Comparable<T>> {
@@ -23,147 +24,230 @@ public class NumberAssertions {
         void check(T actual);
     }
 
+    // ------------------- Общие условия (для всех T) -------------------
+
     /**
-     * Проверяет, что число равно ожидаемому целочисленному значению.
+     * Проверяет, что число равно ожидаемому значению.
+     *
+     * @param expected ожидаемое значение
+     * @param <T>      тип числа
+     * @return условие равенства
      */
-    public static NumberCondition<Integer> equalTo(int expected) {
+    public static <T extends Number & Comparable<T>> NumberCondition<T> equalTo(T expected) {
         return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть равно %d", expected)
+                .as("Значение должно быть равно %s", expected)
                 .isEqualTo(expected);
     }
 
     /**
-     * Проверяет, что число больше указанного значения.
+     * Проверяет, что число не равно ожидаемому значению.
+     *
+     * @param expected ожидаемое значение
+     * @param <T>      тип числа
+     * @return условие неравенства
      */
-    public static NumberCondition<Integer> greaterThan(int expected) {
+    public static <T extends Number & Comparable<T>> NumberCondition<T> notEqualTo(T expected) {
         return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть > %d", expected)
+                .as("Значение не должно быть равно %s", expected)
+                .isNotEqualTo(expected);
+    }
+
+    /**
+     * Проверяет, что число больше указанного значения.
+     *
+     * @param expected значение
+     * @param <T>      тип числа
+     * @return условие "больше"
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> greaterThan(T expected) {
+        return actual -> Assertions.assertThat(actual)
+                .as("Значение должно быть > %s", expected)
                 .isGreaterThan(expected);
     }
 
     /**
      * Проверяет, что число меньше указанного значения.
+     *
+     * @param expected значение
+     * @param <T>      тип числа
+     * @return условие "меньше"
      */
-    public static NumberCondition<Integer> lessThan(int expected) {
+    public static <T extends Number & Comparable<T>> NumberCondition<T> lessThan(T expected) {
         return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть < %d", expected)
+                .as("Значение должно быть < %s", expected)
                 .isLessThan(expected);
     }
 
     /**
      * Проверяет, что число больше или равно указанному значению.
+     *
+     * @param expected значение
+     * @param <T>      тип числа
+     * @return условие "больше или равно"
      */
-    public static NumberCondition<Integer> greaterOrEqualTo(int expected) {
+    public static <T extends Number & Comparable<T>> NumberCondition<T> greaterOrEqualTo(T expected) {
         return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть >= %d", expected)
+                .as("Значение должно быть >= %s", expected)
                 .isGreaterThanOrEqualTo(expected);
     }
 
     /**
      * Проверяет, что число меньше или равно указанному значению.
+     *
+     * @param expected значение
+     * @param <T>      тип числа
+     * @return условие "меньше или равно"
      */
-    public static NumberCondition<Integer> lessOrEqualTo(int expected) {
+    public static <T extends Number & Comparable<T>> NumberCondition<T> lessOrEqualTo(T expected) {
         return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть <= %d", expected)
+                .as("Значение должно быть <= %s", expected)
                 .isLessThanOrEqualTo(expected);
     }
 
     /**
-     * Проверяет, что число не равно указанному целочисленному значению.
+     * Проверяет, что число находится в диапазоне [start, end] (включительно).
+     *
+     * @param start начало диапазона
+     * @param end   конец диапазона
+     * @param <T>   тип числа
+     * @return условие "в диапазоне"
      */
-    public static NumberCondition<Integer> notEqualTo(int expected) {
+    public static <T extends Number & Comparable<T>> NumberCondition<T> inRange(T start, T end) {
         return actual -> Assertions.assertThat(actual)
-                .as("Значение не должно быть равно %d", expected)
-                .isNotEqualTo(expected);
-    }
-
-    /**
-     * Проверяет, что число находится в указанном целочисленном диапазоне включительно.
-     */
-    public static NumberCondition<Integer> inRange(int start, int end) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть в диапазоне [%d, %d]", start, end)
+                .as("Значение должно быть в диапазоне [%s, %s]", start, end)
                 .isBetween(start, end);
     }
 
     /**
-     * Проверяет, что число целочисленное и положительное.
+     * Проверяет, что число находится в диапазоне (start, end) (строго, без включения границ).
+     *
+     * @param start начало диапазона
+     * @param end   конец диапазона
+     * @param <T>   тип числа
+     * @return условие "в диапазоне (start, end)"
      */
-    public static NumberCondition<Integer> isPositive() {
+    public static <T extends Number & Comparable<T>> NumberCondition<T> betweenExclusive(T start, T end) {
         return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть положительным")
-                .isGreaterThan(0);
+                .as("Значение должно быть в диапазоне (%s, %s)", start, end)
+                .isGreaterThan(start)
+                .isLessThan(end);
     }
 
     /**
-     * Проверяет, что число целочисленное и отрицательное.
+     * Проверяет, что число равно нулю.
+     *
+     * @param <T> тип числа
+     * @return условие "равно нулю"
      */
-    public static NumberCondition<Integer> isNegative() {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть отрицательным")
-                .isLessThan(0);
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isZero() {
+        return actual -> Assertions.assertThat(actual.doubleValue())
+                .as("Значение должно быть равно 0")
+                .isEqualTo(0.0);
     }
 
     /**
-     * Проверяет, что число (Long) равно ожидаемому значению.
+     * Проверяет, что число не равно нулю.
+     *
+     * @param <T> тип числа
+     * @return условие "не равно нулю"
      */
-    public static NumberCondition<Long> equalToLong(long expected) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть равно %d", expected)
-                .isEqualTo(expected);
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isNotZero() {
+        return actual -> Assertions.assertThat(actual.doubleValue())
+                .as("Значение не должно быть равно 0")
+                .isNotEqualTo(0.0);
     }
 
     /**
-     * Проверяет, что число (Long) больше указанного значения.
+     * Проверяет, что число положительно.
+     *
+     * @param <T> тип числа
+     * @return условие "положительное"
      */
-    public static NumberCondition<Long> greaterThanLong(long expected) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть > %d", expected)
-                .isGreaterThan(expected);
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isPositive() {
+        return actual -> Assertions.assertThat(actual.doubleValue())
+                .as("Значение должно быть положительным (больше 0)")
+                .isGreaterThan(0.0);
     }
 
     /**
-     * Проверяет, что число (Long) меньше указанного значения.
+     * Проверяет, что число отрицательно.
+     *
+     * @param <T> тип числа
+     * @return условие "отрицательное"
      */
-    public static NumberCondition<Long> lessThanLong(long expected) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть < %d", expected)
-                .isLessThan(expected);
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isNegative() {
+        return actual -> Assertions.assertThat(actual.doubleValue())
+                .as("Значение должно быть отрицательным (меньше 0)")
+                .isLessThan(0.0);
     }
 
     /**
-     * Проверяет, что число (Long) больше или равно указанному значению.
+     * Проверяет, что число неотрицательно (>= 0).
+     *
+     * @param <T> тип числа
+     * @return условие "неотрицательное"
      */
-    public static NumberCondition<Long> greaterOrEqualToLong(long expected) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть >= %d", expected)
-                .isGreaterThanOrEqualTo(expected);
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isPositiveOrZero() {
+        return actual -> Assertions.assertThat(actual.doubleValue())
+                .as("Значение должно быть >= 0")
+                .isGreaterThanOrEqualTo(0.0);
     }
 
     /**
-     * Проверяет, что число (Long) меньше или равно указанному значению.
+     * Проверяет, что число неположительно (<= 0).
+     *
+     * @param <T> тип числа
+     * @return условие "неположительное"
      */
-    public static NumberCondition<Long> lessOrEqualToLong(long expected) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть <= %d", expected)
-                .isLessThanOrEqualTo(expected);
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isNegativeOrZero() {
+        return actual -> Assertions.assertThat(actual.doubleValue())
+                .as("Значение должно быть <= 0")
+                .isLessThanOrEqualTo(0.0);
     }
 
     /**
-     * Проверяет, что число (Long) не равно указанному значению.
+     * Проверяет, что целочисленное число является чётным.
+     *
+     * @param <T> тип числа (предполагается, что это Integer, Long, Byte, Short и т.п.)
+     * @return условие "чётное"
      */
-    public static NumberCondition<Long> notEqualTo(long expected) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение не должно быть равно %d", expected)
-                .isNotEqualTo(expected);
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isEven() {
+        return actual -> {
+            long value = actual.longValue();
+            Assertions.assertThat(value % 2)
+                    .as("Значение должно быть чётным")
+                    .isEqualTo(0);
+        };
     }
 
     /**
-     * Проверяет, что число (Long) находится в указанном диапазоне включительно.
+     * Проверяет, что целочисленное число является нечётным.
+     *
+     * @param <T> тип числа (предполагается, что это Integer, Long, Byte, Short и т.п.)
+     * @return условие "нечётное"
      */
-    public static NumberCondition<Long> inRange(long start, long end) {
-        return actual -> Assertions.assertThat(actual)
-                .as("Значение должно быть в диапазоне [%d, %d]", start, end)
-                .isBetween(start, end);
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isOdd() {
+        return actual -> {
+            long value = actual.longValue();
+            Assertions.assertThat(value % 2)
+                    .as("Значение должно быть нечётным")
+                    .isNotEqualTo(0);
+        };
+    }
+
+    /**
+     * Проверяет, что целочисленное число является кратным указанному делителю.
+     *
+     * @param divisor делитель
+     * @param <T>     тип числа (предполагается, что это Integer, Long, Byte, Short и т.п.)
+     * @return условие "кратно"
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> multipleOf(long divisor) {
+        return actual -> {
+            long value = actual.longValue();
+            Assertions.assertThat(value % divisor)
+                    .as("Значение должно быть кратно %d", divisor)
+                    .isEqualTo(0);
+        };
     }
 }

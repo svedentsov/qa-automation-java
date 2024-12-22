@@ -11,6 +11,7 @@ import java.util.regex.Pattern;
  */
 @UtilityClass
 public class JsonPathConditions {
+
     /**
      * Функциональный интерфейс для условий, применяемых к значению, извлеченному по JsonPath.
      */
