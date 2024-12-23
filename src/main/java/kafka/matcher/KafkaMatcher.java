@@ -19,6 +19,7 @@ import java.time.Instant;
  */
 @UtilityClass
 public class KafkaMatcher {
+
     /**
      * Создает {@link Conditions} из {@link RecordCondition}.
      *

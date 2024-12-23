@@ -18,6 +18,7 @@ import rest.matcher.condition.Condition;
  */
 @UtilityClass
 public class RestMatcher {
+
     /**
      * Создаёт условие для проверки статусного кода ответа.
      *

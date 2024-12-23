@@ -16,6 +16,7 @@ import java.util.regex.Pattern;
  */
 @UtilityClass
 public class HeaderAssertions {
+
     /**
      * Функциональный интерфейс для условий проверки заголовков ответа.
      */
