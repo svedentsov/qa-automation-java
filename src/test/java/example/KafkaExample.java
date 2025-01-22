@@ -64,10 +64,14 @@ public class KafkaExample {
         validateRecord.shouldHave(value("$.name", isString()));
         validateRecord.shouldHave(value("$.name", containsJson("Jo")));
         validateRecord.shouldHave(value("$.name", matchesRegexJson("J.*n")));
-        validateRecord.shouldHave(value("$.age", isNumber()));
+        validateRecord.shouldHave(value("$.name", contains("Jo"))); // StringCondition
+        validateRecord.shouldHave(value("$.name", equalsTo("John"))); // StringCondition
         validateRecord.shouldHave(value("$.active", isBoolean()));
+        validateRecord.shouldHave(value("$.age", isNumber()));
         validateRecord.shouldHave(value("$.age", numberGreater(18)));
         validateRecord.shouldHave(value("$.age", numberLess(65)));
+        validateRecord.shouldHave(value("$.age", greaterThan(25), Integer.class)); // NumberCondition
+        validateRecord.shouldHave(value("$.age", lessOrEqualTo(30), Integer.class)); // NumberCondition
         validateRecord.shouldHave(value("$.items", isArray()));
         validateRecord.shouldHave(value("$.items", arraySize(3)));
 

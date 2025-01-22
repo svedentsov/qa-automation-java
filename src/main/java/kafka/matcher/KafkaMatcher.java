@@ -27,7 +27,7 @@ public class KafkaMatcher {
      * @return обертка для проверки списка записей
      */
     public static Conditions records(RecordCondition rc) {
-        return records -> rc.check(records);
+        return rc::check;
     }
 
     /**
@@ -48,7 +48,30 @@ public class KafkaMatcher {
      * @return условие для одной записи
      */
     public static Condition value(String jsonPath, JsonPathCondition jc) {
-        return record -> jc.check(JsonPath.parse(record.value()).read(jsonPath), jsonPath);
+        return record -> {
+            Object value = JsonPath.parse(record.value()).read(jsonPath);
+            jc.check(value, jsonPath);
+        };
+    }
+
+    /**
+     * Создает {@link Condition} для проверки строкового значения по JsonPath.
+     */
+    public static Condition value(String jsonPath, StringCondition sc) {
+        return record -> {
+            Object value = JsonPath.parse(record.value()).read(jsonPath);
+            sc.check((String) value);
+        };
+    }
+
+    /**
+     * Создает {@link Condition} для проверки числового значения по JsonPath.
+     */
+    public static <T extends Number & Comparable<T>> Condition value(String jsonPath, NumberCondition<T> nc, Class<T> type) {
+        return record -> {
+            Object value = JsonPath.parse(record.value()).read(jsonPath);
+            nc.check(type.cast(value));
+        };
     }
 
     /**
