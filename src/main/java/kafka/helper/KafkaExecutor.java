@@ -288,6 +288,19 @@ public class KafkaExecutor {
     }
 
     /**
+     * Преобразует первую запись, удовлетворяющую условию, в объект указанного типа.
+     *
+     * @param tClass    класс типа, в который нужно преобразовать запись
+     * @param condition условие для фильтрации записей
+     * @param <T>       тип объекта
+     * @return объект указанного типа или {@code null}, если подходящих записей нет
+     */
+    public <T> T getRecordAs(Class<T> tClass, Condition condition) {
+        List<ConsumerRecord<String, String>> records = getRecordsByCondition(condition);
+        return records.isEmpty() ? null : JsonUtils.fromJson(records.getFirst().value(), tClass);
+    }
+
+    /**
      * Преобразует все записи в список объектов указанного типа.
      *
      * @param tClass класс типа, в который нужно преобразовать записи
@@ -297,6 +310,21 @@ public class KafkaExecutor {
     public <T> List<T> getRecordsAsList(Class<T> tClass) {
         validateConsumer();
         return consumer.getAllRecords(record.getTopic()).stream()
+                .map(record -> JsonUtils.fromJson(record.value(), tClass))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Преобразует записи, удовлетворяющие условию, в список объектов указанного типа.
+     *
+     * @param tClass    класс типа, в который нужно преобразовать записи
+     * @param condition условие для фильтрации записей
+     * @param <T>       тип объектов
+     * @return список объектов указанного типа (может быть пустым)
+     */
+    public <T> List<T> getRecordsAsList(Class<T> tClass, Condition condition) {
+        List<ConsumerRecord<String, String>> records = getRecordsByCondition(condition);
+        return records.stream()
                 .map(record -> JsonUtils.fromJson(record.value(), tClass))
                 .collect(Collectors.toList());
     }
