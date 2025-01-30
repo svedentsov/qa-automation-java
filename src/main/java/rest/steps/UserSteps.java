@@ -15,6 +15,7 @@ import static rest.matcher.assertions.StatusAssertions.statusCode;
  * Содержит методы для создания, получения, обновления и удаления пользователей.
  */
 public class UserSteps extends BaseSteps {
+
     /**
      * Создаёт нового пользователя.
      *

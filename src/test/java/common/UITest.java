@@ -12,6 +12,7 @@ import static com.codeborne.selenide.WebDriverRunner.closeWebDriver;
  * Класс для UI-тестов, расширяющий базовый тестовый класс и включающий методы настройки, завершения и выполнения тестов.
  */
 public abstract class UITest extends BaseTest {
+
     /**
      * Метод, выполняемый перед всеми тестами. Инициализирует Selenide.
      */

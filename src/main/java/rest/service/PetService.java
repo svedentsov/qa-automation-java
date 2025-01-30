@@ -14,6 +14,7 @@ import static rest.enums.Endpoints.*;
  * Сервис для взаимодействия с API питомцев.
  */
 public class PetService extends BaseService {
+
     /**
      * Добавление нового питомца.
      *

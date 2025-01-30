@@ -19,31 +19,37 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Pet {
+
     /**
      * Уникальный идентификатор питомца.
      */
     @JsonProperty("id")
     private long id;
+
     /**
      * Категория питомца.
      */
     @JsonProperty("category")
     private Category category;
+
     /**
      * Имя питомца.
      */
     @JsonProperty("name")
     private String name;
+
     /**
      * Список URL-адресов фотографий питомца.
      */
     @JsonProperty("photoUrls")
     private List<String> photoUrls;
+
     /**
      * Список тегов питомца.
      */
     @JsonProperty("tags")
     private List<Tag> tags;
+
     /**
      * Статус питомца.
      */

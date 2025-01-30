@@ -19,6 +19,7 @@ import static rest.matcher.assertions.StatusAssertions.statusCode;
  * Содержит методы для создания, обновления, удаления и получения данных о питомцах.
  */
 public class PetSteps extends BaseSteps {
+
     /**
      * Создает питомца с валидным запросом.
      *

@@ -15,6 +15,7 @@ import static rest.matcher.assertions.StatusAssertions.statusCode;
  * Содержит методы для создания, получения, удаления заказов и проверки состояния инвентаря.
  */
 public class StoreSteps extends BaseSteps {
+
     /**
      * Удаляет заказ по идентификатору.
      *

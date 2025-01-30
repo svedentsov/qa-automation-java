@@ -16,16 +16,19 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ApiResponse {
+
     /**
      * Код ответа.
      */
     @JsonProperty("code")
     private long code;
+
     /**
      * Тип ответа.
      */
     @JsonProperty("type")
     private String type;
+
     /**
      * Сообщение ответа.
      */

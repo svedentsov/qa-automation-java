@@ -11,6 +11,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Обеспечивает хранение уникальных записей для каждого топика.
  */
 public class KafkaRecordsManager {
+
     /**
      * Структура для хранения уникальных записей по топикам.
      * Ключ: название топика

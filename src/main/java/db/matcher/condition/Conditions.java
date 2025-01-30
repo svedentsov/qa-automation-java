@@ -7,6 +7,7 @@ import java.util.List;
  *
  * @param <T> тип сущности
  */
+@FunctionalInterface
 public interface Conditions<T> {
     /**
      * Метод для проверки списка сущностей.

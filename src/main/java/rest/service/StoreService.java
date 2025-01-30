@@ -11,6 +11,7 @@ import static rest.enums.Endpoints.*;
  * Сервис для взаимодействия с API магазина.
  */
 public class StoreService extends BaseService {
+
     /**
      * Удаление заказа по идентификатору.
      *
