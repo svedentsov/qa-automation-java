@@ -9,7 +9,7 @@ import java.util.List;
 import static kafka.matcher.KafkaMatcher.*;
 import static kafka.matcher.assertions.JsonPathConditions.*;
 import static kafka.matcher.assertions.NumberAssertions.*;
-import static kafka.matcher.assertions.RecordAssertions.*;
+import static kafka.matcher.assertions.CollectionAssertions.*;
 import static kafka.matcher.assertions.StringAssertions.equalsTo;
 import static kafka.matcher.assertions.StringAssertions.*;
 import static kafka.matcher.assertions.TimestampAssertions.equalsTo;
@@ -96,11 +96,11 @@ public class KafkaExample {
         validateRecord.shouldHave(topic(startsWith("top")));
 
         // Составные условия
-        validateRecord.shouldHave(allOf(
+        validateRecord.shouldHave(and(
                 value(contains("John")),
                 value(contains("30"))));
 
-        validateRecord.shouldHave(anyOf(
+        validateRecord.shouldHave(or(
                 key(equalsTo("key1")),
                 key(equalsTo("key2"))));
 

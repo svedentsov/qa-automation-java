@@ -6,45 +6,63 @@ import org.assertj.core.api.Assertions;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
- * Утилитный класс для различных проверок свойств сущности: на null, in(...) проверка, на тип, Optional, несколько свойств сразу и т.д.
+ * Утилитный класс для проверки различных свойств сущности: равенство, null, принадлежность к списку, тип и т.д.
  */
 @UtilityClass
 public class PropertyAssertions {
 
     /**
-     * Проверяет, что свойство сущности равно ожидаемому значению.
+     * Функциональный интерфейс для проверки отдельного свойства.
+     *
+     * @param <V> тип проверяемого свойства
      */
-    public static <T> Condition<T> propertyEquals(Function<T, ?> getter, Object expectedValue) {
-        return entity -> {
-            Object actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Значение должно быть равно %s", expectedValue)
-                    .isEqualTo(expectedValue);
-        };
+    @FunctionalInterface
+    public interface PropertyCondition<V> {
+        /**
+         * Проверяет значение свойства.
+         *
+         * @param value значение свойства для проверки
+         */
+        void check(V value);
     }
 
     /**
-     * Проверяет, что свойство null.
+     * Возвращает условие, проверяющее, что значение свойства равно ожидаемому.
+     *
+     * @param expectedValue ожидаемое значение свойства
+     * @param <T>           тип проверяемого свойства
+     * @return условие проверки равенства
      */
-    public static <T> Condition<T> propertyIsNull(Function<T, ?> getter) {
-        return entity -> {
-            Object actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Значение должно быть null")
-                    .isNull();
-        };
+    public static <T> Condition<T> equalsTo(Object expectedValue) {
+        return value -> Assertions.assertThat(value)
+                .as("Значение должно быть равно %s", expectedValue)
+                .isEqualTo(expectedValue);
     }
 
     /**
-     * Проверяет, что свойство пустое (для строки или коллекции).
+     * Возвращает условие, проверяющее, что значение свойства равно null.
+     *
+     * @param <T> тип проверяемого свойства
+     * @return условие проверки, что значение равно null
      */
-    public static <T> Condition<T> propertyIsEmpty(Function<T, ?> getter) {
-        return entity -> {
-            Object value = getter.apply(entity);
+    public static <T> Condition<T> isNull() {
+        return value -> Assertions.assertThat(value)
+                .as("Значение должно быть null")
+                .isNull();
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что значение свойства (строка или коллекция) пустое.
+     *
+     * @param <T> тип проверяемого свойства
+     * @return условие проверки пустоты значения
+     * @throws IllegalArgumentException если значение не является строкой или коллекцией
+     */
+    public static <T> Condition<T> propertyIsEmpty() {
+        return value -> {
             Assertions.assertThat(value)
                     .as("Значение не должно быть null")
                     .isNotNull();
@@ -64,56 +82,44 @@ public class PropertyAssertions {
     }
 
     /**
-     * Проверяет, что свойство имеет ожидаемый тип (instanceOf).
+     * Возвращает условие, проверяющее, что значение имеет точный тип {@code expectedType}.
+     *
+     * @param expectedType ожидаемый тип значения
+     * @param <T>          тип проверяемого свойства
+     * @return условие проверки типа
      */
-    public static <T> Condition<T> propertyIsOfType(Function<T, ?> getter, Class<?> expectedType) {
-        return entity -> {
-            Object value = getter.apply(entity);
-            Assertions.assertThat(value)
-                    .as("Значение не должно быть null")
-                    .isNotNull();
-            Assertions.assertThat(value.getClass())
-                    .as("Значение должно быть типа %s", expectedType.getName())
-                    .isEqualTo(expectedType);
-        };
+    public static <T> Condition<T> isOfType(Class<?> expectedType) {
+        return value -> Assertions.assertThat(value.getClass())
+                .as("Значение должно быть типа %s", expectedType.getName())
+                .isEqualTo(expectedType);
     }
 
     /**
-     * Проверяет, что свойство является подклассом (или реализует интерфейс) заданного типа.
+     * Возвращает условие, проверяющее, что значение является подклассом или реализует указанный тип.
+     *
+     * @param expectedSuperType ожидаемый суперкласс или интерфейс
+     * @param <T>               тип проверяемого свойства
+     * @return условие проверки принадлежности к типу
      */
-    public static <T> Condition<T> propertyIsAssignableFrom(Function<T, ?> getter, Class<?> expectedSuperType) {
-        return entity -> {
-            Object value = getter.apply(entity);
-            Assertions.assertThat(value)
-                    .as("Значение не должно быть null")
-                    .isNotNull();
-            Assertions.assertThat(expectedSuperType.isAssignableFrom(value.getClass()))
-                    .as("Значение должно быть подклассом/реализовывать %s", expectedSuperType.getName())
-                    .isTrue();
-        };
+    public static <T> Condition<T> isAssignableFrom(Class<?> expectedSuperType) {
+        return value -> Assertions.assertThat(expectedSuperType.isAssignableFrom(value.getClass()))
+                .as("Значение должно быть подклассом/реализовывать %s", expectedSuperType.getName())
+                .isTrue();
     }
 
     /**
-     * Проверяет, что Optional свойство присутствует (isPresent).
-     */
-    public static <T, R> Condition<T> optionalPropertyIsPresent(Function<T, Optional<R>> getter) {
-        return entity -> {
-            Optional<R> optionalValue = getter.apply(entity);
-            Assertions.assertThat(optionalValue)
-                    .as("Optional значение должно быть present")
-                    .isPresent();
-        };
-    }
-
-    /**
-     * Проверяет, что все перечисленные свойства сущности (getter -> expectedValue) равны ожидаемым значениям.
+     * Возвращает условие, проверяющее, что все указанные свойства сущности равны ожидаемым значениям.
+     *
+     * @param expectedProperties карта, где ключ – функция-геттер свойства, а значение – ожидаемое значение
+     * @param <T>                тип сущности
+     * @return условие проверки нескольких свойств
      */
     public static <T> Condition<T> allPropertiesEqual(Map<Function<T, ?>, Object> expectedProperties) {
-        return entity -> {
+        return value -> {
             for (Map.Entry<Function<T, ?>, Object> entry : expectedProperties.entrySet()) {
                 Function<T, ?> getter = entry.getKey();
                 Object expectedValue = entry.getValue();
-                Object actualValue = getter.apply(entity);
+                Object actualValue = getter.apply(value);
                 Assertions.assertThat(actualValue)
                         .as("Проверка, что значение равно %s", expectedValue)
                         .isEqualTo(expectedValue);
@@ -122,17 +128,15 @@ public class PropertyAssertions {
     }
 
     /**
-     * Проверяет, что свойство входит в заданный список значений.
+     * Возвращает условие, проверяющее, что значение входит в заданный список.
+     *
+     * @param values список допустимых значений
+     * @param <T>    тип проверяемого свойства
+     * @return условие проверки принадлежности значения списку
      */
-    public static <T> Condition<T> propertyIn(Function<T, ?> getter, List<?> values) {
-        return entity -> {
-            Object actualValue = getter.apply(entity);
-            Assertions.assertThat(values)
-                    .as("Список значений не должен быть пустым")
-                    .isNotEmpty();
-            Assertions.assertThat(actualValue)
-                    .as("Проверка, что значение входит в список %s", values)
-                    .isIn(values);
-        };
+    public static <T> Condition<T> in(List<?> values) {
+        return value -> Assertions.assertThat(value)
+                .as("Проверка, что значение входит в список %s", values)
+                .isIn(values);
     }
 }

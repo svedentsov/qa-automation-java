@@ -14,8 +14,8 @@ import org.apache.kafka.common.header.Header;
 import java.util.List;
 
 import static kafka.matcher.KafkaMatcher.*;
-import static kafka.matcher.assertions.RecordAssertions.exists;
-import static kafka.matcher.assertions.RecordAssertions.*;
+import static kafka.matcher.assertions.CollectionAssertions.exists;
+import static kafka.matcher.assertions.CollectionAssertions.*;
 import static kafka.matcher.assertions.StringAssertions.*;
 
 /**

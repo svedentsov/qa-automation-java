@@ -3,14 +3,14 @@ package db.matcher.condition;
 import java.util.List;
 
 /**
- * Интерфейс Conditions для проверки списка сущностей базы данных.
+ * Функциональный интерфейс для проверки списка сущностей.
  *
- * @param <T> тип сущности
+ * @param <T> тип проверяемой сущности
  */
 @FunctionalInterface
 public interface Conditions<T> {
     /**
-     * Метод для проверки списка сущностей.
+     * Выполняет проверку списка сущностей.
      *
      * @param entities список сущностей для проверки
      */

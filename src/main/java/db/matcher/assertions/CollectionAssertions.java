@@ -5,46 +5,38 @@ import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
 import java.util.Collection;
-import java.util.function.Function;
 
 /**
- * Утилитный класс с условиями для коллекций (поля типа List/Set/массив внутри сущности),
- * в том числе проверки длины, проверки каждого элемента и т.д.
+ * Утилитный класс для проверок свойств, представляющих коллекции, строки или массивы.
+ * Здесь можно проверить длину (количество элементов, длину строки и т.д.).
  */
 @UtilityClass
 public class CollectionAssertions {
 
     /**
-     * Проверяет, что все элементы коллекции внутри сущности соответствуют заданному условию (Condition<E>).
+     * Функциональный интерфейс для проверки коллекций.
      *
-     * @param getter           функция для получения коллекции из сущности
-     * @param elementCondition условие для каждого элемента
-     * @param <T>              тип сущности
-     * @param <E>              тип элементов коллекции
+     * @param <E> тип элементов коллекции
      */
-    public static <T, E> Condition<T> allCollectionElementsMatch(Function<T, Collection<E>> getter, Condition<E> elementCondition) {
-        return entity -> {
-            Collection<E> collection = getter.apply(entity);
-            Assertions.assertThat(collection)
-                    .as("Коллекция не должна быть null или пустой")
-                    .isNotNull()
-                    .isNotEmpty();
-            for (E element : collection) {
-                elementCondition.check(element);
-            }
-        };
+    @FunctionalInterface
+    public interface CollectionCondition<E> {
+        /**
+         * Выполняет проверку коллекции.
+         *
+         * @param collection проверяемая коллекция
+         */
+        void check(Collection<E> collection);
     }
 
     /**
-     * Проверяет, что длина свойства (строка, коллекция или массив) равна заданному значению.
+     * Проверяет, что длина значения (строка, коллекция или массив) равна заданному значению.
      *
-     * @param getter         функция, возвращающая строку / коллекцию / массив
      * @param expectedLength ожидаемая длина
-     * @param <T>            тип сущности
+     * @param <T>            тип проверяемого значения (String, Collection или массив)
+     * @return условие, проверяющее равенство длины
      */
-    public static <T> Condition<T> propertyLengthEquals(Function<T, ?> getter, int expectedLength) {
-        return entity -> {
-            Object value = getter.apply(entity);
+    public static <T> Condition<T> lengthEquals(int expectedLength) {
+        return value -> {
             int actualLength = getLength(value);
             Assertions.assertThat(actualLength)
                     .as("Длина значения должна быть равна %d", expectedLength)
@@ -53,15 +45,14 @@ public class CollectionAssertions {
     }
 
     /**
-     * Проверяет, что длина свойства больше заданного значения.
+     * Проверяет, что длина значения (строка, коллекция или массив) больше заданного значения.
      *
-     * @param getter    функция, возвращающая строку / коллекцию / массив
-     * @param minLength минимально допустимая длина
-     * @param <T>       тип сущности
+     * @param minLength минимально допустимая длина (строго больше)
+     * @param <T>       тип проверяемого значения (String, Collection или массив)
+     * @return условие, проверяющее, что длина больше указанного минимума
      */
-    public static <T> Condition<T> propertyLengthGreaterThan(Function<T, ?> getter, int minLength) {
-        return entity -> {
-            Object value = getter.apply(entity);
+    public static <T> Condition<T> lengthGreaterThan(int minLength) {
+        return value -> {
             int actualLength = getLength(value);
             Assertions.assertThat(actualLength)
                     .as("Длина значения должна быть больше %d", minLength)
@@ -70,15 +61,14 @@ public class CollectionAssertions {
     }
 
     /**
-     * Проверяет, что длина свойства меньше заданного значения.
+     * Проверяет, что длина значения (строка, коллекция или массив) меньше заданного значения.
      *
-     * @param getter    функция, возвращающая строку / коллекцию / массив
-     * @param maxLength максимально допустимая длина
-     * @param <T>       тип сущности
+     * @param maxLength максимально допустимая длина (строго меньше)
+     * @param <T>       тип проверяемого значения (String, Collection или массив)
+     * @return условие, проверяющее, что длина меньше указанного максимума
      */
-    public static <T> Condition<T> propertyLengthLessThan(Function<T, ?> getter, int maxLength) {
-        return entity -> {
-            Object value = getter.apply(entity);
+    public static <T> Condition<T> lengthLessThan(int maxLength) {
+        return value -> {
             int actualLength = getLength(value);
             Assertions.assertThat(actualLength)
                     .as("Длина значения должна быть меньше %d", maxLength)
@@ -86,11 +76,14 @@ public class CollectionAssertions {
         };
     }
 
+    /**
+     * Возвращает длину значения в зависимости от его типа.
+     *
+     * @param value значение для получения длины (String, Collection или массив)
+     * @return длина значения
+     * @throws IllegalArgumentException если значение не является строкой, коллекцией или массивом
+     */
     private static int getLength(Object value) {
-        Assertions.assertThat(value)
-                .as("Значение не должно быть null")
-                .isNotNull();
-
         if (value instanceof String) {
             return ((String) value).length();
         } else if (value instanceof Collection) {

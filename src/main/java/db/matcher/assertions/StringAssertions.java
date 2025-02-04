@@ -1,119 +1,121 @@
 package db.matcher.assertions;
 
-import db.matcher.condition.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * Утилитный класс для проверки строковых свойств в сущности (property + проверка).
+ * Утилитный класс для проверки строковых свойств сущности.
  */
 @UtilityClass
 public class StringAssertions {
 
     /**
-     * Проверяет, что строковое свойство содержит указанный текст.
+     * Функциональный интерфейс для проверки строк.
      */
-    public static <T> Condition<T> propertyContains(Function<T, String> getter, String text) {
-        return entity -> {
-            String actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Строка должна содержать '%s'", text)
-                    .isNotNull()
-                    .contains(text);
-        };
+    @FunctionalInterface
+    public interface StringCondition {
+        /**
+         * Проверяет строковое значение на соответствие условию.
+         *
+         * @param value строка для проверки
+         */
+        void check(String value);
     }
 
     /**
-     * Проверяет, что строковое свойство содержит указанный текст (без учёта регистра).
+     * Возвращает условие, проверяющее, что строка содержит заданный текст.
+     *
+     * @param text текст, который должна содержать строка
+     * @return условие проверки на содержание подстроки
      */
-    public static <T> Condition<T> propertyContainsIgnoreCase(Function<T, String> getter, String text) {
-        return entity -> {
-            String actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Строка должна содержать '%s' (без учёта регистра)", text)
-                    .isNotNull()
-                    .containsIgnoringCase(text);
-        };
+    public static StringCondition contains(String text) {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать '%s'", text)
+                .contains(text);
     }
 
     /**
-     * Проверяет, что строковое свойство начинается с указанного префикса.
+     * Возвращает условие, проверяющее, что строка содержит заданный текст без учёта регистра.
+     *
+     * @param text текст для проверки
+     * @return условие проверки на содержание подстроки без учёта регистра
      */
-    public static <T> Condition<T> propertyStartsWith(Function<T, String> getter, String prefix) {
-        return entity -> {
-            String actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Строка должна начинаться с '%s'", prefix)
-                    .isNotNull()
-                    .startsWith(prefix);
-        };
+    public static StringCondition containsIgnoreCase(String text) {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать '%s' (без учёта регистра)", text)
+                .containsIgnoringCase(text);
     }
 
     /**
-     * Проверяет, что строковое свойство заканчивается указанным суффиксом.
+     * Возвращает условие, проверяющее, что строка начинается с указанного префикса.
+     *
+     * @param prefix префикс, с которого должна начинаться строка
+     * @return условие проверки начала строки
      */
-    public static <T> Condition<T> propertyEndsWith(Function<T, String> getter, String suffix) {
-        return entity -> {
-            String actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Строка должна заканчиваться на '%s'", suffix)
-                    .isNotNull()
-                    .endsWith(suffix);
-        };
+    public static StringCondition startsWith(String prefix) {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна начинаться с '%s'", prefix)
+                .startsWith(prefix);
     }
 
     /**
-     * Проверяет, что строковое свойство соответствует регулярному выражению.
+     * Возвращает условие, проверяющее, что строка заканчивается указанным суффиксом.
+     *
+     * @param suffix суффикс, которым должна заканчиваться строка
+     * @return условие проверки конца строки
      */
-    public static <T> Condition<T> propertyMatchesRegex(Function<T, String> getter, String regex) {
-        return entity -> {
-            String actualValue = getter.apply(entity);
+    public static StringCondition endsWith(String suffix) {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна заканчиваться на '%s'", suffix)
+                .endsWith(suffix);
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что строка соответствует заданному регулярному выражению.
+     *
+     * @param regex регулярное выражение
+     * @return условие проверки соответствия строки регулярному выражению
+     */
+    public static StringCondition matchesRegex(String regex) {
+        return value -> {
             Pattern pattern = Pattern.compile(regex);
-            Assertions.assertThat(actualValue)
+            Assertions.assertThat(value)
                     .as("Строка должна соответствовать рег. выражению '%s'", regex)
-                    .isNotNull()
                     .matches(pattern);
         };
     }
 
     /**
-     * Проверяет, что строковое свойство пустое.
+     * Возвращает условие, проверяющее, что строка пуста.
+     *
+     * @return условие проверки пустоты строки
      */
-    public static <T> Condition<T> propertyIsEmpty(Function<T, String> getter) {
-        return entity -> {
-            String actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Строка должна быть пустой")
-                    .isNotNull()
-                    .isEmpty();
-        };
+    public static StringCondition isEmpty() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна быть пустой")
+                .isEmpty();
     }
 
     /**
-     * Проверяет, что строковое свойство не пустое (не null и не "").
+     * Возвращает условие, проверяющее, что строка не пуста (не null и не "").
+     *
+     * @return условие проверки, что строка не пуста
      */
-    public static <T> Condition<T> propertyIsNotEmpty(Function<T, String> getter) {
-        return entity -> {
-            String actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Строка не должна быть пустой")
-                    .isNotNull()
-                    .isNotEmpty();
-        };
+    public static StringCondition isNotEmpty() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка не должна быть пустой")
+                .isNotEmpty();
     }
 
     /**
-     * Проверяет, что строковое свойство состоит только из цифр.
+     * Возвращает условие, проверяющее, что строка состоит только из цифр.
+     *
+     * @return условие проверки, что строка содержит только цифры
      */
-    public static <T> Condition<T> propertyIsDigitsOnly(Function<T, String> getter) {
-        return entity -> {
-            String value = getter.apply(entity);
-            Assertions.assertThat(value)
-                    .as("Строка не должна быть null")
-                    .isNotNull();
+    public static StringCondition isDigitsOnly() {
+        return value -> {
             boolean onlyDigits = value.chars().allMatch(Character::isDigit);
             Assertions.assertThat(onlyDigits)
                     .as("Строка '%s' должна содержать только цифры", value)

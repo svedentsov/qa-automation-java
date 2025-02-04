@@ -1,67 +1,72 @@
 package db.matcher.assertions;
 
-import db.matcher.condition.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
 import java.time.LocalDateTime;
-import java.util.function.Function;
 
 /**
- * Утилитный класс для проверки временных (LocalDateTime) свойств в сущности.
+ * Утилитный класс для проверки временных свойств (LocalDateTime) сущности.
  */
 @UtilityClass
 public class TimestampAssertions {
 
     /**
-     * Проверяет, что LocalDateTime-свойство раньше (до) указанного момента.
+     * Функциональный интерфейс для проверки LocalDateTime значений.
      */
-    public static <T> Condition<T> dateBefore(Function<T, LocalDateTime> getter, LocalDateTime dateTime) {
-        return entity -> {
-            LocalDateTime actual = getter.apply(entity);
-            Assertions.assertThat(actual)
-                    .as("Дата должна быть до %s", dateTime)
-                    .isNotNull()
-                    .isBefore(dateTime);
-        };
+    @FunctionalInterface
+    public interface TimestampCondition {
+        /**
+         * Проверяет значение LocalDateTime.
+         *
+         * @param value значение даты и времени для проверки
+         */
+        void check(LocalDateTime value);
     }
 
     /**
-     * Проверяет, что LocalDateTime-свойство после (строго позже) указанного момента.
+     * Возвращает условие, проверяющее, что значение LocalDateTime раньше (до) указанного момента.
+     *
+     * @param dateTime момент времени, до которого должно быть значение
+     * @return условие проверки, что дата раньше указанной
      */
-    public static <T> Condition<T> localDateTimeAfter(Function<T, LocalDateTime> getter, LocalDateTime dateTime) {
-        return entity -> {
-            LocalDateTime actual = getter.apply(entity);
-            Assertions.assertThat(actual)
-                    .as("Дата и время должны быть после %s", dateTime)
-                    .isNotNull()
-                    .isAfter(dateTime);
-        };
+    public static TimestampCondition dateBefore(LocalDateTime dateTime) {
+        return timestamp -> Assertions.assertThat(timestamp)
+                .as("Дата должна быть до %s", dateTime)
+                .isBefore(dateTime);
     }
 
     /**
-     * Проверяет, что LocalDateTime-свойство в будущем (после настоящего момента).
+     * Возвращает условие, проверяющее, что значение LocalDateTime строго позже указанного момента.
+     *
+     * @param dateTime момент времени, после которого должно быть значение
+     * @return условие проверки, что дата позже указанной
      */
-    public static <T> Condition<T> isInFuture(Function<T, LocalDateTime> getter) {
-        return entity -> {
-            LocalDateTime actual = getter.apply(entity);
-            Assertions.assertThat(actual)
-                    .as("Дата и время должны быть в будущем")
-                    .isNotNull()
-                    .isAfter(LocalDateTime.now());
-        };
+    public static TimestampCondition localDateTimeAfter(LocalDateTime dateTime) {
+        return timestamp -> Assertions.assertThat(timestamp)
+                .as("Дата и время должны быть после %s", dateTime)
+                .isAfter(dateTime);
     }
 
     /**
-     * Проверяет, что LocalDateTime-свойство в прошлом (до настоящего момента).
+     * Возвращает условие, проверяющее, что значение LocalDateTime находится в будущем (после настоящего момента).
+     *
+     * @return условие проверки, что дата находится в будущем
      */
-    public static <T> Condition<T> isInPast(Function<T, LocalDateTime> getter) {
-        return entity -> {
-            LocalDateTime actual = getter.apply(entity);
-            Assertions.assertThat(actual)
-                    .as("Дата и время должны быть в прошлом")
-                    .isNotNull()
-                    .isBefore(LocalDateTime.now());
-        };
+    public static TimestampCondition isInFuture() {
+        return timestamp -> Assertions.assertThat(timestamp)
+                .as("Дата и время должны быть в будущем")
+                .isAfter(LocalDateTime.now());
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что значение LocalDateTime находится в прошлом (до настоящего момента).
+     *
+     * @return условие проверки, что дата находится в прошлом
+     */
+    public static TimestampCondition isInPast() {
+        return timestamp -> Assertions.assertThat(timestamp)
+                .as("Дата и время должны быть в прошлом")
+                .isBefore(LocalDateTime.now());
     }
 }

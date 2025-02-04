@@ -10,92 +10,87 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Класс для валидации одной или нескольких сущностей базы данных.
+ * Класс для валидации одной или нескольких сущностей с применением заданных условий.
+ * Все сущности объединяются в один список, что позволяет единообразно применять проверки.
  *
  * @param <T> тип сущности
  */
 @Slf4j
-public class DbValidator<T> {
-
-    private final T singleEntity;
-    private final List<T> multipleEntities;
+public final class DbValidator<T> {
 
     /**
-     * Конструктор для одной сущности.
+     * Список сущностей для валидации.
+     */
+    private final List<T> entities;
+
+    /**
+     * Конструктор для валидации единственной сущности.
      *
-     * @param entity сущность для проверки
+     * @param entity проверяемая сущность; не должна быть null
      */
     public DbValidator(@NonNull T entity) {
-        Assertions.assertThat(entity)
-                .as("Сущность не должна быть null")
-                .isNotNull();
-        this.singleEntity = entity;
-        this.multipleEntities = null;
+        this.entities = Collections.singletonList(entity);
     }
 
     /**
-     * Конструктор для списка сущностей.
+     * Конструктор для валидации списка сущностей.
      *
-     * @param entities список сущностей для проверки
+     * @param entities список проверяемых сущностей; не должен быть null или пустым
+     * @throws AssertionError если список сущностей пуст
      */
     public DbValidator(@NonNull List<T> entities) {
         Assertions.assertThat(entities)
-                .as("Список сущностей не должен быть null или пустым")
-                .isNotNull()
+                .as("Список сущностей не должен быть пустым")
                 .isNotEmpty();
-        this.singleEntity = null;
-        this.multipleEntities = entities;
+        this.entities = entities;
     }
 
     /**
-     * Проверяет, соответствует ли (соответствуют ли) сущность(и) указанному условию Condition<T>.
+     * Применяет к каждой сущности из списка заданное условие.
      *
-     * @param condition условие
-     * @return текущий DbValidator
+     * @param condition условие для проверки
+     * @return текущий экземпляр DbValidator для построения цепочки вызовов
+     * @throws AssertionError   если условие не выполнено для хотя бы одной сущности
+     * @throws RuntimeException если происходит другая ошибка при проверке
      */
     public DbValidator<T> shouldHave(@NonNull Condition<T> condition) {
-        if (singleEntity != null) {
-            log.debug("Проверка условия '{}' для одной сущности", condition);
-            executeCheck(() -> condition.check(singleEntity), condition, "singleEntity");
-        } else {
-            // список
-            log.debug("Проверка условия '{}' для {} сущностей", condition, multipleEntities.size());
-            for (T entity : multipleEntities) {
-                executeCheck(() -> condition.check(entity), condition, entity.toString());
-            }
-        }
+        log.debug("Проверка условия '{}' для {} сущностей", condition, entities.size());
+        entities.forEach(entity -> runCheck(() -> condition.check(entity), condition, entity.toString()));
         return this;
     }
 
     /**
-     * Проверяет, соответствует ли список сущностей условию Conditions<T>.
+     * Применяет заданный набор условий к списку сущностей.
      *
-     * @param conditions условие для списка
-     * @return текущий DbValidator
+     * @param conditions условия для проверки списка сущностей
+     * @return текущий экземпляр DbValidator для построения цепочки вызовов
+     * @throws AssertionError   если условие не выполнено
+     * @throws RuntimeException если происходит другая ошибка при проверке
      */
     public DbValidator<T> shouldHave(@NonNull Conditions<T> conditions) {
-        if (multipleEntities == null) {
-            // Если вызвали на одну сущность, обернём её в список
-            log.debug("Проверка условий '{}' для одиночной сущности", conditions);
-            executeCheck(() -> conditions.check(Collections.singletonList(singleEntity)), conditions, "singleEntity");
-        } else {
-            log.debug("Проверка условий '{}' для {} сущностей", conditions, multipleEntities.size());
-            executeCheck(() -> conditions.check(multipleEntities), conditions, "multipleEntities");
-        }
+        log.debug("Проверка условий '{}' для {} сущностей", conditions, entities.size());
+        runCheck(() -> conditions.check(entities), conditions, "entities");
         return this;
     }
 
-    private void executeCheck(Runnable check, Object condition, String entityKey) {
+    /**
+     * Выполняет проверку и обрабатывает исключения, возникающие при выполнении условия.
+     *
+     * @param check       проверка, представленная в виде {@code Runnable}
+     * @param condition   условие, которое проверяется (для формирования сообщения об ошибке)
+     * @param entityLabel идентификатор или описание сущности (или группы сущностей)
+     */
+    private void runCheck(Runnable check, Object condition, String entityLabel) {
         try {
             check.run();
         } catch (AssertionError e) {
-            String message = String.format("Условие %s не выполнено для [%s]: %s", condition, entityKey, e.getMessage());
-            log.error(message);
-            throw new AssertionError(message, e);
+            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s", condition, entityLabel, e.getMessage());
+            log.error(errorMessage);
+            throw new AssertionError(errorMessage, e);
         } catch (Exception e) {
-            String message = String.format("Ошибка при проверке условия %s для [%s]: %s", condition, entityKey, e.getMessage());
-            log.error(message, e);
-            throw new RuntimeException(message, e);
+            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s", condition, entityLabel, e.getMessage());
+            log.error(errorMessage, e);
+            throw new RuntimeException(errorMessage, e);
         }
     }
 }

@@ -15,13 +15,13 @@ import java.util.stream.Collectors;
  * Утилитный класс для создания различных условий, применяемых к списку записей Kafka.
  */
 @UtilityClass
-public class RecordAssertions {
+public class CollectionAssertions {
 
     /**
      * Функциональный интерфейс для условий, проверяющих список записей целиком.
      */
     @FunctionalInterface
-    public interface RecordCondition {
+    public interface CollectionCondition {
         /**
          * Проверяет условие для списка записей.
          *
@@ -33,7 +33,7 @@ public class RecordAssertions {
     /**
      * Проверяет, что в списке есть хотя бы одна запись.
      */
-    public static RecordCondition exists() {
+    public static CollectionCondition exists() {
         return records -> Assertions.assertThat(records)
                 .as("Должна быть хотя бы одна запись")
                 .isNotEmpty();
@@ -42,7 +42,7 @@ public class RecordAssertions {
     /**
      * Проверяет, что количество записей равно указанному значению.
      */
-    public static RecordCondition countEqual(int count) {
+    public static CollectionCondition countEqual(int count) {
         return records -> Assertions.assertThat(records)
                 .as("Количество записей должно быть равно %d", count)
                 .hasSize(count);
@@ -51,7 +51,7 @@ public class RecordAssertions {
     /**
      * Проверяет, что количество записей больше указанного значения.
      */
-    public static RecordCondition countGreater(int count) {
+    public static CollectionCondition countGreater(int count) {
         return records -> Assertions.assertThat(records)
                 .as("Количество записей должно быть больше %d", count)
                 .hasSizeGreaterThan(count);
@@ -60,7 +60,7 @@ public class RecordAssertions {
     /**
      * Проверяет, что количество записей меньше указанного значения.
      */
-    public static RecordCondition countLess(int count) {
+    public static CollectionCondition countLess(int count) {
         return records -> Assertions.assertThat(records)
                 .as("Количество записей должно быть меньше %d", count)
                 .hasSizeLessThan(count);
@@ -69,7 +69,7 @@ public class RecordAssertions {
     /**
      * Проверяет, что все ключи в списке записей уникальны.
      */
-    public static RecordCondition allKeysUnique() {
+    public static CollectionCondition allKeysUnique() {
         return records -> Assertions.assertThat(records)
                 .extracting(ConsumerRecord::key)
                 .as("Все ключи записей должны быть уникальными")
@@ -79,7 +79,7 @@ public class RecordAssertions {
     /**
      * Проверяет, что все значения в списке записей уникальны.
      */
-    public static RecordCondition allValuesUnique() {
+    public static CollectionCondition allValuesUnique() {
         return records -> Assertions.assertThat(records)
                 .extracting(ConsumerRecord::value)
                 .as("Все значения записей должны быть уникальными")
@@ -93,7 +93,7 @@ public class RecordAssertions {
      * @param ascending      true, если по возрастанию, false, если по убыванию
      * @param <T>            тип значения поля для сравнения
      */
-    public static <T extends Comparable<T>> RecordCondition recordsOrdered(Function<ConsumerRecord<String, String>, T> fieldExtractor, boolean ascending) {
+    public static <T extends Comparable<T>> CollectionCondition recordsOrdered(Function<ConsumerRecord<String, String>, T> fieldExtractor, boolean ascending) {
         return records -> {
             List<T> extracted = records.stream()
                     .map(fieldExtractor)
@@ -114,7 +114,7 @@ public class RecordAssertions {
      * @param key ключ для поиска
      * @return условие для одной записи
      */
-    public static RecordCondition keysExists(String key) {
+    public static CollectionCondition keysExists(String key) {
         return records -> {
             boolean found = records.stream().anyMatch(r -> Objects.equals(r.key(), key));
             Assertions.assertThat(found)
@@ -129,7 +129,7 @@ public class RecordAssertions {
      * @param key ключ для проверки отсутствия
      * @return условие для одной записи
      */
-    public static RecordCondition keysNotExists(String key) {
+    public static CollectionCondition keysNotExists(String key) {
         return records -> {
             boolean found = records.stream().anyMatch(r -> Objects.equals(r.key(), key));
             Assertions.assertThat(found)
@@ -144,7 +144,7 @@ public class RecordAssertions {
      * @param value значение для поиска
      * @return условие для одной записи
      */
-    public static RecordCondition valuesExists(String value) {
+    public static CollectionCondition valuesExists(String value) {
         return records -> {
             boolean found = records.stream().anyMatch(r -> Objects.equals(r.value(), value));
             Assertions.assertThat(found)
@@ -159,7 +159,7 @@ public class RecordAssertions {
      * @param value значение для проверки отсутствия
      * @return условие для одной записи
      */
-    public static RecordCondition valuesNotExists(String value) {
+    public static CollectionCondition valuesNotExists(String value) {
         return records -> {
             boolean found = records.stream().anyMatch(r -> Objects.equals(r.value(), value));
             Assertions.assertThat(found)
@@ -174,7 +174,7 @@ public class RecordAssertions {
      * @param substring подстрока для поиска
      * @return условие для одной записи
      */
-    public static RecordCondition anyKeyContains(String substring) {
+    public static CollectionCondition anyKeyContains(String substring) {
         return records -> {
             boolean found = records.stream()
                     .map(ConsumerRecord::key)
@@ -192,7 +192,7 @@ public class RecordAssertions {
      * @param substring подстрока для поиска
      * @return условие для одной записи
      */
-    public static RecordCondition anyValueContains(String substring) {
+    public static CollectionCondition anyValueContains(String substring) {
         return records -> {
             boolean found = records.stream()
                     .map(ConsumerRecord::value)
@@ -210,7 +210,7 @@ public class RecordAssertions {
      * @param regex регулярное выражение
      * @return условие для одной записи
      */
-    public static RecordCondition allKeysMatchRegex(String regex) {
+    public static CollectionCondition allKeysMatchRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
         return records -> {
             boolean allMatch = records.stream()
@@ -229,7 +229,7 @@ public class RecordAssertions {
      * @param regex регулярное выражение
      * @return условие для одной записи
      */
-    public static RecordCondition allValuesMatchRegex(String regex) {
+    public static CollectionCondition allValuesMatchRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
         return records -> {
             boolean allMatch = records.stream()
@@ -248,7 +248,7 @@ public class RecordAssertions {
      * @param partition номер партиции
      * @return условие для одной записи
      */
-    public static RecordCondition partitionsAllEqual(int partition) {
+    public static CollectionCondition partitionsAllEqual(int partition) {
         return records -> {
             boolean allEqual = records.stream().allMatch(r -> r.partition() == partition);
             Assertions.assertThat(allEqual)
@@ -264,7 +264,7 @@ public class RecordAssertions {
      * @param endInclusive   конец диапазона (включительно)
      * @return условие для одной записи
      */
-    public static RecordCondition partitionsAllInRange(int startInclusive, int endInclusive) {
+    public static CollectionCondition partitionsAllInRange(int startInclusive, int endInclusive) {
         return records -> {
             boolean allInRange = records.stream()
                     .allMatch(r -> r.partition() >= startInclusive && r.partition() <= endInclusive);
@@ -280,7 +280,7 @@ public class RecordAssertions {
      * @param offset пороговое значение
      * @return условие для одной записи
      */
-    public static RecordCondition offsetsAllGreaterThan(long offset) {
+    public static CollectionCondition offsetsAllGreaterThan(long offset) {
         return records -> {
             boolean allGreater = records.stream().allMatch(r -> r.offset() > offset);
             Assertions.assertThat(allGreater)
@@ -295,7 +295,7 @@ public class RecordAssertions {
      * @param offset пороговое значение
      * @return условие для одной записи
      */
-    public static RecordCondition offsetsAllLessThan(long offset) {
+    public static CollectionCondition offsetsAllLessThan(long offset) {
         return records -> {
             boolean allLess = records.stream().allMatch(r -> r.offset() < offset);
             Assertions.assertThat(allLess)
@@ -311,7 +311,7 @@ public class RecordAssertions {
      * @param endInclusive   конец диапазона (включительно)
      * @return условие для одной записи
      */
-    public static RecordCondition offsetsAllInRange(long startInclusive, long endInclusive) {
+    public static CollectionCondition offsetsAllInRange(long startInclusive, long endInclusive) {
         return records -> {
             boolean allInRange = records.stream()
                     .allMatch(r -> r.offset() >= startInclusive && r.offset() <= endInclusive);
@@ -327,7 +327,7 @@ public class RecordAssertions {
      * @param topic имя топика
      * @return условие для одной записи
      */
-    public static RecordCondition topicsAllEqual(String topic) {
+    public static CollectionCondition topicsAllEqual(String topic) {
         return records -> {
             boolean allEqual = records.stream().allMatch(r -> Objects.equals(r.topic(), topic));
             Assertions.assertThat(allEqual)
@@ -339,7 +339,7 @@ public class RecordAssertions {
     /**
      * Проверяет, что в списке записей все ключи не пусты.
      */
-    public static RecordCondition allKeysNotEmpty() {
+    public static CollectionCondition allKeysNotEmpty() {
         return records -> {
             boolean allNonEmpty = records.stream()
                     .map(ConsumerRecord::key)
@@ -354,7 +354,7 @@ public class RecordAssertions {
     /**
      * Проверяет, что в списке записей все значения не пусты.
      */
-    public static RecordCondition allValuesNotEmpty() {
+    public static CollectionCondition allValuesNotEmpty() {
         return records -> {
             boolean allNonEmpty = records.stream()
                     .map(ConsumerRecord::value)

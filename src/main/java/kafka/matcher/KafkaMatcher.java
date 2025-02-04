@@ -1,10 +1,10 @@
 package kafka.matcher;
 
 import com.jayway.jsonpath.JsonPath;
+import kafka.matcher.assertions.CollectionAssertions.CollectionCondition;
 import kafka.matcher.assertions.CompositeAssertions;
 import kafka.matcher.assertions.JsonPathConditions.JsonPathCondition;
 import kafka.matcher.assertions.NumberAssertions.NumberCondition;
-import kafka.matcher.assertions.RecordAssertions.RecordCondition;
 import kafka.matcher.assertions.StringAssertions.StringCondition;
 import kafka.matcher.assertions.TimestampAssertions.TimestampCondition;
 import kafka.matcher.condition.Condition;
@@ -21,13 +21,13 @@ import java.time.Instant;
 public class KafkaMatcher {
 
     /**
-     * Создает {@link Conditions} из {@link RecordCondition}.
+     * Создает {@link Conditions} из {@link CollectionCondition}.
      *
-     * @param rc условие для проверки списка записей
+     * @param cc условие для проверки списка записей
      * @return обертка для проверки списка записей
      */
-    public static Conditions records(RecordCondition rc) {
-        return rc::check;
+    public static Conditions records(CollectionCondition cc) {
+        return cc::check;
     }
 
     /**
@@ -132,7 +132,7 @@ public class KafkaMatcher {
      * @param conditions условия для объединения
      * @return условие, которое пройдет только если все условия будут истинны
      */
-    public static Condition allOf(Condition... conditions) {
+    public static Condition and(Condition... conditions) {
         return CompositeAssertions.and(conditions);
     }
 
@@ -142,7 +142,7 @@ public class KafkaMatcher {
      * @param conditions условия для объединения
      * @return условие, которое пройдет если хотя бы одно условие будет истинно
      */
-    public static Condition anyOf(Condition... conditions) {
+    public static Condition or(Condition... conditions) {
         return CompositeAssertions.or(conditions);
     }
 
