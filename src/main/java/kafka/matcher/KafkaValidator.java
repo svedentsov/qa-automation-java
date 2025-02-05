@@ -25,7 +25,7 @@ public class KafkaValidator {
      * Конструктор для проверки списка записей.
      *
      * @param records список записей для проверки
-     * @throws ValidationException если список пуст или null
+     * @throws ValidationException если список пуст или равен null
      */
     public KafkaValidator(@NonNull List<ConsumerRecord<String, String>> records) {
         validateRecords(records);
@@ -36,14 +36,14 @@ public class KafkaValidator {
      * Конструктор для проверки одной записи.
      *
      * @param record одна запись для проверки
-     * @throws ValidationException если запись null
+     * @throws ValidationException если запись равна null
      */
     public KafkaValidator(@NonNull ConsumerRecord<String, String> record) {
         this(Collections.singletonList(record));
     }
 
     /**
-     * Проверяет одну или несколько записей на соответствие одиночному условию.
+     * Проверяет одну запись на соответствие заданному условию.
      *
      * @param condition условие для проверки
      * @return текущий {@link KafkaValidator}
@@ -59,9 +59,9 @@ public class KafkaValidator {
     }
 
     /**
-     * Проверяет список записей на соответствие условиям для набора записей.
+     * Проверяет список записей на соответствие условию для списка.
      *
-     * @param conditions условия для проверки списка записей
+     * @param conditions условие для проверки списка записей
      * @return текущий {@link KafkaValidator}
      * @throws ValidationException если условие не выполнено
      */

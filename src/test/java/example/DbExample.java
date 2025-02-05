@@ -15,8 +15,7 @@ import static db.matcher.assertions.EntityAssertions.*;
 import static db.matcher.assertions.NumberAssertions.*;
 import static db.matcher.assertions.PropertyAssertions.*;
 import static db.matcher.assertions.StringAssertions.*;
-import static db.matcher.assertions.TimestampAssertions.dateBefore;
-import static db.matcher.assertions.TimestampAssertions.localDateTimeAfter;
+import static db.matcher.assertions.TimeAssertions.dateBefore;
 
 /**
  * <p>Пример класса, демонстрирующего использование {@link DbValidator} и различных утилит-условий.</p>

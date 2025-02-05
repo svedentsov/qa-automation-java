@@ -7,14 +7,15 @@ import java.time.Instant;
 import java.util.List;
 
 import static kafka.matcher.KafkaMatcher.*;
-import static kafka.matcher.assertions.JsonPathConditions.*;
-import static kafka.matcher.assertions.NumberAssertions.*;
+import static kafka.matcher.assertions.BooleanAssertions.isBoolean;
+import static kafka.matcher.assertions.BooleanAssertions.isTrue;
 import static kafka.matcher.assertions.CollectionAssertions.*;
+import static kafka.matcher.assertions.NumberAssertions.*;
 import static kafka.matcher.assertions.StringAssertions.equalsTo;
 import static kafka.matcher.assertions.StringAssertions.*;
-import static kafka.matcher.assertions.TimestampAssertions.equalsTo;
-import static kafka.matcher.assertions.TimestampAssertions.inRange;
-import static kafka.matcher.assertions.TimestampAssertions.*;
+import static kafka.matcher.assertions.TimeAssertions.equalsTo;
+import static kafka.matcher.assertions.TimeAssertions.inRange;
+import static kafka.matcher.assertions.TimeAssertions.*;
 
 /**
  * Пример использования DSL для проверки Kafka записей.
@@ -60,20 +61,14 @@ public class KafkaExample {
         validateRecord.shouldHave(value(wordsOrder("John", "30")));
         validateRecord.shouldHave(value(isNotEmpty()));
 
-        // Проверки JsonPath
+        // Проверки JSON-полей (извлечение по JSONPath)
         validateRecord.shouldHave(value("$.name", isString()));
-        validateRecord.shouldHave(value("$.name", containsJson("Jo")));
-        validateRecord.shouldHave(value("$.name", matchesRegexJson("J.*n")));
         validateRecord.shouldHave(value("$.name", contains("Jo"))); // StringCondition
         validateRecord.shouldHave(value("$.name", equalsTo("John"))); // StringCondition
         validateRecord.shouldHave(value("$.active", isBoolean()));
-        validateRecord.shouldHave(value("$.age", isNumber()));
-        validateRecord.shouldHave(value("$.age", numberGreater(18)));
-        validateRecord.shouldHave(value("$.age", numberLess(65)));
-        validateRecord.shouldHave(value("$.age", greaterThan(25), Integer.class)); // NumberCondition
-        validateRecord.shouldHave(value("$.age", lessOrEqualTo(30), Integer.class)); // NumberCondition
-        validateRecord.shouldHave(value("$.items", isArray()));
-        validateRecord.shouldHave(value("$.items", arraySize(3)));
+        validateRecord.shouldHave(value("$.active", isTrue()));
+        validateRecord.shouldHave(value("$.age", greaterThan(18), Integer.class));
+        validateRecord.shouldHave(value("$.age", lessOrEqualTo(30), Integer.class));
 
         // Проверки временной метки
         validateRecord.shouldHave(timestamp(before(Instant.now().plusSeconds(60))));

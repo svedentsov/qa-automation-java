@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class CollectionAssertions {
 
     /**
-     * Функциональный интерфейс для условий, проверяющих список записей целиком.
+     * Функциональный интерфейс для условий проверки списка записей.
      */
     @FunctionalInterface
     public interface CollectionCondition {
@@ -28,6 +28,15 @@ public class CollectionAssertions {
          * @param records список записей для проверки
          */
         void check(List<ConsumerRecord<String, String>> records);
+    }
+
+    /**
+     * Проверяет, что значение  является массивом.
+     */
+    public static CollectionCondition isArray() {
+        return records -> Assertions.assertThat(records)
+                .as("Значение должно быть массивом")
+                .isInstanceOf(List.class);
     }
 
     /**
@@ -67,7 +76,7 @@ public class CollectionAssertions {
     }
 
     /**
-     * Проверяет, что все ключи в списке записей уникальны.
+     * Проверяет, что все ключи записей уникальны.
      */
     public static CollectionCondition allKeysUnique() {
         return records -> Assertions.assertThat(records)
@@ -77,7 +86,7 @@ public class CollectionAssertions {
     }
 
     /**
-     * Проверяет, что все значения в списке записей уникальны.
+     * Проверяет, что все значения записей уникальны.
      */
     public static CollectionCondition allValuesUnique() {
         return records -> Assertions.assertThat(records)
@@ -90,8 +99,8 @@ public class CollectionAssertions {
      * Проверяет, что записи упорядочены по заданному полю.
      *
      * @param fieldExtractor функция извлечения поля
-     * @param ascending      true, если по возрастанию, false, если по убыванию
-     * @param <T>            тип значения поля для сравнения
+     * @param ascending      true, если по возрастанию, false – по убыванию
+     * @param <T>            тип сравниваемого значения
      */
     public static <T extends Comparable<T>> CollectionCondition recordsOrdered(Function<ConsumerRecord<String, String>, T> fieldExtractor, boolean ascending) {
         return records -> {
@@ -112,7 +121,6 @@ public class CollectionAssertions {
      * Проверяет, что существует запись с указанным ключом.
      *
      * @param key ключ для поиска
-     * @return условие для одной записи
      */
     public static CollectionCondition keysExists(String key) {
         return records -> {
@@ -127,7 +135,6 @@ public class CollectionAssertions {
      * Проверяет, что ни в одной записи не встречается указанный ключ.
      *
      * @param key ключ для проверки отсутствия
-     * @return условие для одной записи
      */
     public static CollectionCondition keysNotExists(String key) {
         return records -> {
@@ -142,7 +149,6 @@ public class CollectionAssertions {
      * Проверяет, что существует запись с указанным значением.
      *
      * @param value значение для поиска
-     * @return условие для одной записи
      */
     public static CollectionCondition valuesExists(String value) {
         return records -> {
@@ -157,7 +163,6 @@ public class CollectionAssertions {
      * Проверяет, что ни в одной записи не встречается указанное значение.
      *
      * @param value значение для проверки отсутствия
-     * @return условие для одной записи
      */
     public static CollectionCondition valuesNotExists(String value) {
         return records -> {
@@ -208,7 +213,6 @@ public class CollectionAssertions {
      * Проверяет, что все ключи соответствуют заданному регулярному выражению.
      *
      * @param regex регулярное выражение
-     * @return условие для одной записи
      */
     public static CollectionCondition allKeysMatchRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
@@ -227,7 +231,6 @@ public class CollectionAssertions {
      * Проверяет, что все значения соответствуют заданному регулярному выражению.
      *
      * @param regex регулярное выражение
-     * @return условие для одной записи
      */
     public static CollectionCondition allValuesMatchRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
@@ -246,7 +249,6 @@ public class CollectionAssertions {
      * Проверяет, что все записи принадлежат указанной партиции.
      *
      * @param partition номер партиции
-     * @return условие для одной записи
      */
     public static CollectionCondition partitionsAllEqual(int partition) {
         return records -> {
@@ -262,7 +264,6 @@ public class CollectionAssertions {
      *
      * @param startInclusive начало диапазона (включительно)
      * @param endInclusive   конец диапазона (включительно)
-     * @return условие для одной записи
      */
     public static CollectionCondition partitionsAllInRange(int startInclusive, int endInclusive) {
         return records -> {
@@ -278,7 +279,6 @@ public class CollectionAssertions {
      * Проверяет, что все смещения (offset) больше указанного значения.
      *
      * @param offset пороговое значение
-     * @return условие для одной записи
      */
     public static CollectionCondition offsetsAllGreaterThan(long offset) {
         return records -> {
@@ -293,7 +293,6 @@ public class CollectionAssertions {
      * Проверяет, что все смещения (offset) меньше указанного значения.
      *
      * @param offset пороговое значение
-     * @return условие для одной записи
      */
     public static CollectionCondition offsetsAllLessThan(long offset) {
         return records -> {
@@ -309,7 +308,6 @@ public class CollectionAssertions {
      *
      * @param startInclusive начало диапазона (включительно)
      * @param endInclusive   конец диапазона (включительно)
-     * @return условие для одной записи
      */
     public static CollectionCondition offsetsAllInRange(long startInclusive, long endInclusive) {
         return records -> {
@@ -325,7 +323,6 @@ public class CollectionAssertions {
      * Проверяет, что все записи принадлежат указанному топику.
      *
      * @param topic имя топика
-     * @return условие для одной записи
      */
     public static CollectionCondition topicsAllEqual(String topic) {
         return records -> {

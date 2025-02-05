@@ -5,7 +5,7 @@ import db.matcher.assertions.CompositeAssertions;
 import db.matcher.assertions.NumberAssertions.NumberCondition;
 import db.matcher.assertions.PropertyAssertions.PropertyCondition;
 import db.matcher.assertions.StringAssertions.StringCondition;
-import db.matcher.assertions.TimestampAssertions.TimestampCondition;
+import db.matcher.assertions.TimeAssertions.TimestampCondition;
 import db.matcher.condition.Condition;
 import lombok.experimental.UtilityClass;
 

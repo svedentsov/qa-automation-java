@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * Утилитный класс для проверки временных свойств (LocalDateTime) сущности.
  */
 @UtilityClass
-public class TimestampAssertions {
+public class TimeAssertions {
 
     /**
      * Функциональный интерфейс для проверки LocalDateTime значений.

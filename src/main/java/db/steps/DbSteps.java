@@ -32,7 +32,6 @@ public class DbSteps {
 
         // Добавление аннотированных классов сущностей
         configuration.addAnnotatedClass(MyEntity.class);
-//        sessionFactory = configuration.buildSessionFactory();
         sessionFactory = SessionFactoryProvider.getSessionFactory(DatabaseType.DB1);
     }
 

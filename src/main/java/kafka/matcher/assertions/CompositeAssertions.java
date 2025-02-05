@@ -7,7 +7,7 @@ import org.assertj.core.api.Assertions;
 import java.util.Arrays;
 
 /**
- * Утилитный класс для создания композитных условий (логические операции).
+ * Утилитный класс для создания составных (композитных) условий проверки.
  */
 @UtilityClass
 public class CompositeAssertions {
@@ -16,7 +16,7 @@ public class CompositeAssertions {
      * Проверяет, что все перечисленные условия выполнены (логическое И).
      *
      * @param conditions набор условий
-     * @return условие, которое проходит только если все условия истинны
+     * @return составное условие, которое проходит только если все условия истинны
      */
     public static Condition and(Condition... conditions) {
         return record -> {
@@ -30,7 +30,7 @@ public class CompositeAssertions {
      * Проверяет, что хотя бы одно из перечисленных условий выполнено (логическое ИЛИ).
      *
      * @param conditions набор условий
-     * @return условие, которое проходит, если хотя бы одно условие истинно
+     * @return составное условие, которое проходит если хотя бы одно условие истинно
      */
     public static Condition or(Condition... conditions) {
         return record -> {
@@ -49,11 +49,30 @@ public class CompositeAssertions {
     }
 
     /**
-     * Проверяет, что хотя бы {@code n} из заданных условий истинны.
+     * Инвертирует результаты указанных условий (логическое НЕ).
      *
-     * @param n          минимальное число условий, которые должны быть выполнены
      * @param conditions набор условий
-     * @return условие, которое проходит, если хотя бы {@code n} условий истинны
+     * @return условие, которое проходит только если все указанные условия не выполнены
+     */
+    public static Condition not(Condition... conditions) {
+        return record -> {
+            for (Condition condition : conditions) {
+                try {
+                    condition.check(record);
+                    Assertions.fail("Условие должно быть не выполнено, но выполнено: " + condition);
+                } catch (AssertionError e) {
+                    // Ожидаемый результат
+                }
+            }
+        };
+    }
+
+    /**
+     * Проверяет, что хотя бы n из перечисленных условий истинны.
+     *
+     * @param n          минимальное число условий, которые должны выполниться
+     * @param conditions набор условий
+     * @return условие, которое проходит если хотя бы n условий истинны
      */
     public static Condition nOf(int n, Condition... conditions) {
         return record -> {
@@ -67,29 +86,9 @@ public class CompositeAssertions {
                         }
                     })
                     .count();
-
             Assertions.assertThat(successCount)
-                    .as("Ожидалось, что хотя бы %d условий выполнятся, но выполнено %d", n, successCount)
+                    .as("Ожидалось, что хотя бы %d условий выполнится, но выполнено %d", n, successCount)
                     .isGreaterThanOrEqualTo(n);
-        };
-    }
-
-    /**
-     * Проверяет, что ни одно из указанных условий не выполнено (логическое НЕ).
-     *
-     * @param conditions набор условий
-     * @return условие, которое проходит только если все условия ложны
-     */
-    public static Condition not(Condition... conditions) {
-        return record -> {
-            for (Condition condition : conditions) {
-                try {
-                    condition.check(record);
-                    Assertions.fail("Условие должно быть не выполнено, но оно выполнено: " + condition);
-                } catch (AssertionError e) {
-                    // Ожидаемый результат: условие не выполнено
-                }
-            }
         };
     }
 }

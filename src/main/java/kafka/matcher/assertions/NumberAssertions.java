@@ -25,6 +25,15 @@ public class NumberAssertions {
     }
 
     /**
+     * Проверяет, что значение является числом.
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isNumber() {
+        return actual -> Assertions.assertThat(actual)
+                .as("Значение должно быть числом")
+                .isInstanceOf(Number.class);
+    }
+
+    /**
      * Проверяет, что число равно ожидаемому значению.
      *
      * @param expected ожидаемое значение

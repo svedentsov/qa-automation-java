@@ -10,22 +10,19 @@ import java.util.Set;
 
 /**
  * Утилитный класс для создания условий проверки временных меток (Instant).
- * Позволяет гибко проверять, что временная метка удовлетворяет заданным критериям:
- * находится в диапазоне, совпадает с конкретной датой и временем, раньше/позже указанной точки,
- * принадлежит определённому дню недели, году, месяцу, и многим другим требованиям.
  */
 @UtilityClass
-public class TimestampAssertions {
+public class TimeAssertions {
 
     /**
-     * Функциональный интерфейс для условий, проверяющих временную метку.
+     * Функциональный интерфейс для условий проверки временной метки.
      */
     @FunctionalInterface
     public interface TimestampCondition {
         /**
          * Проверяет временную метку.
          *
-         * @param actual временная метка записи
+         * @param actual фактическая временная метка
          */
         void check(Instant actual);
     }
@@ -34,6 +31,7 @@ public class TimestampAssertions {
      * Проверяет, что временная метка раньше указанного времени.
      *
      * @param time время для сравнения
+     * @return условие "до указанного времени"
      */
     public static TimestampCondition before(Instant time) {
         return actual -> Assertions.assertThat(actual)
@@ -45,6 +43,7 @@ public class TimestampAssertions {
      * Проверяет, что временная метка позже указанного времени.
      *
      * @param time время для сравнения
+     * @return условие "после указанного времени"
      */
     public static TimestampCondition after(Instant time) {
         return actual -> Assertions.assertThat(actual)
@@ -57,6 +56,7 @@ public class TimestampAssertions {
      *
      * @param start начало диапазона (включительно)
      * @param end   конец диапазона (включительно)
+     * @return условие "в диапазоне"
      */
     public static TimestampCondition inRange(Instant start, Instant end) {
         return actual -> Assertions.assertThat(actual)
@@ -65,9 +65,10 @@ public class TimestampAssertions {
     }
 
     /**
-     * Проверяет, что временная метка равна указанному времени.
+     * Проверяет, что временная метка равна указанной.
      *
      * @param time ожидаемая временная метка
+     * @return условие равенства временной метки
      */
     public static TimestampCondition equalsTo(Instant time) {
         return actual -> Assertions.assertThat(actual)
@@ -76,9 +77,10 @@ public class TimestampAssertions {
     }
 
     /**
-     * Проверяет, что временная метка не равна указанному времени.
+     * Проверяет, что временная метка не равна указанной.
      *
      * @param time временная метка для проверки неравенства
+     * @return условие неравенства временной метки
      */
     public static TimestampCondition notEqualsTo(Instant time) {
         return actual -> Assertions.assertThat(actual)
@@ -109,7 +111,9 @@ public class TimestampAssertions {
     }
 
     /**
-     * Проверяет, что временная метка является прошлым временем (раньше текущего момента).
+     * Проверяет, что временная метка находится в прошлом.
+     *
+     * @return условие, что временная метка в прошлом
      */
     public static TimestampCondition isInPast() {
         return actual -> Assertions.assertThat(actual)
@@ -118,7 +122,9 @@ public class TimestampAssertions {
     }
 
     /**
-     * Проверяет, что временная метка является будущим временем (позже текущего момента).
+     * Проверяет, что временная метка находится в будущем.
+     *
+     * @return условие, что временная метка в будущем
      */
     public static TimestampCondition isInFuture() {
         return actual -> Assertions.assertThat(actual)

@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+import static io.restassured.http.ContentType.*;
 import static rest.matcher.RestMatcher.*;
 import static rest.matcher.assertions.BodyAssertions.*;
 import static rest.matcher.assertions.CookieAssertions.*;
@@ -60,7 +61,7 @@ public class RestExample {
                 header(headerEndsWith("Content-Type", "utf-8")),
                 header(headerValueNotEmpty("Content-Type")),
                 header(headerValueMatchesRegex("Content-Type", "application/json.*")),
-                header(contentType(io.restassured.http.ContentType.JSON))
+                header(contentType(JSON))
         );
     }
 

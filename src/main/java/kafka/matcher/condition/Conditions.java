@@ -5,11 +5,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import java.util.List;
 
 /**
- * Функциональный интерфейс для условий, проверяющих список записей целиком.
+ * Функциональный интерфейс для условия проверки списка Kafka записей.
  */
 @FunctionalInterface
 public interface Conditions {
-
     /**
      * Проверяет условие для списка записей.
      *

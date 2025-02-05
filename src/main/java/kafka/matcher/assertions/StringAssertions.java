@@ -37,6 +37,26 @@ public class StringAssertions {
     private static final String SPECIAL_CHARS = "!@#$%^&*()-_=+[]{}|;:'\",.<>/?`~";
 
     /**
+     * Проверяет, что значение по является строкой.
+     */
+    public static StringCondition isString() {
+        return value -> {
+            Assertions.assertThat(value)
+                    .as("Значение должно быть строкой")
+                    .isInstanceOf(String.class);
+        };
+    }
+
+    /**
+     * Проверяет, что значение не равно null.
+     */
+    public static StringCondition isNotNull() {
+        return value -> Assertions.assertThat(value)
+                .as("Не должно быть null")
+                .isNotNull();
+    }
+
+    /**
      * Проверяет, что строка пустая.
      */
     public static StringCondition isEmpty() {
