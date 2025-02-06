@@ -1,10 +1,9 @@
 package db.matcher.assertions;
 
-import db.matcher.condition.Condition;
+import db.matcher.Checker;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
-import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -20,13 +19,7 @@ public class PropertyAssertions {
      * @param <V> тип проверяемого свойства
      */
     @FunctionalInterface
-    public interface PropertyCondition<V> {
-        /**
-         * Проверяет значение свойства.
-         *
-         * @param value значение свойства для проверки
-         */
-        void check(V value);
+    public interface PropertyCondition<V> extends Checker<V> {
     }
 
     /**
@@ -36,7 +29,7 @@ public class PropertyAssertions {
      * @param <T>           тип проверяемого свойства
      * @return условие проверки равенства
      */
-    public static <T> Condition<T> equalsTo(Object expectedValue) {
+    public static <T> Checker<T> equalsTo(Object expectedValue) {
         return value -> Assertions.assertThat(value)
                 .as("Значение должно быть равно %s", expectedValue)
                 .isEqualTo(expectedValue);
@@ -48,7 +41,7 @@ public class PropertyAssertions {
      * @param <T> тип проверяемого свойства
      * @return условие проверки, что значение равно null
      */
-    public static <T> Condition<T> isNull() {
+    public static <T> Checker<T> isNull() {
         return value -> Assertions.assertThat(value)
                 .as("Значение должно быть null")
                 .isNull();
@@ -61,12 +54,11 @@ public class PropertyAssertions {
      * @return условие проверки пустоты значения
      * @throws IllegalArgumentException если значение не является строкой или коллекцией
      */
-    public static <T> Condition<T> propertyIsEmpty() {
+    public static <T> Checker<T> propertyIsEmpty() {
         return value -> {
             Assertions.assertThat(value)
                     .as("Значение не должно быть null")
                     .isNotNull();
-
             if (value instanceof String) {
                 Assertions.assertThat((String) value)
                         .as("Строка должна быть пустой")
@@ -88,7 +80,7 @@ public class PropertyAssertions {
      * @param <T>          тип проверяемого свойства
      * @return условие проверки типа
      */
-    public static <T> Condition<T> isOfType(Class<?> expectedType) {
+    public static <T> Checker<T> isOfType(Class<?> expectedType) {
         return value -> Assertions.assertThat(value.getClass())
                 .as("Значение должно быть типа %s", expectedType.getName())
                 .isEqualTo(expectedType);
@@ -101,7 +93,7 @@ public class PropertyAssertions {
      * @param <T>               тип проверяемого свойства
      * @return условие проверки принадлежности к типу
      */
-    public static <T> Condition<T> isAssignableFrom(Class<?> expectedSuperType) {
+    public static <T> Checker<T> isAssignableFrom(Class<?> expectedSuperType) {
         return value -> Assertions.assertThat(expectedSuperType.isAssignableFrom(value.getClass()))
                 .as("Значение должно быть подклассом/реализовывать %s", expectedSuperType.getName())
                 .isTrue();
@@ -114,7 +106,7 @@ public class PropertyAssertions {
      * @param <T>                тип сущности
      * @return условие проверки нескольких свойств
      */
-    public static <T> Condition<T> allPropertiesEqual(Map<Function<T, ?>, Object> expectedProperties) {
+    public static <T> Checker<T> allPropertiesEqual(Map<Function<T, ?>, Object> expectedProperties) {
         return value -> {
             for (Map.Entry<Function<T, ?>, Object> entry : expectedProperties.entrySet()) {
                 Function<T, ?> getter = entry.getKey();
@@ -134,7 +126,7 @@ public class PropertyAssertions {
      * @param <T>    тип проверяемого свойства
      * @return условие проверки принадлежности значения списку
      */
-    public static <T> Condition<T> in(List<?> values) {
+    public static <T> Checker<T> in(java.util.List<?> values) {
         return value -> Assertions.assertThat(value)
                 .as("Проверка, что значение входит в список %s", values)
                 .isIn(values);

@@ -1,10 +1,8 @@
 package db.matcher;
 
-import db.matcher.condition.Condition;
-import db.matcher.condition.Conditions;
+import db.matcher.assertions.CompositeAssertions;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
-import org.assertj.core.api.Assertions;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,51 +23,31 @@ public final class DbValidator<T> {
 
     /**
      * Конструктор для валидации единственной сущности.
-     *
-     * @param entity проверяемая сущность; не должна быть null
      */
     public DbValidator(@NonNull T entity) {
-        this.entities = Collections.singletonList(entity);
+        this(Collections.singletonList(entity));
     }
 
     /**
      * Конструктор для валидации списка сущностей.
-     *
-     * @param entities список проверяемых сущностей; не должен быть null или пустым
-     * @throws AssertionError если список сущностей пуст
      */
     public DbValidator(@NonNull List<T> entities) {
-        Assertions.assertThat(entities)
-                .as("Список сущностей не должен быть пустым")
-                .isNotEmpty();
         this.entities = entities;
     }
 
     /**
-     * Применяет к каждой сущности из списка заданное условие.
+     * Применяет переданные проверщики (Checker) ко всем сущностям.
+     * Все проверки объединяются с помощью логической операции И (and).
      *
-     * @param condition условие для проверки
+     * @param checkers набор проверщиков для проверки сущностей
      * @return текущий экземпляр DbValidator для построения цепочки вызовов
-     * @throws AssertionError   если условие не выполнено для хотя бы одной сущности
-     * @throws RuntimeException если происходит другая ошибка при проверке
      */
-    public DbValidator<T> shouldHave(@NonNull Condition<T> condition) {
-        log.debug("Проверка условия '{}' для {} сущностей", condition, entities.size());
-        entities.forEach(entity -> runCheck(() -> condition.check(entity), condition, entity.toString()));
-        return this;
-    }
-
-    /**
-     * Применяет заданный набор условий к списку сущностей.
-     *
-     * @param conditions условия для проверки списка сущностей
-     * @return текущий экземпляр DbValidator для построения цепочки вызовов
-     * @throws AssertionError   если условие не выполнено
-     * @throws RuntimeException если происходит другая ошибка при проверке
-     */
-    public DbValidator<T> shouldHave(@NonNull Conditions<T> conditions) {
-        log.debug("Проверка условий '{}' для {} сущностей", conditions, entities.size());
-        runCheck(() -> conditions.check(entities), conditions, "entities");
+    @SafeVarargs
+    public final DbValidator<T> shouldHave(@NonNull Checker<T>... checkers) {
+        // Создаём составной Checker с помощью логической операции "И"
+        Checker<T> composite = CompositeAssertions.and(checkers);
+        log.debug("Проверка условия '{}' для {} сущностей", composite, entities.size());
+        runCheck(() -> composite.checkAll(entities), composite, "entities");
         return this;
     }
 

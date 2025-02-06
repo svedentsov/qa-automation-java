@@ -1,5 +1,6 @@
 package db.matcher.assertions;
 
+import db.matcher.Checker;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -15,13 +16,7 @@ public class TimeAssertions {
      * Функциональный интерфейс для проверки LocalDateTime значений.
      */
     @FunctionalInterface
-    public interface TimestampCondition {
-        /**
-         * Проверяет значение LocalDateTime.
-         *
-         * @param value значение даты и времени для проверки
-         */
-        void check(LocalDateTime value);
+    public interface TimeCondition extends Checker<LocalDateTime> {
     }
 
     /**
@@ -30,7 +25,7 @@ public class TimeAssertions {
      * @param dateTime момент времени, до которого должно быть значение
      * @return условие проверки, что дата раньше указанной
      */
-    public static TimestampCondition dateBefore(LocalDateTime dateTime) {
+    public static TimeCondition dateBefore(LocalDateTime dateTime) {
         return timestamp -> Assertions.assertThat(timestamp)
                 .as("Дата должна быть до %s", dateTime)
                 .isBefore(dateTime);
@@ -42,7 +37,7 @@ public class TimeAssertions {
      * @param dateTime момент времени, после которого должно быть значение
      * @return условие проверки, что дата позже указанной
      */
-    public static TimestampCondition localDateTimeAfter(LocalDateTime dateTime) {
+    public static TimeCondition localDateTimeAfter(LocalDateTime dateTime) {
         return timestamp -> Assertions.assertThat(timestamp)
                 .as("Дата и время должны быть после %s", dateTime)
                 .isAfter(dateTime);
@@ -53,7 +48,7 @@ public class TimeAssertions {
      *
      * @return условие проверки, что дата находится в будущем
      */
-    public static TimestampCondition isInFuture() {
+    public static TimeCondition isInFuture() {
         return timestamp -> Assertions.assertThat(timestamp)
                 .as("Дата и время должны быть в будущем")
                 .isAfter(LocalDateTime.now());
@@ -64,7 +59,7 @@ public class TimeAssertions {
      *
      * @return условие проверки, что дата находится в прошлом
      */
-    public static TimestampCondition isInPast() {
+    public static TimeCondition isInPast() {
         return timestamp -> Assertions.assertThat(timestamp)
                 .as("Дата и время должны быть в прошлом")
                 .isBefore(LocalDateTime.now());

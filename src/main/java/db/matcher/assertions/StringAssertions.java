@@ -1,5 +1,6 @@
 package db.matcher.assertions;
 
+import db.matcher.Checker;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -15,13 +16,7 @@ public class StringAssertions {
      * Функциональный интерфейс для проверки строк.
      */
     @FunctionalInterface
-    public interface StringCondition {
-        /**
-         * Проверяет строковое значение на соответствие условию.
-         *
-         * @param value строка для проверки
-         */
-        void check(String value);
+    public interface StringCondition extends Checker<String> {
     }
 
     /**

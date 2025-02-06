@@ -1,6 +1,6 @@
 package db.matcher.assertions;
 
-import db.matcher.condition.Condition;
+import db.matcher.Checker;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 
 /**
  * Утилитный класс для проверки числовых свойств сущности.
- * Предоставляет условия для сравнения числовых значений.
  */
 @UtilityClass
 public class NumberAssertions {
@@ -16,16 +15,10 @@ public class NumberAssertions {
     /**
      * Функциональный интерфейс для проверки числовых значений.
      *
-     * @param <T> тип числа (например, Integer, Long, Float, Double, BigDecimal и т.д.), реализующий Comparable
+     * @param <T> тип числа, реализующий Comparable
      */
     @FunctionalInterface
-    public interface NumberCondition<T extends Number & Comparable<T>> {
-        /**
-         * Проверяет числовое значение.
-         *
-         * @param value число для проверки
-         */
-        void check(T value);
+    public interface NumberCondition<T extends Number & Comparable<T>> extends Checker<T> {
     }
 
     /**
@@ -33,7 +26,7 @@ public class NumberAssertions {
      *
      * @param expected ожидаемое значение
      * @param <T>      тип числа
-     * @return условие проверки равенства
+     * @return проверка числового свойства
      */
     public static <T extends Number & Comparable<T>> NumberCondition<T> equalTo(T expected) {
         return value -> Assertions.assertThat(value)
@@ -49,7 +42,7 @@ public class NumberAssertions {
      * @param <T>       тип числа
      * @return условие, проверяющее, что число больше указанного порога
      */
-    public static <T extends Number> Condition<T> greaterThan(BigDecimal threshold) {
+    public static <T extends Number> Checker<T> greaterThan(BigDecimal threshold) {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -66,7 +59,7 @@ public class NumberAssertions {
      * @param <T>       тип числа
      * @return условие, проверяющее, что число меньше указанного порога
      */
-    public static <T extends Number> Condition<T> lessThan(BigDecimal threshold) {
+    public static <T extends Number> Checker<T> lessThan(BigDecimal threshold) {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -82,7 +75,7 @@ public class NumberAssertions {
      * @param <T>       тип числа
      * @return условие, проверяющее, что число больше или равно указанному порогу
      */
-    public static <T extends Number> Condition<T> greaterThanOrEqualTo(BigDecimal threshold) {
+    public static <T extends Number> Checker<T> greaterThanOrEqualTo(BigDecimal threshold) {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -98,7 +91,7 @@ public class NumberAssertions {
      * @param <T>       тип числа
      * @return условие, проверяющее, что число меньше или равно указанному порогу
      */
-    public static <T extends Number> Condition<T> lessThanOrEqualTo(BigDecimal threshold) {
+    public static <T extends Number> Checker<T> lessThanOrEqualTo(BigDecimal threshold) {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -115,7 +108,7 @@ public class NumberAssertions {
      * @param <T>   тип числа
      * @return условие, проверяющее, что число находится в заданном диапазоне
      */
-    public static <T extends Number> Condition<T> between(BigDecimal start, BigDecimal end) {
+    public static <T extends Number> Checker<T> between(BigDecimal start, BigDecimal end) {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -132,7 +125,7 @@ public class NumberAssertions {
      * @param <T>   тип числа
      * @return условие, проверяющее, что число строго между start и end
      */
-    public static <T extends Number> Condition<T> strictlyBetween(BigDecimal start, BigDecimal end) {
+    public static <T extends Number> Checker<T> strictlyBetween(BigDecimal start, BigDecimal end) {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -149,7 +142,7 @@ public class NumberAssertions {
      * @param <T>   тип числа
      * @return условие, проверяющее, что число не находится в диапазоне [start, end]
      */
-    public static <T extends Number> Condition<T> notBetween(BigDecimal start, BigDecimal end) {
+    public static <T extends Number> Checker<T> notBetween(BigDecimal start, BigDecimal end) {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             boolean conditionMet = actual.compareTo(start) < 0 || actual.compareTo(end) > 0;
@@ -165,7 +158,7 @@ public class NumberAssertions {
      * @param <T> тип числа
      * @return условие, проверяющее, что число равно 0
      */
-    public static <T extends Number> Condition<T> propertyIsZero() {
+    public static <T extends Number> Checker<T> propertyIsZero() {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual.compareTo(BigDecimal.ZERO) == 0)
@@ -180,7 +173,7 @@ public class NumberAssertions {
      * @param <T> тип числа
      * @return условие, проверяющее, что число не равно 0
      */
-    public static <T extends Number> Condition<T> propertyIsNotZero() {
+    public static <T extends Number> Checker<T> propertyIsNotZero() {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual.compareTo(BigDecimal.ZERO) != 0)
@@ -195,7 +188,7 @@ public class NumberAssertions {
      * @param <T> тип числа
      * @return условие, проверяющее, что число положительное
      */
-    public static <T extends Number> Condition<T> isPositive() {
+    public static <T extends Number> Checker<T> isPositive() {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -210,7 +203,7 @@ public class NumberAssertions {
      * @param <T> тип числа
      * @return условие, проверяющее, что число отрицательное
      */
-    public static <T extends Number> Condition<T> isNegative() {
+    public static <T extends Number> Checker<T> isNegative() {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -225,7 +218,7 @@ public class NumberAssertions {
      * @param <T> тип числа
      * @return условие, проверяющее, что число неотрицательное
      */
-    public static <T extends Number> Condition<T> isNonNegative() {
+    public static <T extends Number> Checker<T> isNonNegative() {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -240,7 +233,7 @@ public class NumberAssertions {
      * @param <T> тип числа
      * @return условие, проверяющее, что число неположительное
      */
-    public static <T extends Number> Condition<T> isNonPositive() {
+    public static <T extends Number> Checker<T> isNonPositive() {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             Assertions.assertThat(actual)
@@ -257,7 +250,7 @@ public class NumberAssertions {
      * @param <T>       тип числа
      * @return условие, проверяющее, что разница между фактическим и ожидаемым значениями не превышает tolerance
      */
-    public static <T extends Number> Condition<T> approximatelyEqualTo(BigDecimal expected, BigDecimal tolerance) {
+    public static <T extends Number> Checker<T> approximatelyEqualTo(BigDecimal expected, BigDecimal tolerance) {
         return number -> {
             BigDecimal actual = toBigDecimal(number);
             BigDecimal diff = actual.subtract(expected).abs();
@@ -274,7 +267,7 @@ public class NumberAssertions {
      * @param <T>       тип числа
      * @return условие, проверяющее, что число примерно равно 0
      */
-    public static <T extends Number> Condition<T> approximatelyZero(BigDecimal tolerance) {
+    public static <T extends Number> Checker<T> approximatelyZero(BigDecimal tolerance) {
         return approximatelyEqualTo(BigDecimal.ZERO, tolerance);
     }
 
@@ -285,7 +278,7 @@ public class NumberAssertions {
      * @param <T>        тип числа
      * @return условие, проверяющее, что число не равно unexpected
      */
-    public static <T extends Number & Comparable<T>> Condition<T> notEqualTo(T unexpected) {
+    public static <T extends Number & Comparable<T>> Checker<T> notEqualTo(T unexpected) {
         return number -> Assertions.assertThat(number)
                 .as("Значение не должно быть равно %s", unexpected)
                 .isNotEqualTo(unexpected);
@@ -299,7 +292,6 @@ public class NumberAssertions {
      * @return BigDecimal представление числа
      */
     private static <T extends Number> BigDecimal toBigDecimal(T number) {
-        // Используем строковое представление, чтобы избежать проблем с точностью при преобразовании.
         return new BigDecimal(number.toString());
     }
 }

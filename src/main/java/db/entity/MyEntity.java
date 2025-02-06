@@ -1,7 +1,6 @@
 package db.entity;
 
 import lombok.Data;
-import lombok.experimental.Accessors;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
@@ -13,7 +12,6 @@ import java.util.Optional;
  * Сущность MyEntity для демонстрации валидации.
  */
 @Data
-@Accessors(fluent = true)
 @Entity
 @Table(name = "my_entity")
 @NamedQueries({

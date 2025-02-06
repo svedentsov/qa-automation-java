@@ -1,128 +1,163 @@
 package db.matcher.assertions;
 
-import db.matcher.condition.Condition;
-import db.matcher.condition.Conditions;
+import db.matcher.Checker;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
+import java.util.List;
 import java.util.function.Function;
 
 /**
  * Утилитный класс для проверки списков сущностей.
- * Позволяет проверять наличие, количество, а также соответствие условий для всех или некоторых сущностей.
  */
 @UtilityClass
 public class EntityAssertions {
 
     /**
-     * Проверяет, что в списке сущностей присутствует хотя бы одна сущность.
+     * Возвращает проверку, что список сущностей не пуст.
      *
      * @param <T> тип сущности
-     * @return условие проверки существования хотя бы одной сущности
+     * @return проверка сущностей
      */
-    public static <T> Conditions<T> exists() {
-        return entities -> Assertions.assertThat(entities)
-                .as("Проверка наличия хотя бы одной сущности")
-                .isNotEmpty();
+    public static <T> Checker<T> exists() {
+        return entities -> {
+            if (entities instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<T> list = (List<T>) entities;
+                Assertions.assertThat(list)
+                        .as("Проверка наличия хотя бы одной сущности")
+                        .isNotEmpty();
+            } else {
+                throw new IllegalArgumentException("Ожидался список сущностей");
+            }
+        };
     }
 
     /**
-     * Проверяет, что количество сущностей в списке равно указанному значению.
+     * Возвращает проверку, что количество сущностей равно заданному значению.
      *
      * @param count ожидаемое количество сущностей
      * @param <T>   тип сущности
-     * @return условие проверки количества сущностей
+     * @return проверка сущностей
      */
-    public static <T> Conditions<T> countEqual(int count) {
-        return entities -> Assertions.assertThat(entities)
-                .as("Количество сущностей должно быть равно %d", count)
-                .hasSize(count);
+    public static <T> Checker<T> countEqual(int count) {
+        return entities -> {
+            if (entities instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<T> list = (List<T>) entities;
+                Assertions.assertThat(list)
+                        .as("Количество сущностей должно быть равно %d", count)
+                        .hasSize(count);
+            } else {
+                throw new IllegalArgumentException("Ожидался список сущностей");
+            }
+        };
     }
 
     /**
-     * Проверяет, что количество сущностей в списке больше указанного значения.
+     * Возвращает проверку, что количество сущностей больше заданного значения.
      *
-     * @param count минимальное допустимое количество сущностей
+     * @param count минимальное количество сущностей
      * @param <T>   тип сущности
-     * @return условие проверки, что количество сущностей больше заданного
+     * @return проверка сущностей
      */
-    public static <T> Conditions<T> countGreater(int count) {
-        return entities -> Assertions.assertThat(entities)
-                .as("Количество сущностей должно быть больше %d", count)
-                .hasSizeGreaterThan(count);
-    }
-
-    /**
-     * Проверяет, что все сущности в списке удовлетворяют заданному условию.
-     *
-     * @param condition условие для проверки каждой сущности
-     * @param <T>       тип сущности
-     * @return условие проверки, что все сущности удовлетворяют условию
-     */
-    public static <T> Conditions<T> allMatch(Condition<T> condition) {
-        return entities -> entities.forEach(condition::check);
-    }
-
-    /**
-     * Проверяет, что хотя бы одна сущность в списке удовлетворяет заданному условию.
-     *
-     * @param condition условие для проверки
-     * @param <T>       тип сущности
-     * @return условие проверки, что хотя бы одна сущность удовлетворяет условию
-     */
-    public static <T> Conditions<T> anyEntityMatches(Condition<T> condition) {
+    public static <T> Checker<T> countGreater(int count) {
         return entities -> {
-            boolean matchFound = entities.stream().anyMatch(entity -> {
-                try {
-                    condition.check(entity);
-                    return true;
-                } catch (AssertionError e) {
-                    return false;
-                }
-            });
-            Assertions.assertThat(matchFound)
-                    .as("Ожидалось, что хотя бы одна сущность удовлетворяет условию")
-                    .isTrue();
+            if (entities instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<T> list = (List<T>) entities;
+                Assertions.assertThat(list)
+                        .as("Количество сущностей должно быть больше %d", count)
+                        .hasSizeGreaterThan(count);
+            } else {
+                throw new IllegalArgumentException("Ожидался список сущностей");
+            }
         };
     }
 
     /**
-     * Проверяет, что ни одна сущность в списке не удовлетворяет заданному условию.
+     * Возвращает проверку, что все сущности удовлетворяют указанной проверке.
      *
-     * @param condition условие для проверки
-     * @param <T>       тип сущности
-     * @return условие проверки, что ни одна сущность не удовлетворяет условию
+     * @param checker проверка для каждой сущности
+     * @param <T>     тип сущности
+     * @return проверка сущностей
      */
-    public static <T> Conditions<T> noMatches(Condition<T> condition) {
+    public static <T> Checker<T> allMatch(Checker<T> checker) {
+        return entity -> checker.check(entity);
+    }
+
+    /**
+     * Возвращает проверку, что хотя бы одна сущность удовлетворяет указанной проверке.
+     *
+     * @param checker проверка для сущности
+     * @param <T>     тип сущности
+     * @return проверка сущностей
+     */
+    public static <T> Checker<T> anyEntityMatches(Checker<T> checker) {
         return entities -> {
-            boolean anyMatch = entities.stream().anyMatch(entity -> {
-                try {
-                    condition.check(entity);
-                    return true;
-                } catch (AssertionError e) {
-                    return false;
-                }
-            });
-            Assertions.assertThat(anyMatch)
-                    .as("Найдена сущность, соответствующая условию, хотя ожидалось отсутствие совпадений")
-                    .isFalse();
+            if (entities instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<T> list = (List<T>) entities;
+                boolean matchFound = list.stream().anyMatch(entity -> {
+                    try {
+                        checker.check(entity);
+                        return true;
+                    } catch (AssertionError e) {
+                        return false;
+                    }
+                });
+                Assertions.assertThat(matchFound)
+                        .as("Ожидалось, что хотя бы одна сущность удовлетворяет условию")
+                        .isTrue();
+            } else {
+                throw new IllegalArgumentException("Ожидался список сущностей");
+            }
         };
     }
 
     /**
-     * Проверяет, что значение свойства для всех сущностей равно ожидаемому.
+     * Возвращает проверку, что ни одна сущность не удовлетворяет указанной проверке.
      *
-     * @param getter        функция-геттер для извлечения свойства из сущности
+     * @param checker проверка для сущности
+     * @param <T>     тип сущности
+     * @return проверка сущностей
+     */
+    public static <T> Checker<T> noMatches(Checker<T> checker) {
+        return entities -> {
+            if (entities instanceof List) {
+                @SuppressWarnings("unchecked")
+                List<T> list = (List<T>) entities;
+                boolean anyMatch = list.stream().anyMatch(entity -> {
+                    try {
+                        checker.check(entity);
+                        return true;
+                    } catch (AssertionError e) {
+                        return false;
+                    }
+                });
+                Assertions.assertThat(anyMatch)
+                        .as("Найдена сущность, соответствующая условию, хотя ожидалось отсутствие совпадений")
+                        .isFalse();
+            } else {
+                throw new IllegalArgumentException("Ожидался список сущностей");
+            }
+        };
+    }
+
+    /**
+     * Возвращает проверку, что значение свойства для каждой сущности равно ожидаемому.
+     *
+     * @param getter        функция для получения свойства
      * @param expectedValue ожидаемое значение свойства
      * @param <T>           тип сущности
-     * @return условие проверки, что все сущности имеют указанное значение свойства
+     * @return проверка сущностей
      */
-    public static <T> Conditions<T> valuesEqual(Function<T, ?> getter, Object expectedValue) {
-        return entities -> entities.forEach(entity -> {
+    public static <T> Checker<T> valuesEqual(Function<T, ?> getter, Object expectedValue) {
+        return entity -> {
             Object actualValue = getter.apply(entity);
             Assertions.assertThat(actualValue)
                     .as("Значение должно быть равно %s", expectedValue)
                     .isEqualTo(expectedValue);
-        });
+        };
     }
 }

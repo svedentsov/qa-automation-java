@@ -1,51 +1,42 @@
 package db.matcher.assertions;
 
-import db.matcher.condition.Condition;
+import db.matcher.Checker;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
 import java.util.Arrays;
 
 /**
- * Утилитный класс для композиционных (логических) операций над условиями: AND, OR, NOT, а также "хотя бы N из M".
+ * Утилитный класс для композиционных (логических) операций над проверками: AND, OR, NOT, nOf.
  */
 @UtilityClass
 public class CompositeAssertions {
 
     /**
-     * Возвращает условие, представляющее логическую операцию И (AND) для нескольких условий.
+     * Возвращает составную проверку, которая проходит, если пройдены все переданные проверки.
      *
-     * @param conditions набор условий
-     * @param <T>        тип проверяемой сущности
-     * @return условие, которое считается выполненным, если выполнены все переданные условия
+     * @param checkers набор проверок
+     * @param <T>      тип сущности
+     * @return составная проверка
      */
     @SafeVarargs
-    public static <T> Condition<T> and(Condition<T>... conditions) {
-        return entity -> {
-            for (Condition<T> condition : conditions) {
-                condition.check(entity);
-            }
-        };
+    public static <T> Checker<T> and(Checker<T>... checkers) {
+        return entity -> Arrays.stream(checkers)
+                .forEach(checker -> checker.check(entity));
     }
 
     /**
-     * Возвращает условие, представляющее логическую операцию ИЛИ (OR) для нескольких условий.
+     * Возвращает составную проверку, которая проходит, если хотя бы одна из переданных проверок пройдена.
      *
-     * @param conditions набор условий
-     * @param <T>        тип проверяемой сущности
-     * @return условие, которое считается выполненным, если выполнено хотя бы одно из переданных условий
+     * @param checkers набор проверок
+     * @param <T>      тип сущности
+     * @return составная проверка
      */
     @SafeVarargs
-    public static <T> Condition<T> or(Condition<T>... conditions) {
+    public static <T> Checker<T> or(Checker<T>... checkers) {
         return entity -> {
-            boolean atLeastOnePassed = Arrays.stream(conditions).anyMatch(cond -> {
-                try {
-                    cond.check(entity);
-                    return true;
-                } catch (AssertionError ignore) {
-                    return false;
-                }
-            });
+            boolean atLeastOnePassed = Arrays.stream(checkers)
+                    .anyMatch(checker -> passes(checker, entity));
             Assertions.assertThat(atLeastOnePassed)
                     .as("Ни одно из OR-условий не выполнено")
                     .isTrue();
@@ -53,50 +44,57 @@ public class CompositeAssertions {
     }
 
     /**
-     * Возвращает условие, представляющее логическую операцию НЕ (NOT) для одного или нескольких условий.
+     * Возвращает составную проверку, которая проходит, если ни одна из переданных проверок не пройдена.
      *
-     * @param conditions набор условий
-     * @param <T>        тип проверяемой сущности
-     * @return условие, которое считается выполненным, если ни одно из переданных условий не выполнено
+     * @param checkers набор проверок
+     * @param <T>      тип сущности
+     * @return составная проверка
      */
     @SafeVarargs
-    public static <T> Condition<T> not(Condition<T>... conditions) {
+    public static <T> Checker<T> not(Checker<T>... checkers) {
         return entity -> {
-            for (Condition<T> condition : conditions) {
-                try {
-                    condition.check(entity);
-                    Assertions.fail("Условие должно было не выполняться, но выполнилось: " + condition);
-                } catch (AssertionError expected) {
-                    // Ожидаемое поведение: условие не выполнено
-                }
-            }
+            boolean nonePassed = Arrays.stream(checkers)
+                    .noneMatch(checker -> passes(checker, entity));
+            Assertions.assertThat(nonePassed)
+                    .as("Ожидалось, что ни одна проверка не пройдет, но хотя бы одна выполнилась")
+                    .isTrue();
         };
     }
 
     /**
-     * Возвращает условие, которое проверяет, что хотя бы n из переданных условий выполнены.
+     * Возвращает составную проверку, которая проходит, если выполнено хотя бы n из переданных проверок.
      *
-     * @param n          минимальное число условий, которые должны выполниться
-     * @param conditions набор условий
-     * @param <T>        тип проверяемой сущности
-     * @return условие, которое считается выполненным, если выполнено хотя бы n условий
+     * @param n        минимальное число проверок, которые должны пройти
+     * @param checkers набор проверок
+     * @param <T>      тип сущности
+     * @return составная проверка
      */
     @SafeVarargs
-    public static <T> Condition<T> nOf(int n, Condition<T>... conditions) {
+    public static <T> Checker<T> nOf(int n, Checker<T>... checkers) {
         return entity -> {
-            long successCount = Arrays.stream(conditions)
-                    .filter(cond -> {
-                        try {
-                            cond.check(entity);
-                            return true;
-                        } catch (AssertionError e) {
-                            return false;
-                        }
-                    })
+            long successCount = Arrays.stream(checkers)
+                    .filter(checker -> passes(checker, entity))
                     .count();
             Assertions.assertThat(successCount)
                     .as("Ожидалось, что хотя бы %d условий будут выполнены, но выполнено %d", n, successCount)
                     .isGreaterThanOrEqualTo(n);
         };
+    }
+
+    /**
+     * Вспомогательный метод для проверки, проходит ли переданная проверка для заданной сущности.
+     *
+     * @param checker проверка
+     * @param entity  сущность
+     * @param <T>     тип сущности
+     * @return {@code true}, если проверка прошла, иначе {@code false}
+     */
+    private static <T> boolean passes(Checker<T> checker, T entity) {
+        try {
+            checker.check(entity);
+            return true;
+        } catch (AssertionError e) {
+            return false;
+        }
     }
 }

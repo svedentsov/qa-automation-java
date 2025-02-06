@@ -1,6 +1,6 @@
 package db.matcher.assertions;
 
-import db.matcher.condition.Condition;
+import db.matcher.Checker;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -35,7 +35,7 @@ public class CollectionAssertions {
      * @param <T>            тип проверяемого значения (String, Collection или массив)
      * @return условие, проверяющее равенство длины
      */
-    public static <T> Condition<T> lengthEquals(int expectedLength) {
+    public static <T> Checker<T> lengthEquals(int expectedLength) {
         return value -> {
             int actualLength = getLength(value);
             Assertions.assertThat(actualLength)
@@ -51,7 +51,7 @@ public class CollectionAssertions {
      * @param <T>       тип проверяемого значения (String, Collection или массив)
      * @return условие, проверяющее, что длина больше указанного минимума
      */
-    public static <T> Condition<T> lengthGreaterThan(int minLength) {
+    public static <T> Checker<T> lengthGreaterThan(int minLength) {
         return value -> {
             int actualLength = getLength(value);
             Assertions.assertThat(actualLength)
@@ -67,7 +67,7 @@ public class CollectionAssertions {
      * @param <T>       тип проверяемого значения (String, Collection или массив)
      * @return условие, проверяющее, что длина меньше указанного максимума
      */
-    public static <T> Condition<T> lengthLessThan(int maxLength) {
+    public static <T> Checker<T> lengthLessThan(int maxLength) {
         return value -> {
             int actualLength = getLength(value);
             Assertions.assertThat(actualLength)
