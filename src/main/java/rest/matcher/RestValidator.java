@@ -3,7 +3,6 @@ package rest.matcher;
 import io.restassured.response.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import rest.matcher.condition.Condition;
 
 import java.util.Objects;
 

@@ -6,7 +6,7 @@ import org.hamcrest.Matchers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import rest.matcher.RestValidator;
-import rest.matcher.condition.Condition;
+import rest.matcher.Condition;
 
 import java.io.File;
 import java.time.Duration;

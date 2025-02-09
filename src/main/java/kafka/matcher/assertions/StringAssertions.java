@@ -1,5 +1,6 @@
 package kafka.matcher.assertions;
 
+import db.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -18,16 +19,10 @@ import java.util.regex.Pattern;
 public class StringAssertions {
 
     /**
-     * Функциональный интерфейс для строковых условий.
+     * Функциональный интерфейс для проверки строк.
      */
     @FunctionalInterface
-    public interface StringCondition {
-        /**
-         * Проверяет строку на соответствие условию.
-         *
-         * @param value строка для проверки
-         */
-        void check(String value);
+    public interface StringCondition extends Condition<String> {
     }
 
     // Константы для часто используемых шаблонов

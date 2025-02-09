@@ -2,7 +2,7 @@ package ui.pages;
 
 import com.codeborne.selenide.Selenide;
 import ui.helper.UrlController;
-import common.annotations.Url;
+import core.annotations.Url;
 import ui.helper.BrowserActions;
 import lombok.Getter;
 import org.openqa.selenium.By;
@@ -10,9 +10,9 @@ import ui.helper.UiManager;
 import ui.element.popup.ErrorPopup;
 import ui.element.popup.ModalPopup;
 
-import static common.utils.StrUtil.EMPTY;
-import static common.utils.WaitUtils.doWaitMedium;
-import static common.utils.WaitUtils.repeatAction;
+import static core.utils.StrUtil.EMPTY;
+import static core.utils.WaitUtils.doWaitMedium;
+import static core.utils.WaitUtils.repeatAction;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**

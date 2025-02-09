@@ -23,6 +23,8 @@ public final class DbValidator<T> {
 
     /**
      * Конструктор для валидации единственной сущности.
+     *
+     * @param entity сущность для валидации
      */
     public DbValidator(@NonNull T entity) {
         this(Collections.singletonList(entity));
@@ -30,24 +32,25 @@ public final class DbValidator<T> {
 
     /**
      * Конструктор для валидации списка сущностей.
+     *
+     * @param entities список сущностей для валидации
      */
     public DbValidator(@NonNull List<T> entities) {
         this.entities = entities;
     }
 
     /**
-     * Применяет переданные проверщики (Checker) ко всем сущностям.
-     * Все проверки объединяются с помощью логической операции И (and).
+     * Применяет переданные условия проверки ко всем сущностям.
+     * Все условия объединяются с помощью логической операции И (AND).
      *
-     * @param checkers набор проверщиков для проверки сущностей
-     * @return текущий экземпляр DbValidator для построения цепочки вызовов
+     * @param conditions набор условий проверки сущностей
+     * @return текущий экземпляр DbValidator для дальнейшей цепочки вызовов
      */
     @SafeVarargs
-    public final DbValidator<T> shouldHave(@NonNull Checker<T>... checkers) {
-        // Создаём составной Checker с помощью логической операции "И"
-        Checker<T> composite = CompositeAssertions.and(checkers);
-        log.debug("Проверка условия '{}' для {} сущностей", composite, entities.size());
-        runCheck(() -> composite.checkAll(entities), composite, "entities");
+    public final DbValidator<T> shouldHave(@NonNull Condition<T>... conditions) {
+        Condition<T> compositeCondition = CompositeAssertions.and(conditions);
+        log.debug("Проверка условия '{}' для {} сущностей", compositeCondition, entities.size());
+        executeCheck(() -> compositeCondition.checkAll(entities), compositeCondition, "entities");
         return this;
     }
 
@@ -58,17 +61,17 @@ public final class DbValidator<T> {
      * @param condition   условие, которое проверяется (для формирования сообщения об ошибке)
      * @param entityLabel идентификатор или описание сущности (или группы сущностей)
      */
-    private void runCheck(Runnable check, Object condition, String entityLabel) {
+    private void executeCheck(Runnable check, Object condition, String entityLabel) {
         try {
             check.run();
-        } catch (AssertionError e) {
-            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s", condition, entityLabel, e.getMessage());
-            log.error(errorMessage);
-            throw new AssertionError(errorMessage, e);
-        } catch (Exception e) {
-            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s", condition, entityLabel, e.getMessage());
-            log.error(errorMessage, e);
-            throw new RuntimeException(errorMessage, e);
+        } catch (AssertionError error) {
+            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s",
+                    condition, entityLabel, error.getMessage());
+            throw new AssertionError(errorMessage, error);
+        } catch (Exception exception) {
+            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s",
+                    condition, entityLabel, exception.getMessage());
+            throw new RuntimeException(errorMessage, exception);
         }
     }
 }

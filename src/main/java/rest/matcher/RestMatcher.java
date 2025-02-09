@@ -8,7 +8,6 @@ import rest.matcher.assertions.CookieAssertions.CookieCondition;
 import rest.matcher.assertions.HeaderAssertions.HeaderCondition;
 import rest.matcher.assertions.StatusAssertions.StatusCondition;
 import rest.matcher.assertions.TimeAssertions.TimeCondition;
-import rest.matcher.condition.Condition;
 
 /**
  * Утилитный класс для создания условий проверки HTTP-ответов.

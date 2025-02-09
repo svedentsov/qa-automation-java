@@ -4,7 +4,7 @@ import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
-import rest.matcher.condition.Condition;
+import rest.matcher.Condition;
 
 import java.time.Duration;
 import java.util.Objects;

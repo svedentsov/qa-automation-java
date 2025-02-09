@@ -20,12 +20,12 @@ import io.restassured.specification.ProxySpecification;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
 import rest.matcher.RestValidator;
-import rest.matcher.condition.Condition;
+import rest.matcher.Condition;
 
 import java.util.List;
 import java.util.Map;
 
-import static common.allure.AllureRestAssuredFilter.withCustomTemplates;
+import static core.allure.AllureRestAssuredFilter.withCustomTemplates;
 
 /**
  * Класс для выполнения REST-запросов с использованием библиотеки RestAssured.

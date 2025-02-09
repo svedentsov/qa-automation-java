@@ -1,6 +1,6 @@
 package ui.pages;
 
-import common.annotations.Url;
+import core.annotations.Url;
 import org.openqa.selenium.By;
 import ui.element.Link;
 import ui.element.LineRead;
@@ -11,6 +11,7 @@ import ui.element.LineRead;
  */
 @Url(pattern = ".*/status_codes")
 public class StatusCodesPage extends AbstractPage<StatusCodesPage> {
+
     public Link STATUS_200_LINK = new Link(By.linkText("200"));
     public Link STATUS_301_LINK = new Link(By.linkText("301"));
     public Link STATUS_404_LINK = new Link(By.linkText("404"));

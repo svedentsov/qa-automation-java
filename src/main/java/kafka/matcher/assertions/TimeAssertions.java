@@ -1,5 +1,6 @@
 package kafka.matcher.assertions;
 
+import db.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -18,13 +19,7 @@ public class TimeAssertions {
      * Функциональный интерфейс для условий проверки временной метки.
      */
     @FunctionalInterface
-    public interface TimestampCondition {
-        /**
-         * Проверяет временную метку.
-         *
-         * @param actual фактическая временная метка
-         */
-        void check(Instant actual);
+    public interface TimeCondition extends Condition<Instant> {
     }
 
     /**
@@ -33,7 +28,7 @@ public class TimeAssertions {
      * @param time время для сравнения
      * @return условие "до указанного времени"
      */
-    public static TimestampCondition before(Instant time) {
+    public static TimeCondition before(Instant time) {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка должна быть до %s", time)
                 .isBefore(time);
@@ -45,7 +40,7 @@ public class TimeAssertions {
      * @param time время для сравнения
      * @return условие "после указанного времени"
      */
-    public static TimestampCondition after(Instant time) {
+    public static TimeCondition after(Instant time) {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка должна быть после %s", time)
                 .isAfter(time);
@@ -58,7 +53,7 @@ public class TimeAssertions {
      * @param end   конец диапазона (включительно)
      * @return условие "в диапазоне"
      */
-    public static TimestampCondition inRange(Instant start, Instant end) {
+    public static TimeCondition inRange(Instant start, Instant end) {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка должна быть в диапазоне %s - %s", start, end)
                 .isBetween(start, end);
@@ -70,7 +65,7 @@ public class TimeAssertions {
      * @param time ожидаемая временная метка
      * @return условие равенства временной метки
      */
-    public static TimestampCondition equalsTo(Instant time) {
+    public static TimeCondition equalsTo(Instant time) {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка должна быть равна %s", time)
                 .isEqualTo(time);
@@ -82,7 +77,7 @@ public class TimeAssertions {
      * @param time временная метка для проверки неравенства
      * @return условие неравенства временной метки
      */
-    public static TimestampCondition notEqualsTo(Instant time) {
+    public static TimeCondition notEqualsTo(Instant time) {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка не должна быть равна %s", time)
                 .isNotEqualTo(time);
@@ -93,7 +88,7 @@ public class TimeAssertions {
      *
      * @param time время для сравнения
      */
-    public static TimestampCondition afterOrEqualTo(Instant time) {
+    public static TimeCondition afterOrEqualTo(Instant time) {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка должна быть после или равна %s", time)
                 .isAfterOrEqualTo(time);
@@ -104,7 +99,7 @@ public class TimeAssertions {
      *
      * @param time время для сравнения
      */
-    public static TimestampCondition beforeOrEqualTo(Instant time) {
+    public static TimeCondition beforeOrEqualTo(Instant time) {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка должна быть до или равна %s", time)
                 .isBeforeOrEqualTo(time);
@@ -115,7 +110,7 @@ public class TimeAssertions {
      *
      * @return условие, что временная метка в прошлом
      */
-    public static TimestampCondition isInPast() {
+    public static TimeCondition isInPast() {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка должна быть в прошлом")
                 .isBefore(Instant.now());
@@ -126,7 +121,7 @@ public class TimeAssertions {
      *
      * @return условие, что временная метка в будущем
      */
-    public static TimestampCondition isInFuture() {
+    public static TimeCondition isInFuture() {
         return actual -> Assertions.assertThat(actual)
                 .as("Временная метка должна быть в будущем")
                 .isAfter(Instant.now());
@@ -139,7 +134,7 @@ public class TimeAssertions {
      * @param reference опорная временная метка
      * @param tolerance максимально допустимое отклонение
      */
-    public static TimestampCondition within(Instant reference, Duration tolerance) {
+    public static TimeCondition within(Instant reference, Duration tolerance) {
         return actual -> {
             Instant lowerBound = reference.minus(tolerance);
             Instant upperBound = reference.plus(tolerance);
@@ -155,7 +150,7 @@ public class TimeAssertions {
      *
      * @param maxAgo максимальная длительность "назад" от текущего момента
      */
-    public static TimestampCondition notOlderThan(Duration maxAgo) {
+    public static TimeCondition notOlderThan(Duration maxAgo) {
         return actual -> {
             Instant threshold = Instant.now().minus(maxAgo);
             Assertions.assertThat(actual)
@@ -169,7 +164,7 @@ public class TimeAssertions {
      *
      * @param maxAhead максимальная длительность "вперёд" от текущего момента
      */
-    public static TimestampCondition notFurtherThan(Duration maxAhead) {
+    public static TimeCondition notFurtherThan(Duration maxAhead) {
         return actual -> {
             Instant threshold = Instant.now().plus(maxAhead);
             Assertions.assertThat(actual)
@@ -183,7 +178,7 @@ public class TimeAssertions {
      *
      * @param instant ожидаемая дата (год, месяц, день)
      */
-    public static TimestampCondition sameDateAs(Instant instant) {
+    public static TimeCondition sameDateAs(Instant instant) {
         return actual -> {
             LocalDate expectedDate = instant.atZone(ZoneId.systemDefault()).toLocalDate();
             LocalDate actualDate = actual.atZone(ZoneId.systemDefault()).toLocalDate();
@@ -198,7 +193,7 @@ public class TimeAssertions {
      *
      * @param year год, который ожидается (например, 2024)
      */
-    public static TimestampCondition inYear(int year) {
+    public static TimeCondition inYear(int year) {
         return actual -> {
             int actualYear = actual.atZone(ZoneId.systemDefault()).getYear();
             Assertions.assertThat(actualYear)
@@ -212,7 +207,7 @@ public class TimeAssertions {
      *
      * @param month месяц (1 - январь, 12 - декабрь)
      */
-    public static TimestampCondition inMonth(int month) {
+    public static TimeCondition inMonth(int month) {
         return actual -> {
             int actualMonth = actual.atZone(ZoneId.systemDefault()).getMonthValue();
             Assertions.assertThat(actualMonth)
@@ -226,7 +221,7 @@ public class TimeAssertions {
      *
      * @param dayOfWeek ожидаемый день недели
      */
-    public static TimestampCondition dayOfWeek(DayOfWeek dayOfWeek) {
+    public static TimeCondition dayOfWeek(DayOfWeek dayOfWeek) {
         return actual -> {
             DayOfWeek actualDOW = actual.atZone(ZoneId.systemDefault()).getDayOfWeek();
             Assertions.assertThat(actualDOW)
@@ -240,7 +235,7 @@ public class TimeAssertions {
      *
      * @param daysOfWeek набор допустимых дней недели
      */
-    public static TimestampCondition inAnyOfDaysOfWeek(Set<DayOfWeek> daysOfWeek) {
+    public static TimeCondition inAnyOfDaysOfWeek(Set<DayOfWeek> daysOfWeek) {
         return actual -> {
             DayOfWeek actualDOW = actual.atZone(ZoneId.systemDefault()).getDayOfWeek();
             Assertions.assertThat(daysOfWeek)
@@ -252,7 +247,7 @@ public class TimeAssertions {
     /**
      * Проверяет, что временная метка приходится на выходной день (суббота или воскресенье).
      */
-    public static TimestampCondition isWeekend() {
+    public static TimeCondition isWeekend() {
         return actual -> {
             DayOfWeek actualDOW = actual.atZone(ZoneId.systemDefault()).getDayOfWeek();
             boolean weekend = (actualDOW == DayOfWeek.SATURDAY || actualDOW == DayOfWeek.SUNDAY);
@@ -265,7 +260,7 @@ public class TimeAssertions {
     /**
      * Проверяет, что временная метка приходится на будний день (не выходной).
      */
-    public static TimestampCondition isWeekday() {
+    public static TimeCondition isWeekday() {
         return actual -> {
             DayOfWeek actualDOW = actual.atZone(ZoneId.systemDefault()).getDayOfWeek();
             boolean weekday = (actualDOW != DayOfWeek.SATURDAY && actualDOW != DayOfWeek.SUNDAY);
@@ -279,7 +274,7 @@ public class TimeAssertions {
      * Проверяет, что временная метка приходится на начало суток (00:00:00).
      * Учитывается системная временная зона.
      */
-    public static TimestampCondition isStartOfDay() {
+    public static TimeCondition isStartOfDay() {
         return actual -> {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isStart = ldt.getHour() == 0 && ldt.getMinute() == 0 && ldt.getSecond() == 0 && ldt.getNano() == 0;
@@ -296,7 +291,7 @@ public class TimeAssertions {
      * Обратите внимание, что в реальных системах конец суток может не всегда быть ровно 23:59:59.999999999
      * из-за возможных переходов на летнее/зимнее время, но в большинстве случаев достаточно этой проверки.
      */
-    public static TimestampCondition isEndOfDay() {
+    public static TimeCondition isEndOfDay() {
         return actual -> {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isEnd = (ldt.getHour() == 23
@@ -315,7 +310,7 @@ public class TimeAssertions {
      * @param reference      опорная временная метка
      * @param maxSecondsDiff максимально допустимая разница в секундах
      */
-    public static TimestampCondition withinSecondsOf(Instant reference, long maxSecondsDiff) {
+    public static TimeCondition withinSecondsOf(Instant reference, long maxSecondsDiff) {
         return actual -> {
             long diff = ChronoUnit.SECONDS.between(reference, actual);
             Assertions.assertThat(Math.abs(diff))
@@ -330,7 +325,7 @@ public class TimeAssertions {
      * @param reference      опорная временная метка
      * @param maxMinutesDiff максимально допустимая разница в минутах
      */
-    public static TimestampCondition withinMinutesOf(Instant reference, long maxMinutesDiff) {
+    public static TimeCondition withinMinutesOf(Instant reference, long maxMinutesDiff) {
         return actual -> {
             long diff = ChronoUnit.MINUTES.between(reference, actual);
             Assertions.assertThat(Math.abs(diff))
@@ -345,7 +340,7 @@ public class TimeAssertions {
      * @param reference    опорная временная метка
      * @param maxHoursDiff максимально допустимая разница в часах
      */
-    public static TimestampCondition withinHoursOf(Instant reference, long maxHoursDiff) {
+    public static TimeCondition withinHoursOf(Instant reference, long maxHoursDiff) {
         return actual -> {
             long diff = ChronoUnit.HOURS.between(reference, actual);
             Assertions.assertThat(Math.abs(diff))
@@ -360,7 +355,7 @@ public class TimeAssertions {
      * @param reference   опорная временная метка
      * @param maxDaysDiff максимально допустимая разница в днях
      */
-    public static TimestampCondition withinDaysOf(Instant reference, long maxDaysDiff) {
+    public static TimeCondition withinDaysOf(Instant reference, long maxDaysDiff) {
         return actual -> {
             long diff = ChronoUnit.DAYS.between(reference, actual);
             Assertions.assertThat(Math.abs(diff))
@@ -376,7 +371,7 @@ public class TimeAssertions {
      * @param field поле времени (например, {@code ChronoField.HOUR_OF_DAY})
      * @param value ожидаемое значение поля
      */
-    public static TimestampCondition checkField(ChronoField field, int value) {
+    public static TimeCondition checkField(ChronoField field, int value) {
         return actual -> {
             ZonedDateTime zdt = actual.atZone(ZoneId.systemDefault());
             int actualValue = zdt.get(field);

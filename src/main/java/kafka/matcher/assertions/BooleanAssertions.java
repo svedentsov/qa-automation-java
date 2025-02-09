@@ -1,5 +1,6 @@
 package kafka.matcher.assertions;
 
+import kafka.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -13,13 +14,7 @@ public class BooleanAssertions {
      * Функциональный интерфейс для условий проверки булевого значения.
      */
     @FunctionalInterface
-    public interface BooleanCondition {
-        /**
-         * Проверяет булевое значение.
-         *
-         * @param value булевое значение для проверки
-         */
-        void check(Boolean value);
+    public interface BooleanCondition extends Condition<Boolean> {
     }
 
     /**

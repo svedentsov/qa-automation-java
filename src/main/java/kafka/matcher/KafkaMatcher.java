@@ -1,70 +1,60 @@
 package kafka.matcher;
 
 import com.jayway.jsonpath.JsonPath;
-import kafka.matcher.assertions.CollectionAssertions.CollectionCondition;
+import kafka.matcher.assertions.BooleanAssertions.BooleanCondition;
 import kafka.matcher.assertions.CompositeAssertions;
 import kafka.matcher.assertions.NumberAssertions.NumberCondition;
 import kafka.matcher.assertions.StringAssertions.StringCondition;
-import kafka.matcher.assertions.TimeAssertions.TimestampCondition;
-import kafka.matcher.assertions.BooleanAssertions.BooleanCondition;
-import kafka.matcher.condition.Condition;
-import kafka.matcher.condition.Conditions;
+import kafka.matcher.assertions.TimeAssertions.TimeCondition;
 import lombok.experimental.UtilityClass;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Instant;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
- * Основной класс, предоставляющий DSL для проверки Kafka записей.
- * Содержит статические методы для создания условий проверки отдельных полей записи,
- * а также для объединения условий.
+ * Утилитный класс, предоставляющий DSL для создания проверок (Condition)
+ * для Kafka-записей. Позволяет создавать проверки для различных полей записи
+ * (ключ, значение, топик, партиция, смещение, временная метка) и для значений,
+ * извлекаемых по JSONPath.
  */
 @UtilityClass
 public class KafkaMatcher {
 
-    // =================== Условия для проверки списка записей ===================
-
     /**
-     * Создает условие для проверки списка записей.
+     * Создаёт условие для проверки свойства Kafka-записи с использованием функции-геттера
+     * и условия для проверяемого свойства.
      *
-     * @param cc условие для проверки списка записей
-     * @return условие, применимое к списку записей
+     * @param getter функция для получения свойства из записи
+     * @param cond   условие для проверки полученного значения
+     * @param <R>    тип свойства
+     * @return условие для проверки Kafka-записи
      */
-    public static Conditions records(CollectionCondition cc) {
-        return cc::check;
+    public static <R> Condition<ConsumerRecord<String, String>> value(Function<ConsumerRecord<String, String>, R> getter, Condition<R> cond) {
+        return valueInternal(getter, cond::check);
     }
 
-    // =================== Условия для проверки значения записи ===================
-
     /**
-     * Создает условие для проверки значения записи с использованием строкового условия.
-     * Перед проверкой выполняется проверка, что значение имеет тип {@code String}.
+     * Создаёт проверку для значения записи с использованием строкового условия.
      *
-     * @param sc строковое условие
+     * @param sc строковое условие для проверки значения
      * @return условие для проверки значения записи
-     * @throws AssertionError если значение записи не является строкой
      */
-    public static Condition value(StringCondition sc) {
-        return record -> {
-            Object val = record.value();
-            if (!(val instanceof String)) {
-                throw new AssertionError("Ожидалось, что значение записи будет строкой, но было: " + val);
-            }
-            sc.check((String) val);
-        };
+    public static Condition<ConsumerRecord<String, String>> value(StringCondition sc) {
+        return valueInternal(ConsumerRecord::value, sc::check);
     }
 
     /**
-     * Создает условие для проверки числового значения, извлеченного по JSONPath.
-     * Проводится проверка, что извлеченное значение имеет ожидаемый числовой тип.
+     * Создаёт проверку для числового значения, извлечённого из JSON-записи по указанному пути.
      *
-     * @param jsonPath путь JSONPath
-     * @param nc       числовое условие
+     * @param jsonPath путь JSONPath для извлечения значения
+     * @param nc       числовое условие для проверки
      * @param type     класс ожидаемого числового типа
-     * @param <T>      тип числа
+     * @param <T>      тип числа, наследующий Number и Comparable
      * @return условие для проверки числового значения
-     * @throws AssertionError если извлеченное значение не соответствует ожидаемому типу
      */
-    public static <T extends Number & Comparable<T>> Condition value(String jsonPath, NumberCondition<T> nc, Class<T> type) {
+    public static <T extends Number & Comparable<T>> Condition<ConsumerRecord<String, String>> value(String jsonPath, NumberCondition<T> nc, Class<T> type) {
         return record -> {
             T val = getJsonValue(record.value(), jsonPath, type);
             nc.check(val);
@@ -72,15 +62,27 @@ public class KafkaMatcher {
     }
 
     /**
-     * Создает условие для проверки строкового значения, извлеченного по JSONPath.
-     * Перед проверкой выполняется проверка, что извлеченное значение имеет тип {@code String}.
+     * Создаёт проверку для булевого значения, извлечённого из JSON-записи по указанному пути.
      *
-     * @param jsonPath путь JSONPath
-     * @param sc       строковое условие
-     * @return условие для проверки строкового значения
-     * @throws AssertionError если извлеченное значение не является строкой
+     * @param jsonPath путь JSONPath для извлечения значения
+     * @param bc       булевое условие для проверки
+     * @return условие для проверки булевого значения
      */
-    public static Condition value(String jsonPath, StringCondition sc) {
+    public static Condition<ConsumerRecord<String, String>> value(String jsonPath, BooleanCondition bc) {
+        return record -> {
+            Boolean val = getJsonValue(record.value(), jsonPath, Boolean.class);
+            bc.check(val);
+        };
+    }
+
+    /**
+     * Создаёт проверку для строкового значения, извлечённого из JSON-записи по указанному пути.
+     *
+     * @param jsonPath путь JSONPath для извлечения значения
+     * @param sc       строковое условие для проверки
+     * @return условие для проверки строкового значения
+     */
+    public static Condition<ConsumerRecord<String, String>> value(String jsonPath, StringCondition sc) {
         return record -> {
             String val = getJsonValue(record.value(), jsonPath, String.class);
             sc.check(val);
@@ -88,134 +90,132 @@ public class KafkaMatcher {
     }
 
     /**
-     * Создает условие для проверки булевого значения, извлеченного по JSONPath.
-     * Перед проверкой выполняется проверка, что извлеченное значение имеет тип {@code Boolean}.
+     * Создаёт проверку для ключа записи с использованием строкового условия.
      *
-     * @param jsonPath путь JSONPath
-     * @param bc       булевое условие
-     * @return условие для проверки булевого значения
-     * @throws AssertionError если извлеченное значение не является булевым
+     * @param sc строковое условие для проверки ключа
+     * @return условие для проверки ключа записи
      */
-    public static Condition value(String jsonPath, BooleanCondition bc) {
-        return record -> {
-            Boolean val = getJsonValue(record.value(), jsonPath, Boolean.class);
-            bc.check(val);
-        };
-    }
-
-    // =================== Условия для проверки других полей записи ===================
-
-    /**
-     * Создает условие для проверки ключа записи с использованием строкового условия.
-     *
-     * @param sc строковое условие
-     * @return условие для проверки ключа
-     */
-    public static Condition key(StringCondition sc) {
-        return record -> sc.check(record.key());
+    public static Condition<ConsumerRecord<String, String>> key(StringCondition sc) {
+        return valueInternal(ConsumerRecord::key, sc::check);
     }
 
     /**
-     * Создает условие для проверки имени топика записи с использованием строкового условия.
+     * Создаёт проверку для имени топика записи с использованием строкового условия.
      *
-     * @param sc строковое условие
-     * @return условие для проверки топика
+     * @param sc строковое условие для проверки топика
+     * @return условие для проверки топика записи
      */
-    public static Condition topic(StringCondition sc) {
-        return record -> sc.check(record.topic());
+    public static Condition<ConsumerRecord<String, String>> topic(StringCondition sc) {
+        return valueInternal(ConsumerRecord::topic, sc::check);
     }
 
     /**
-     * Создает условие для проверки номера партиции записи с использованием числового условия.
+     * Создаёт проверку для номера партиции записи с использованием числового условия.
      *
-     * @param nc числовое условие
-     * @return условие для проверки номера партиции
+     * @param nc числовое условие для проверки партиции
+     * @return условие для проверки номера партиции записи
      */
-    public static Condition partition(NumberCondition<Integer> nc) {
+    public static Condition<ConsumerRecord<String, String>> partition(NumberCondition<Integer> nc) {
         return record -> nc.check(record.partition());
     }
 
     /**
-     * Создает условие для проверки смещения записи с использованием числового условия.
+     * Создаёт проверку для смещения записи с использованием числового условия.
      *
-     * @param nc числовое условие
+     * @param nc числовое условие для проверки смещения
      * @return условие для проверки смещения записи
      */
-    public static Condition offset(NumberCondition<Long> nc) {
+    public static Condition<ConsumerRecord<String, String>> offset(NumberCondition<Long> nc) {
         return record -> nc.check(record.offset());
     }
 
     /**
-     * Создает условие для проверки временной метки записи с использованием условия для {@code Instant}.
+     * Создаёт проверку для временной метки записи с использованием условия для {@link Instant}.
      *
      * @param tc условие для проверки временной метки
-     * @return условие для проверки временной метки
+     * @return условие для проверки временной метки записи
      */
-    public static Condition timestamp(TimestampCondition tc) {
+    public static Condition<ConsumerRecord<String, String>> timestamp(TimeCondition tc) {
         return record -> tc.check(Instant.ofEpochMilli(record.timestamp()));
     }
 
-    // =================== Композиционные условия ===================
-
     /**
-     * Объединяет несколько условий логической операцией AND.
+     * Объединяет несколько проверок в одну с помощью логической операции AND.
      *
-     * @param conditions условия для объединения
-     * @return составное условие, которое проходит только если все условия истинны
+     * @param conditions набор проверок для объединения
+     * @return составное условие, которое считается выполненным, если выполнены все переданные проверки
      */
-    public static Condition and(Condition... conditions) {
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> and(Condition<ConsumerRecord<String, String>>... conditions) {
         return CompositeAssertions.and(conditions);
     }
 
     /**
-     * Объединяет несколько условий логической операцией OR.
+     * Объединяет несколько проверок в одну с помощью логической операции OR.
      *
-     * @param conditions условия для объединения
-     * @return составное условие, которое проходит, если хотя бы одно условие истинно
+     * @param conditions набор проверок для объединения
+     * @return составное условие, которое считается выполненным, если выполнена хотя бы одна из переданных проверок
      */
-    public static Condition or(Condition... conditions) {
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> or(Condition<ConsumerRecord<String, String>>... conditions) {
         return CompositeAssertions.or(conditions);
     }
 
     /**
-     * Инвертирует результаты указанных условий (логическое НЕ).
+     * Инвертирует результаты переданных проверок (логическая операция NOT).
      *
-     * @param conditions условия для инвертирования
-     * @return условие, которое проходит только если все указанные условия не выполнены
+     * @param conditions набор проверок для инвертирования
+     * @return составное условие, которое считается выполненным, если ни одна из переданных проверок не выполнена
      */
-    public static Condition not(Condition... conditions) {
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> not(Condition<ConsumerRecord<String, String>>... conditions) {
         return CompositeAssertions.not(conditions);
     }
 
     /**
-     * Проверяет, что хотя бы n из указанных условий истинны.
+     * Объединяет несколько проверок так, что хотя бы n из них должны выполниться.
      *
-     * @param n          минимальное число истинных условий
-     * @param conditions условия для проверки
-     * @return условие, которое проходит если хотя бы n условий истинны
+     * @param n          минимальное число проверок, которые должны выполниться
+     * @param conditions набор проверок для объединения
+     * @return составное условие, которое считается выполненным, если выполнено хотя бы n проверок
      */
-    public static Condition nOf(int n, Condition... conditions) {
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> nOf(int n, Condition<ConsumerRecord<String, String>>... conditions) {
         return CompositeAssertions.nOf(n, conditions);
     }
+
 
     // =================== Вспомогательные методы ===================
 
     /**
      * Вспомогательный метод для извлечения значения из JSON по указанному пути с проверкой типа.
      *
-     * @param recordValue  значение записи (в формате JSON)
-     * @param jsonPath     путь JSONPath
-     * @param expectedType класс ожидаемого типа
+     * @param json         строка в формате JSON
+     * @param jsonPath     путь JSONPath для извлечения значения
+     * @param expectedType класс ожидаемого типа значения
      * @param <T>          тип извлекаемого значения
-     * @return извлеченное значение, приведенное к ожидаемому типу
-     * @throws AssertionError если извлеченное значение не соответствует ожидаемому типу
+     * @return извлечённое значение, приведённое к ожидаемому типу
+     * @throws AssertionError если извлечённое значение не соответствует ожидаемому типу
      */
-    private static <T> T getJsonValue(String recordValue, String jsonPath, Class<T> expectedType) {
-        Object val = JsonPath.parse(recordValue).read(jsonPath);
+    private static <T> T getJsonValue(String json, String jsonPath, Class<T> expectedType) {
+        Object val = JsonPath.parse(json).read(jsonPath);
         if (!expectedType.isInstance(val)) {
-            throw new AssertionError(String.format("Ожидалось, что значение по пути %s будет типа %s, но было: %s",
+            throw new AssertionError(String.format("Ожидалось, что значение по пути '%s' будет типа %s, но было: %s",
                     jsonPath, expectedType.getSimpleName(), val));
         }
         return expectedType.cast(val);
+    }
+
+    /**
+     * Внутренний универсальный метод для создания условия на основе функции-геттера
+     * и потребителя, выполняющего проверку.
+     *
+     * @param getter  функция для получения свойства из Kafka-записи
+     * @param checker потребитель, выполняющий проверку извлечённого свойства
+     * @param <R>     тип свойства
+     * @return условие для проверки Kafka-записи
+     */
+    private static <R> Condition<ConsumerRecord<String, String>> valueInternal(Function<ConsumerRecord<String, String>, R> getter, Consumer<R> checker) {
+        return record -> checker.accept(getter.apply(record));
     }
 }

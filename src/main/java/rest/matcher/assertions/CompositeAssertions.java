@@ -1,7 +1,7 @@
 package rest.matcher.assertions;
 
 import lombok.experimental.UtilityClass;
-import rest.matcher.condition.Condition;
+import rest.matcher.Condition;
 
 import java.util.Objects;
 

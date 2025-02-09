@@ -1,6 +1,6 @@
 package ui.pages;
 
-import common.annotations.Url;
+import core.annotations.Url;
 
 /**
  * Класс представляет элементы страницы Shifting Content.

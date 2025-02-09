@@ -2,8 +2,8 @@ package kafka.helper;
 
 import kafka.enums.ContentType;
 import kafka.factory.KafkaServiceFactory;
-import kafka.matcher.condition.Condition;
-import kafka.matcher.condition.Conditions;
+import kafka.matcher.Condition;
+import kafka.matcher.KafkaValidator;
 import kafka.model.Record;
 import kafka.service.KafkaConsumerService;
 import kafka.service.KafkaProducerService;
@@ -332,26 +332,13 @@ public class KafkaExecutor {
     /**
      * Проверяет, что все записи удовлетворяют указанному условию.
      *
-     * @param condition условие для проверки записей
+     * @param condition условия для проверки записей
      * @return экземпляр текущего объекта {@code KafkaExecutor} для цепочки вызовов
      */
-    public KafkaExecutor shouldHave(Conditions condition) {
+    public KafkaExecutor shouldHave(Condition... condition) {
         validateConsumer();
         List<ConsumerRecord<String, String>> records = consumer.getAllRecords(record.getTopic());
-        condition.check(records);
-        return this;
-    }
-
-    /**
-     * Проверяет, что все записи удовлетворяют указанному условию.
-     *
-     * @param condition условие для проверки записей
-     * @return экземпляр текущего объекта {@code KafkaExecutor} для цепочки вызовов
-     */
-    public KafkaExecutor shouldHave(Condition condition) {
-        validateConsumer();
-        List<ConsumerRecord<String, String>> records = consumer.getAllRecords(record.getTopic());
-        records.forEach(condition::check);
+        new KafkaValidator<>(records).shouldHave(condition);
         return this;
     }
 

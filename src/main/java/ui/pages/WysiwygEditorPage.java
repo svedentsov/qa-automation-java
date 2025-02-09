@@ -1,6 +1,6 @@
 package ui.pages;
 
-import common.annotations.Url;
+import core.annotations.Url;
 import org.openqa.selenium.By;
 import ui.element.Button;
 import ui.element.TextArea;

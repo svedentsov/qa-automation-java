@@ -1,5 +1,6 @@
 package kafka.matcher.assertions;
 
+import kafka.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -15,13 +16,7 @@ public class NumberAssertions {
      * @param <T> тип числа (например, Integer, Long, Float, Double, BigDecimal, BigInteger и т.д.)
      */
     @FunctionalInterface
-    public interface NumberCondition<T extends Number & Comparable<T>> {
-        /**
-         * Проверяет число на соответствие условию.
-         *
-         * @param actual фактическое значение числа
-         */
-        void check(T actual);
+    public interface NumberCondition<T extends Number & Comparable<T>> extends Condition<T> {
     }
 
     /**

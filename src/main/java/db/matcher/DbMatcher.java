@@ -1,6 +1,5 @@
 package db.matcher;
 
-import db.matcher.assertions.CollectionAssertions.CollectionCondition;
 import db.matcher.assertions.CompositeAssertions;
 import db.matcher.assertions.NumberAssertions.NumberCondition;
 import db.matcher.assertions.PropertyAssertions.PropertyCondition;
@@ -9,7 +8,6 @@ import db.matcher.assertions.TimeAssertions;
 import lombok.experimental.UtilityClass;
 
 import java.time.LocalDateTime;
-import java.util.Collection;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -29,21 +27,8 @@ public class DbMatcher {
      * @param <R>    тип свойства
      * @return условие для проверки сущности
      */
-    public static <T, R> Checker<T> value(Function<T, R> getter, Checker<R> cond) {
+    public static <T, R> Condition<T> value(Function<T, R> getter, Condition<R> cond) {
         return valueInternal(getter, cond::check);
-    }
-
-    /**
-     * Создаёт условие для проверки коллекционного свойства сущности.
-     *
-     * @param getter функция для получения коллекции из сущности
-     * @param cc     условие для проверки коллекции
-     * @param <T>    тип сущности
-     * @param <E>    тип элементов коллекции
-     * @return условие для проверки сущности
-     */
-    public static <T, E> Checker<T> value(Function<T, Collection<E>> getter, CollectionCondition<E> cc) {
-        return valueInternal(getter, cc::check);
     }
 
     /**
@@ -54,7 +39,7 @@ public class DbMatcher {
      * @param <T>    тип сущности
      * @return условие для проверки сущности
      */
-    public static <T> Checker<T> value(Function<T, String> getter, StringCondition sc) {
+    public static <T> Condition<T> value(Function<T, String> getter, StringCondition sc) {
         return valueInternal(getter, sc::check);
     }
 
@@ -67,7 +52,7 @@ public class DbMatcher {
      * @param <N>    тип числа, который наследуется от Number и реализует Comparable
      * @return условие для проверки сущности
      */
-    public static <T, N extends Number & Comparable<N>> Checker<T> value(Function<T, N> getter, NumberCondition<N> nc) {
+    public static <T, N extends Number & Comparable<N>> Condition<T> value(Function<T, N> getter, NumberCondition<N> nc) {
         return valueInternal(getter, nc::check);
     }
 
@@ -79,7 +64,7 @@ public class DbMatcher {
      * @param <T>    тип сущности
      * @return условие для проверки сущности
      */
-    public static <T> Checker<T> value(Function<T, LocalDateTime> getter, TimeAssertions.TimeCondition tc) {
+    public static <T> Condition<T> value(Function<T, LocalDateTime> getter, TimeAssertions.TimeCondition tc) {
         return valueInternal(getter, tc::check);
     }
 
@@ -92,57 +77,57 @@ public class DbMatcher {
      * @param <V>    тип свойства
      * @return условие для проверки сущности
      */
-    public static <T, V> Checker<T> value(Function<T, V> getter, PropertyCondition<V> pc) {
+    public static <T, V> Condition<T> value(Function<T, V> getter, PropertyCondition<V> pc) {
         return valueInternal(getter, pc::check);
     }
 
     /**
      * Логическая операция И для набора условий.
      *
-     * @param checkers набор условий
-     * @param <T>      тип сущности
+     * @param conditions набор условий
+     * @param <T>        тип сущности
      * @return составное условие, которое считается выполненным, если выполнены все условия
      */
     @SafeVarargs
-    public static <T> Checker<T> and(Checker<T>... checkers) {
-        return CompositeAssertions.and(checkers);
+    public static <T> Condition<T> and(Condition<T>... conditions) {
+        return CompositeAssertions.and(conditions);
     }
 
     /**
      * Логическая операция ИЛИ для набора условий.
      *
-     * @param checkers набор условий
-     * @param <T>      тип сущности
+     * @param conditions набор условий
+     * @param <T>        тип сущности
      * @return составное условие, которое считается выполненным, если выполнено хотя бы одно условие
      */
     @SafeVarargs
-    public static <T> Checker<T> or(Checker<T>... checkers) {
-        return CompositeAssertions.or(checkers);
+    public static <T> Condition<T> or(Condition<T>... conditions) {
+        return CompositeAssertions.or(conditions);
     }
 
     /**
      * Логическая операция НЕ для набора условий.
      *
-     * @param checkers набор условий
-     * @param <T>      тип сущности
+     * @param conditions набор условий
+     * @param <T>        тип сущности
      * @return составное условие, которое считается выполненным, если ни одно из условий не выполнено
      */
     @SafeVarargs
-    public static <T> Checker<T> not(Checker<T>... checkers) {
-        return CompositeAssertions.not(checkers);
+    public static <T> Condition<T> not(Condition<T>... conditions) {
+        return CompositeAssertions.not(conditions);
     }
 
     /**
      * Возвращает составное условие, которое считается выполненным, если выполнено хотя бы n из переданных условий.
      *
-     * @param n        минимальное число условий, которые должны выполниться
-     * @param checkers набор условий
-     * @param <T>      тип сущности
+     * @param n          минимальное число условий, которые должны выполниться
+     * @param conditions набор условий
+     * @param <T>        тип сущности
      * @return составное условие для проверки хотя бы n условий
      */
     @SafeVarargs
-    public static <T> Checker<T> nOf(int n, Checker<T>... checkers) {
-        return CompositeAssertions.nOf(n, checkers);
+    public static <T> Condition<T> nOf(int n, Condition<T>... conditions) {
+        return CompositeAssertions.nOf(n, conditions);
     }
 
     /**
@@ -155,7 +140,7 @@ public class DbMatcher {
      * @param <V>     тип свойства
      * @return условие для проверки сущности
      */
-    private static <T, V> Checker<T> valueInternal(Function<T, V> getter, Consumer<V> checker) {
+    private static <T, V> Condition<T> valueInternal(Function<T, V> getter, Consumer<V> checker) {
         return entity -> checker.accept(getter.apply(entity));
     }
 }

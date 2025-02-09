@@ -1,47 +1,50 @@
 package kafka.matcher.assertions;
 
-import kafka.matcher.condition.Condition;
+import kafka.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
 import java.util.Arrays;
 
 /**
- * Утилитный класс для создания составных (композитных) условий проверки.
+ * Утилитный класс для создания составных проверок (Checker) для произвольного типа T.
+ * Предоставляет методы для объединения проверок через логические операции AND, OR, NOT и nOf.
  */
 @UtilityClass
 public class CompositeAssertions {
 
     /**
-     * Проверяет, что все перечисленные условия выполнены (логическое И).
+     * Возвращает составную проверку, которая проходит только если все переданные проверки выполнены.
      *
-     * @param conditions набор условий
-     * @return составное условие, которое проходит только если все условия истинны
+     * @param conditions массив проверок для объединения
+     * @param <T>      тип проверяемой сущности
+     * @return составная проверка, реализующая логическую операцию AND
      */
-    public static Condition and(Condition... conditions) {
-        return record -> {
-            for (Condition condition : conditions) {
-                condition.check(record);
-            }
-        };
+    @SafeVarargs
+    public static <T> Condition<T> and(Condition<T>... conditions) {
+        return entity -> Arrays.stream(conditions)
+                .forEach(checker -> checker.check(entity));
     }
 
     /**
-     * Проверяет, что хотя бы одно из перечисленных условий выполнено (логическое ИЛИ).
+     * Возвращает составную проверку, которая проходит, если хотя бы одна из переданных проверок выполнена.
      *
-     * @param conditions набор условий
-     * @return составное условие, которое проходит если хотя бы одно условие истинно
+     * @param conditions массив проверок для объединения
+     * @param <T>      тип проверяемой сущности
+     * @return составная проверка, реализующая логическую операцию OR
      */
-    public static Condition or(Condition... conditions) {
-        return record -> {
-            boolean atLeastOnePassed = Arrays.stream(conditions).anyMatch(condition -> {
-                try {
-                    condition.check(record);
-                    return true;
-                } catch (AssertionError e) {
-                    return false;
-                }
-            });
+    @SafeVarargs
+    public static <T> Condition<T> or(Condition<T>... conditions) {
+        return t -> {
+            boolean atLeastOnePassed = Arrays.stream(conditions)
+                    .anyMatch(checker -> {
+                        try {
+                            checker.check(t);
+                            return true;
+                        } catch (AssertionError e) {
+                            return false;
+                        }
+                    });
             Assertions.assertThat(atLeastOnePassed)
                     .as("Ни одно из условий OR не выполнено")
                     .isTrue();
@@ -49,37 +52,42 @@ public class CompositeAssertions {
     }
 
     /**
-     * Инвертирует результаты указанных условий (логическое НЕ).
+     * Возвращает составную проверку, которая инвертирует результаты переданных проверок.
+     * То есть проверка проходит, если ни одна из переданных проверок не выполнена.
      *
-     * @param conditions набор условий
-     * @return условие, которое проходит только если все указанные условия не выполнены
+     * @param conditions массив проверок для инвертирования
+     * @param <T>      тип проверяемой сущности
+     * @return составная проверка, реализующая логическую операцию NOT
      */
-    public static Condition not(Condition... conditions) {
-        return record -> {
-            for (Condition condition : conditions) {
+    @SafeVarargs
+    public static <T> Condition<T> not(Condition<T>... conditions) {
+        return t -> {
+            for (Condition<T> condition : conditions) {
                 try {
-                    condition.check(record);
-                    Assertions.fail("Условие должно быть не выполнено, но выполнено: " + condition);
+                    condition.check(t);
+                    Assertions.fail("Условие должно было НЕ выполняться, но выполнилось: " + condition);
                 } catch (AssertionError e) {
-                    // Ожидаемый результат
+                    // Ожидаемое поведение: проверка не прошла
                 }
             }
         };
     }
 
     /**
-     * Проверяет, что хотя бы n из перечисленных условий истинны.
+     * Возвращает составную проверку, которая проходит, если выполнено хотя бы n из переданных проверок.
      *
-     * @param n          минимальное число условий, которые должны выполниться
-     * @param conditions набор условий
-     * @return условие, которое проходит если хотя бы n условий истинны
+     * @param n        минимальное количество проверок, которые должны выполниться
+     * @param conditions массив проверок для объединения
+     * @param <T>      тип проверяемой сущности
+     * @return составная проверка, которая проходит, если выполнено хотя бы n проверок
      */
-    public static Condition nOf(int n, Condition... conditions) {
-        return record -> {
+    @SafeVarargs
+    public static <T> Condition<T> nOf(int n, Condition<T>... conditions) {
+        return t -> {
             long successCount = Arrays.stream(conditions)
-                    .filter(condition -> {
+                    .filter(checker -> {
                         try {
-                            condition.check(record);
+                            checker.check(t);
                             return true;
                         } catch (AssertionError e) {
                             return false;
@@ -87,7 +95,7 @@ public class CompositeAssertions {
                     })
                     .count();
             Assertions.assertThat(successCount)
-                    .as("Ожидалось, что хотя бы %d условий выполнится, но выполнено %d", n, successCount)
+                    .as("Ожидалось, что хотя бы %d проверок будут выполнены, но выполнено %d", n, successCount)
                     .isGreaterThanOrEqualTo(n);
         };
     }

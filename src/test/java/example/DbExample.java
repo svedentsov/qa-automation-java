@@ -4,150 +4,144 @@ import db.entity.MyEntity;
 import db.matcher.DbValidator;
 
 import java.math.BigDecimal;
+import java.time.DayOfWeek;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 
 import static db.matcher.DbMatcher.*;
+import static db.matcher.assertions.CollectionAssertions.isSorted;
 import static db.matcher.assertions.CollectionAssertions.*;
+import static db.matcher.assertions.EntityAssertions.isSorted;
 import static db.matcher.assertions.EntityAssertions.*;
 import static db.matcher.assertions.NumberAssertions.*;
 import static db.matcher.assertions.PropertyAssertions.*;
+import static db.matcher.assertions.StringAssertions.contains;
+import static db.matcher.assertions.StringAssertions.endsWith;
+import static db.matcher.assertions.StringAssertions.equalsTo;
+import static db.matcher.assertions.StringAssertions.startsWith;
 import static db.matcher.assertions.StringAssertions.*;
-import static db.matcher.assertions.TimeAssertions.dateBefore;
+import static db.matcher.assertions.TimeAssertions.*;
 
 /**
  * Пример класса, демонстрирующего использование валидатора и всех доступных матчеров.
  */
 public class DbExample {
 
-    /**
-     * Демонстрация проверки списка сущностей с использованием матчеров из EntityAssertions,
-     * а также проверок для отдельных свойств.
-     *
-     * @param entities список объектов MyEntity
-     */
     public void validateEntities(List<MyEntity> entities) {
-        new DbValidator<>(entities)
-                .shouldHave(
-                        // Проверка наличия хотя бы одной сущности
-                        exists(),
-                        // Проверка, что количество сущностей больше 5
-                        countGreater(5),
-                        // Проверка, что количество сущностей равно 10
-                        countEqual(10),
-                        // Проверка, что все сущности имеют статус "ACTIVE"
-                        value(MyEntity::getStatus, equalsTo("ACTIVE")),
-                        // Проверка, что хотя бы одна сущность содержит в имени подстроку "Admin"
-                        value(MyEntity::getName, contains("Admin")),
-                        // Проверка, что ни одна сущность не имеет статус "GUEST"
-                        value(MyEntity::getStatus, not(equalsTo("GUEST"))),
-                        // Проверка, что все сущности имеют значение свойства "status", равное "USER"
-                        valuesEqual(MyEntity::getStatus, "USER")
-                );
+        new DbValidator<>(entities).shouldHave(
+                exists(), // проверка наличия хотя бы одной сущности
+                countEqual(10), // количество сущностей равно 10
+                countGreater(5), // количество сущностей больше 5
+                value(MyEntity::getStatus, equalsTo("ACTIVE")), // статус равен "ACTIVE"
+                value(MyEntity::getName, contains("Editor")), // имя содержит подстроку "Editor"
+                value(MyEntity::getStatus, not(equalsTo("GUEST"))), // статус не равен "GUEST"
+                valuesEqual(MyEntity::getStatus, "USER"), // все статусы равны "USER"
+                entitiesAreUnique(), // проверка уникальности всех сущностей
+                hasMinimumCount(5), // количество сущностей не меньше 5
+                hasMaximumCount(15), // количество сущностей не больше 15
+                hasSizeBetween(5, 15), // размер списка находится между 5 и 15
+                allEntitiesSatisfy(MyEntity::getStatus, "ACTIVE"), // для каждой сущности статус равен "ACTIVE"
+                anyEntityHasProperty(MyEntity::getName, "TestUser"), // хотя бы одна сущность имеет имя "TestUser"
+                entitiesContainNoNulls(), // в списке нет null-значений
+                entitiesPropertyAreDistinct(MyEntity::getId), // все id уникальны
+                isSorted(Comparator.comparing(MyEntity::getCreationDate)), // список отсортирован по дате создания
+                entityPropertyIsSorted(MyEntity::getCreationDate) // значения creationDate отсортированы по возрастанию
+        );
     }
 
-    /**
-     * Демонстрация проверки одиночной сущности с использованием различных матчеров:
-     * строковых, числовых, временных и проверок свойств.
-     *
-     * @param entity объект MyEntity
-     */
     public void validateEntity(MyEntity entity) {
-        new DbValidator<>(entity)
-                .shouldHave(
-                        // Проверка, что свойство status равно "ACTIVE"
-                        value(MyEntity::getStatus, equalsTo("ACTIVE")),
-                        // Проверка, что имя содержит "Test"
-                        value(MyEntity::getName, contains("Test")),
-                        // Проверка email по регулярному выражению
-                        value(MyEntity::getEmail, matchesRegex("^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}$")),
-                        // Проверка, что middleName равно null
-                        value(MyEntity::getMiddleName, isNull()),
-                        // Проверка, что возраст больше 18
-                        value(MyEntity::getAge, greaterThan(new BigDecimal("18"))),
-                        // Проверка, что возраст меньше 100
-                        value(MyEntity::getAge, lessThan(new BigDecimal("100"))),
-                        // Проверка, что возраст находится в диапазоне от 50 до 100 (границы включаются)
-                        value(MyEntity::getAge, between(new BigDecimal("50"), new BigDecimal("100"))),
-                        // Проверка, что статус входит в список допустимых значений
-                        value(MyEntity::getStatus, in(Arrays.asList("ACTIVE", "USER", "ADMIN"))),
-                        // Проверка, что имя начинается с "Test"
-                        value(MyEntity::getName, startsWith("Test")),
-                        // Проверка, что имя заканчивается на "User"
-                        value(MyEntity::getName, endsWith("User")),
-                        // Проверка, что длина описания равна 20 символам
-                        value(MyEntity::getDescription, lengthEquals(20)),
-                        // Проверка, что длина описания больше 10 символов
-                        value(MyEntity::getDescription, lengthGreaterThan(10)),
-                        // Проверка, что длина описания меньше 100 символов
-                        value(MyEntity::getDescription, lengthLessThan(100)),
-                        // Проверка, что возраст имеет тип Integer
-                        value(MyEntity::getAge, isOfType(Integer.class)),
-                        // Проверка, что roles является коллекцией
-                        value(MyEntity::getRoles, isAssignableFrom(Collection.class)),
-                        // Проверка, что дата создания находится до текущего момента
-                        value(MyEntity::getCreationDate, dateBefore(LocalDateTime.now())),
-                        // Проверка, что имя содержит "admin" без учёта регистра
-                        value(MyEntity::getName, containsIgnoreCase("admin"))
-                );
+        new DbValidator<>(entity).shouldHave(
+
+                // StringAssertions
+                value(MyEntity::getName, contains("Test")), // имя содержит "Test"
+                value(MyEntity::getEmail, matchesRegex("^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$")), // проверка корректного формата email
+                value(MyEntity::getDescription, startsWith("Desc")), // описание начинается с "Desc"
+                value(MyEntity::getDescription, endsWith("End")), // описание заканчивается на "End"
+                value(MyEntity::getDescription, hasMinLength(3)), // длина описания не меньше 3 символов
+                value(MyEntity::getDescription, hasMaxLength(100)), // длина описания не превышает 100 символов
+                value(MyEntity::getName, hasNonBlankContent()), // имя содержит непустой текст (не только пробелы)
+                value(MyEntity::getName, isAlphabetic()), // имя состоит только из букв
+                value(MyEntity::getId, isAlphanumeric()), // id состоит только из букв и цифр
+                value(MyEntity::getEmail, isValidEmail()), // email имеет корректный формат
+                value(MyEntity::getStatus, isUpperCase()), // статус записан заглавными буквами
+                value(MyEntity::getType, isLowerCase()), // тип записан строчными буквами
+                value(MyEntity::getDescription, startsAndEndsWith("*")), // описание начинается и заканчивается символом "*"
+                value(MyEntity::getName, hasWordCount(2)), // имя состоит ровно из 2 слов
+
+                // NumberAssertions
+                value(MyEntity::getAge, equalTo(25)), // возраст равен 25
+                value(MyEntity::getAge, inRange(20, 30)), // возраст находится в диапазоне от 20 до 30
+                value(MyEntity::getAge, isNegative()), // возраст отрицательный
+                value(MyEntity::getAge, isNonPositive()), // возраст не положительный
+                value(MyEntity::getScore, isInteger()), // score является целым числом
+                value(MyEntity::getAge, hasFractionalPart()), // возраст имеет дробную часть
+                value(MyEntity::getScore, hasScale(2)), // у score масштаб равен 2
+                value(MyEntity::getAge, leftInclusiveRightExclusive(18, 65)), // возраст находится в диапазоне [18, 65)
+                value(MyEntity::getScore, isCloseTo(BigDecimal.valueOf(100), BigDecimal.valueOf(5))), // score близок к 100 с допуском 5
+                value(MyEntity::getScore, isFinite()), // score является конечным числом
+                value(MyEntity::getScore, hasAbsoluteValueGreaterThan(BigDecimal.ZERO)), // абсолютное значение score больше 0
+                value(MyEntity::getScore, approximatelyEqualRelative(BigDecimal.valueOf(100), BigDecimal.valueOf(0.1))), // score примерно равен 100 с относительной погрешностью 10%
+                value(MyEntity::getScore, isBetweenZeroAndOne()), // score находится между 0 и 1
+
+                // CollectionAssertions
+                value(MyEntity::getRoles, empty()), // список ролей пуст
+                value(MyEntity::getRoles, containsAll("ADMIN", "USER")), // список ролей содержит "ADMIN" и "USER"
+                value(MyEntity::getRoles, noDuplicates()), // в списке ролей нет дубликатов
+                value(MyEntity::getRoles, lengthBetween(2, 5)), // количество ролей от 2 до 5
+                value(MyEntity::getRoles, allElementsInstanceOf(String.class)), // все элементы ролей являются строками
+                value(MyEntity::getRoles, lengthGreaterThanOrEqual(1)), // в списке ролей не менее 1 элемента
+                value(MyEntity::getRoles, hasSameSizeAs(Arrays.asList("A", "B", "C"))), // размер списка ролей равен 3
+                value(MyEntity::getRoles, isSorted()), // список ролей отсортирован
+                value(MyEntity::getRoles, containsAtLeast(2, "ADMIN")), // "ADMIN" встречается как минимум 2 раза
+
+                // TimeAssertions
+                value(MyEntity::getCreationDate, localDateTimeAfter(LocalDateTime.now().minusDays(1))), // дата создания позже, чем вчера
+                value(MyEntity::getCreationDate, isInFuture()), // дата создания находится в будущем
+                value(MyEntity::getCreationDate, dateEquals(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS))), // дата создания равна сегодняшней (без времени)
+                value(MyEntity::getCreationDate, dateAfterOrEqual(LocalDateTime.now().minusYears(1))), // дата создания не раньше года назад
+                value(MyEntity::getCreationDate, isBetween(LocalDateTime.MIN, LocalDateTime.MAX)), // дата создания в допустимом диапазоне
+                value(MyEntity::getCreationDate, hasYear(2023)), // год даты создания равен 2023
+                value(MyEntity::getCreationDate, hasMonth(12)), // месяц даты создания равен 12 (декабрь)
+                value(MyEntity::getCreationDate, hasDayOfMonth(31)), // число месяца даты создания равно 31
+                value(MyEntity::getCreationDate, hasHour(12)), // час даты создания равен 12
+                value(MyEntity::getCreationDate, isOnSameDayAs(LocalDateTime.now())), // дата создания совпадает с сегодняшней датой
+                value(MyEntity::getCreationDate, isWeekend()), // дата создания приходится на выходной день
+                value(MyEntity::getCreationDate, hasDayOfWeek(DayOfWeek.MONDAY)), // день недели даты создания — понедельник
+                value(MyEntity::getCreationDate, isInSameYearAs(LocalDateTime.now())), // дата создания в том же году, что и сейчас
+                value(MyEntity::getCreationDate, isAtStartOfDay()), // время даты создания соответствует началу дня
+
+                // PropertyAssertions
+                value(MyEntity::getMiddleName, isNull()), // middleName равен null
+                value(MyEntity::getRoles, isAssignableFrom(List.class)), // роли являются экземпляром List
+                value(MyEntity::getAge, isOfType(Integer.class)), // возраст имеет тип Integer
+                value(MyEntity::getRoles, hasSize(3)), // список ролей содержит ровно 3 элемента
+                value(MyEntity::getName, toStringStartsWith("User")), // строковое представление имени начинается с "User"
+                value(MyEntity::getId, toStringEndsWith("001")) // строковое представление id заканчивается на "001"
+        );
     }
 
-    /**
-     * Демонстрация проверки числовых свойств с использованием матчеров из NumberAssertions.
-     *
-     * @param entity объект MyEntity
-     */
-    public void validateNumericProperties(MyEntity entity) {
-        new DbValidator<>(entity)
-                .shouldHave(
-                        // Проверка, что возраст больше или равен 18
-                        value(MyEntity::getAge, greaterThanOrEqualTo(new BigDecimal("18"))),
-                        // Проверка, что возраст меньше или равен 65
-                        value(MyEntity::getAge, lessThanOrEqualTo(new BigDecimal("65"))),
-                        // Проверка, что возраст строго между 20 и 30 (границы не включаются)
-                        value(MyEntity::getAge, strictlyBetween(new BigDecimal("20"), new BigDecimal("30"))),
-                        // Проверка, что возраст не находится в диапазоне [40, 50]
-                        value(MyEntity::getAge, notBetween(new BigDecimal("40"), new BigDecimal("50"))),
-                        // Проверка, что возраст не равен 25
-                        value(MyEntity::getAge, notEqualTo(25)),
-                        // Проверка, что рейтинг (score) положительный
-                        value(MyEntity::getScore, isPositive()),
-                        // Проверка, что рейтинг (score) неотрицательный
-                        value(MyEntity::getScore, isNonNegative()),
-                        // Проверка, что рейтинг (score) примерно равен 100 с погрешностью 0.5
-                        value(MyEntity::getScore, approximatelyEqualTo(new BigDecimal("100"), new BigDecimal("0.5"))),
-                        // Проверка, что рейтинг (score) примерно равен 0 с погрешностью 0.1
-                        value(MyEntity::getScore, approximatelyZero(new BigDecimal("0.1")))
-                );
-    }
-
-    /**
-     * Демонстрация использования композиционных операций (and, or, not, nOf) для комбинирования проверок.
-     *
-     * @param entity объект MyEntity
-     */
     public void validateCompositeMatchers(MyEntity entity) {
-        new DbValidator<>(entity)
-                .shouldHave(
-                        // Проверка, что выполняются одновременно две проверки: статус равен "ACTIVE" и имя содержит "Test"
-                        and(
-                                value(MyEntity::getStatus, equalsTo("ACTIVE")),
-                                value(MyEntity::getStatus, equalsTo("ACTIVE")),
-                                value(MyEntity::getName, contains("Test"))),
-                        // Проверка, что хотя бы одна из проверок (имя начинается с "Admin" или имя заканчивается на "User") проходит
-                        or(
-                                value(MyEntity::getName, startsWith("Admin")),
-                                value(MyEntity::getName, endsWith("User"))),
-                        // Проверка, что ни одна из проверок (имя пустое или имя состоит только из цифр) не проходит
-                        not(
-                                value(MyEntity::getName, isEmpty()),
-                                value(MyEntity::getName, isDigitsOnly())),
-                        // Проверка, что из трёх проверок хотя бы две проходят
-                        nOf(2,
-                                value(MyEntity::getStatus, equalsTo("ACTIVE")),
-                                value(MyEntity::getName, containsIgnoreCase("test")),
-                                value(MyEntity::getEmail, matchesRegex(".*@.*\\..*"))));
+        new DbValidator<>(entity).shouldHave(
+                and( // выполняются одновременно две проверки: статус равен "ACTIVE" и имя содержит "Test"
+                        value(MyEntity::getStatus, equalsTo("ACTIVE")), // статус равен "ACTIVE"
+                        value(MyEntity::getName, contains("Test")) // имя содержит "Test"
+                ),
+                or(  // хотя бы одна из проверок (имя начинается с "Editor" или имя заканчивается на "User") проходит
+                        value(MyEntity::getName, startsWith("Editor")), // имя начинается с "Editor"
+                        value(MyEntity::getName, endsWith("User")) // имя заканчивается на "User"
+                ),
+                not( // ни одна из проверок (имя пустое или имя состоит только из цифр) не проходит
+                        value(MyEntity::getName, isEmpty()), // имя не пустое
+                        value(MyEntity::getName, isDigitsOnly()) // имя не состоит только из цифр
+                ),
+                nOf(2, // из трёх проверок хотя бы две проходят
+                        value(MyEntity::getStatus, equalsTo("ACTIVE")), // условие 1: статус равен "ACTIVE"
+                        value(MyEntity::getName, containsIgnoreCase("test")), // условие 2: имя содержит "test" без учёта регистра
+                        value(MyEntity::getEmail, matchesRegex(".*@.*\\..*")) // условие 3: email соответствует базовому шаблону
+                )
+        );
     }
 }

@@ -2,7 +2,7 @@ package ui.element;
 
 import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
-import common.utils.DateUtil;
+import core.utils.DateUtil;
 import org.openqa.selenium.By;
 import ui.helper.Widget;
 

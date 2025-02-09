@@ -1,10 +1,10 @@
 package rest.petstore;
 
-import common.RestTest;
-import common.annotations.*;
-import common.annotations.Epic;
-import common.annotations.Feature;
-import common.annotations.Story;
+import core.RestTest;
+import core.annotations.*;
+import core.annotations.Epic;
+import core.annotations.Feature;
+import core.annotations.Story;
 import io.qameta.allure.*;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Tag;
