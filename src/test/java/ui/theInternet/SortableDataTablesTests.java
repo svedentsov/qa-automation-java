@@ -13,7 +13,7 @@ import static com.codeborne.selenide.Selenide.open;
 @Layer("ui")
 @Feature("Тестирование функциональности сортируемых таблиц")
 @DisplayName("Тесты страницы 'Sortable Data Tables'")
-public class SortableDataTablesTest extends UITest {
+public class SortableDataTablesTests extends UITest {
 
     @BeforeEach
     public void setUp() {

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 @Layer("ui")
 @Feature("Тестирование страницы с изображениями")
 @DisplayName("Тесты страницы 'Broken Images'")
-public class BrokenImagesTest extends UITest {
+public class BrokenImagesTests extends UITest {
 
     @Test
     @DisplayName("Проверка видимости всех изображений на странице")

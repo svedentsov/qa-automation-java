@@ -19,7 +19,7 @@ import static rest.matcher.assertions.StatusAssertions.statusCode;
 @Owner("svedentsov")
 @Epic("Регресс магазина питомцев")
 @Feature("Пользователь")
-public class UserRestTest extends RestTest {
+public class UserRestTests extends RestTest {
 
     @Test
     @Severity(CRITICAL)

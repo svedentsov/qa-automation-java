@@ -18,7 +18,7 @@ import static io.qameta.allure.SeverityLevel.NORMAL;
 @Owner("svedentsov")
 @Epic("Регресс магазина питомцев")
 @Feature("Заказы магазина")
-public class StoreRestTest extends RestTest {
+public class StoreRestTests extends RestTest {
 
     private final Pet minDataPet = DataGenerator.generateMinDataPet();
     private final Order order = DataGenerator.generateValidOrder();

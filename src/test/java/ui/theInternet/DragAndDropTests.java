@@ -13,7 +13,7 @@ import static com.codeborne.selenide.Selenide.open;
 @Layer("ui")
 @Feature("Тестирование функциональности перетаскивания")
 @DisplayName("Тесты страницы 'Drag and Drop'")
-public class DragAndDropTest extends UITest {
+public class DragAndDropTests extends UITest {
 
     @BeforeEach
     public void setUp() {

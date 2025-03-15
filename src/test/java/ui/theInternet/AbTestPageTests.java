@@ -13,7 +13,7 @@ import static com.codeborne.selenide.Selenide.open;
 @Layer("ui")
 @Feature("Тестирование функциональности A/B Testing")
 @DisplayName("Тесты страницы 'A/B Testing'")
-public class AbTestPageTest extends UITest {
+public class AbTestPageTests extends UITest {
 
     @BeforeEach
     public void setUp() {

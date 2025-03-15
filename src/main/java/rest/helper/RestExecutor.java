@@ -19,8 +19,8 @@ import io.restassured.response.Response;
 import io.restassured.specification.ProxySpecification;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
-import rest.matcher.RestValidator;
 import rest.matcher.Condition;
+import rest.matcher.RestValidator;
 
 import java.util.List;
 import java.util.Map;
@@ -34,20 +34,23 @@ import static core.allure.AllureRestAssuredFilter.withCustomTemplates;
 public class RestExecutor {
 
     private String baseURI = "http://localhost";
-    private String proxyHost = null;
     private String basePath = "";
-    private int proxyPort = 0;
     private Object body = null;
     private Response response = null;
-    private boolean useProxy = false;
     private boolean resetAuth = false;
-    private boolean uriDefined = false;
-    private boolean pathDefined = false;
-    private boolean bodyDefined = false;
     private boolean resetRequest = true;
     private RestAssuredConfig restAssuredConfig = RestAssured.config();
     private AuthenticationScheme authentication = new NoAuthScheme();
     private RequestSpecBuilder requestBuilder = new RequestSpecBuilder();
+
+    /**
+     * HTTP методы для запросов
+     */
+    private enum HttpMethod {
+        GET, POST, PUT, DELETE, PATCH
+    }
+
+    // ============================== CONSTRUCTORS ==============================
 
     /**
      * Конструктор по умолчанию.
@@ -66,27 +69,7 @@ public class RestExecutor {
         appendDefaultCharset(false);
     }
 
-    private static void setStaticRequestSpec(RequestSpecification specification) {
-        RestAssured.requestSpecification = specification;
-    }
-
-    private void setProxy() {
-        if (useProxy && proxyHost != null) {
-            RestAssured.proxy(proxyHost, proxyPort);
-        } else if (useProxy) {
-            RestAssured.proxy(proxyPort);
-        }
-    }
-
-    /**
-     * Настройка проверки SSL-сертификатов.
-     *
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setRelaxedHTTPSValidation() {
-        RestAssured.useRelaxedHTTPSValidation();
-        return this;
-    }
+    // ========================== CONFIGURATION METHODS =========================
 
     /**
      * Устанавливает, сбрасывать ли аутентификацию после выполнения запроса.
@@ -109,6 +92,131 @@ public class RestExecutor {
         resetRequest = value;
         return this;
     }
+
+    /**
+     * Устанавливает базовый URI.
+     *
+     * @param baseURI базовый URI
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setBaseURI(String baseURI) {
+        this.baseURI = baseURI;
+        return this;
+    }
+
+    /**
+     * Устанавливает базовый путь.
+     *
+     * @param basePath базовый путь
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setBasePath(String basePath) {
+        this.basePath = basePath;
+        return this;
+    }
+
+    /**
+     * Устанавливает тело запроса.
+     *
+     * @param body тело запроса
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setBody(Object body) {
+        this.body = body;
+        return this;
+    }
+
+    /**
+     * Устанавливает схему аутентификации.
+     *
+     * @param authentication схема аутентификации
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setAuth(AuthenticationScheme authentication) {
+        this.authentication = authentication;
+        return this;
+    }
+
+    /**
+     * Устанавливает тип контента запроса.
+     *
+     * @param contentType тип контента
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setContentType(ContentType contentType) {
+        this.requestBuilder.setContentType(contentType);
+        return this;
+    }
+
+    /**
+     * Настройка проверки SSL-сертификатов.
+     *
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setRelaxedHTTPSValidation() {
+        RestAssured.useRelaxedHTTPSValidation();
+        return this;
+    }
+
+    /**
+     * Устанавливает следование за редиректами.
+     *
+     * @param value значение флага следования за редиректами
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor followRedirects(boolean value) {
+        restAssuredConfig = restAssuredConfig.redirect(RedirectConfig.redirectConfig().followRedirects(value));
+        return this;
+    }
+
+    /**
+     * Устанавливает добавление кодировки по умолчанию в заголовок Content-Type.
+     *
+     * @param value значение флага добавления кодировки
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor appendDefaultCharset(boolean value) {
+        restAssuredConfig = restAssuredConfig.encoderConfig(EncoderConfig.encoderConfig().appendDefaultContentCharsetToContentTypeIfUndefined(value));
+        return this;
+    }
+
+    // ============================== PROXY METHODS =============================
+
+    /**
+     * Устанавливает прокси-сервер по порту.
+     *
+     * @param port порт прокси-сервера
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setProxy(int port) {
+        requestBuilder.setProxy(new ProxySpecification(null, port, null));
+        return this;
+    }
+
+    /**
+     * Устанавливает прокси-сервер по хосту и порту.
+     *
+     * @param host хост прокси-сервера
+     * @param port порт прокси-сервера
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setProxy(String host, int port) {
+        requestBuilder.setProxy(new ProxySpecification(host, port, null));
+        return this;
+    }
+
+    /**
+     * Устанавливает прокси-сервер по спецификации прокси.
+     *
+     * @param proxySpecification спецификация прокси
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor setProxy(ProxySpecification proxySpecification) {
+        requestBuilder.setProxy(proxySpecification);
+        return this;
+    }
+
+    // ============================= RESET METHODS ==============================
 
     /**
      * Сбрасывает глобальные параметры запроса RestAssured.
@@ -138,27 +246,7 @@ public class RestExecutor {
         return this;
     }
 
-    /**
-     * Устанавливает следование за редиректами.
-     *
-     * @param value значение флага следования за редиректами
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor followRedirects(boolean value) {
-        restAssuredConfig = restAssuredConfig.redirect(RedirectConfig.redirectConfig().followRedirects(value));
-        return this;
-    }
-
-    /**
-     * Устанавливает добавление кодировки по умолчанию в заголовок Content-Type.
-     *
-     * @param value значение флага добавления кодировки
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor appendDefaultCharset(boolean value) {
-        restAssuredConfig = restAssuredConfig.encoderConfig(EncoderConfig.encoderConfig().appendDefaultContentCharsetToContentTypeIfUndefined(value));
-        return this;
-    }
+    // ========================== REQUEST PARAMETERS ===========================
 
     /**
      * Добавляет параметр запроса.
@@ -220,6 +308,8 @@ public class RestExecutor {
         return this;
     }
 
+    // =========================== HEADERS AND COOKIES ==========================
+
     /**
      * Добавляет заголовок запроса.
      *
@@ -251,124 +341,11 @@ public class RestExecutor {
      * @return текущий экземпляр RestExecutor
      */
     public RestExecutor addCookies(Map<String, String> cookies) {
-        for (Map.Entry<String, String> cookie : cookies.entrySet()) {
-            addCookie(cookie.getKey(), cookie.getValue());
-        }
+        cookies.forEach(this::addCookie);
         return this;
     }
 
-    /**
-     * Возвращает полный URI текущего запроса.
-     *
-     * @return строка с полным URI
-     */
-    public String getURI() {
-        String resultUri = "";
-        resultUri += uriDefined ? baseURI : RestAssured.baseURI;
-        resultUri += pathDefined ? basePath : RestAssured.basePath;
-        return resultUri;
-    }
-
-    /**
-     * Возвращает объект RequestSpecBuilder для настройки запроса.
-     *
-     * @return объект RequestSpecBuilder
-     */
-    public RequestSpecBuilder getRequestBuilder() {
-        return requestBuilder;
-    }
-
-    /**
-     * Устанавливает базовый URI.
-     *
-     * @param baseURI базовый URI
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setBaseURI(String baseURI) {
-        this.baseURI = baseURI;
-        uriDefined = true;
-        return this;
-    }
-
-    /**
-     * Устанавливает тело запроса.
-     *
-     * @param body тело запроса
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setBody(Object body) {
-        this.body = body;
-        bodyDefined = true;
-        return this;
-    }
-
-    /**
-     * Устанавливает базовый путь.
-     *
-     * @param basePath базовый путь
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setBasePath(String basePath) {
-        this.basePath = basePath;
-        pathDefined = true;
-        return this;
-    }
-
-    /**
-     * Устанавливает схему аутентификации.
-     *
-     * @param authentication схема аутентификации
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setAuth(AuthenticationScheme authentication) {
-        this.authentication = authentication;
-        return this;
-    }
-
-    /**
-     * Устанавливает тип контента запроса.
-     *
-     * @param contentType тип контента
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setContentType(ContentType contentType) {
-        this.requestBuilder.setContentType(contentType);
-        return this;
-    }
-
-    /**
-     * Устанавливает прокси-сервер по порту.
-     *
-     * @param port порт прокси-сервера
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setProxy(int port) {
-        proxyPort = port;
-        return this;
-    }
-
-    /**
-     * Устанавливает прокси-сервер по хосту и порту.
-     *
-     * @param host хост прокси-сервера
-     * @param port порт прокси-сервера
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setProxy(String host, int port) {
-        RestAssured.proxy(host, port);
-        return this;
-    }
-
-    /**
-     * Устанавливает прокси-сервер по спецификации прокси.
-     *
-     * @param proxySpecification спецификация прокси
-     * @return текущий экземпляр RestExecutor
-     */
-    public RestExecutor setProxy(ProxySpecification proxySpecification) {
-        RestAssured.proxy(proxySpecification);
-        return this;
-    }
+    // ============================== FILE METHODS ==============================
 
     /**
      * Устанавливает файл для отправки с типом контента и текстом.
@@ -399,6 +376,8 @@ public class RestExecutor {
         return this;
     }
 
+    // ======================== HTTP REQUEST METHODS ===========================
+
     /**
      * Выполняет GET-запрос.
      *
@@ -417,7 +396,7 @@ public class RestExecutor {
      */
     @Step("Выполняется GET запрос по URI: {uri}")
     public Response get(String uri) {
-        return sendRequest("GET", uri);
+        return sendRequest(HttpMethod.GET, uri);
     }
 
     /**
@@ -438,7 +417,7 @@ public class RestExecutor {
      */
     @Step("Выполняется POST запрос по URI: {uri}")
     public Response post(String uri) {
-        return sendRequest("POST", uri);
+        return sendRequest(HttpMethod.POST, uri);
     }
 
     /**
@@ -459,7 +438,7 @@ public class RestExecutor {
      */
     @Step("Выполняется PUT запрос по URI: {uri}")
     public Response put(String uri) {
-        return sendRequest("PUT", uri);
+        return sendRequest(HttpMethod.PUT, uri);
     }
 
     /**
@@ -480,7 +459,7 @@ public class RestExecutor {
      */
     @Step("Выполняется DELETE запрос по URI: {uri}")
     public Response delete(String uri) {
-        return sendRequest("DELETE", uri);
+        return sendRequest(HttpMethod.DELETE, uri);
     }
 
     /**
@@ -501,60 +480,109 @@ public class RestExecutor {
      */
     @Step("Выполняется PATCH запрос по URI: {uri}")
     public Response patch(String uri) {
-        return sendRequest("PATCH", uri);
+        return sendRequest(HttpMethod.PATCH, uri);
     }
 
     /**
      * Отправляет запрос заданного типа по-указанному URI.
      *
-     * @param requestType тип запроса (GET, POST, PUT, DELETE, PATCH)
-     * @param uri         URI запроса
+     * @param method HTTP метод запроса
+     * @param uri    URI запроса
      * @return объект Response
      */
-    private Response sendRequest(String requestType, String uri) {
-        if (uriDefined) {
+    private Response sendRequest(HttpMethod method, String uri) {
+        buildRequestSpecification();
+        RequestSpecification requestSpec = requestBuilder.build();
+
+        switch (method) {
+            case GET -> response = RestAssured.given(requestSpec).get(uri);
+            case POST -> response = RestAssured.given(requestSpec).post(uri);
+            case PUT -> response = RestAssured.given(requestSpec).put(uri);
+            case DELETE -> response = RestAssured.given(requestSpec).delete(uri);
+            case PATCH -> response = RestAssured.given(requestSpec).patch(uri);
+        }
+
+        handlePostRequestCleanup();
+        return response;
+    }
+
+    /**
+     * Подготавливает спецификацию запроса.
+     */
+    private void buildRequestSpecification() {
+        if (baseURI != null && !baseURI.isEmpty()) {
             requestBuilder.setBaseUri(baseURI);
         }
-
-        if (pathDefined) {
+        if (basePath != null && !basePath.isEmpty()) {
             requestBuilder.setBasePath(basePath);
         }
-
-        if (bodyDefined) {
+        if (body != null) {
             requestBuilder.setBody(body);
         }
 
         requestBuilder.setConfig(restAssuredConfig);
-
         requestBuilder.setAuth(authentication);
-        setStaticRequestSpec(requestBuilder.build());
-
         requestBuilder
-                .addFilter(new ResponseLoggingFilter()) // Логирование ответов в консоль
-                .addFilter(new RequestLoggingFilter()) // Логирование запросов в консоль
+                .addFilter(new ResponseLoggingFilter())
+                .addFilter(new RequestLoggingFilter())
                 .addFilter(withCustomTemplates());
+    }
 
-        setProxy();
-
-        switch (requestType) {
-            case "GET" -> response = RestAssured.get(uri);
-            case "POST" -> response = RestAssured.post(uri);
-            case "PUT" -> response = RestAssured.put(uri);
-            case "DELETE" -> response = RestAssured.delete(uri);
-            case "PATCH" -> response = RestAssured.patch(uri);
-            default -> throw new IllegalStateException("Unexpected request type: " + requestType);
-        }
-
+    /**
+     * Выполняет необходимые действия после запроса.
+     */
+    private void handlePostRequestCleanup() {
         if (resetRequest) {
             resetRequest();
         }
-
         if (resetAuth) {
             resetAuth();
         }
-
-        return response;
     }
+
+    // ========================== UTILITY METHODS ==============================
+
+    /**
+     * Возвращает полный URI текущего запроса.
+     *
+     * @return строка с полным URI
+     */
+    public String getURI() {
+        String resultUri = "";
+        if (baseURI != null && !baseURI.isEmpty()) {
+            resultUri += baseURI;
+        } else {
+            resultUri += RestAssured.baseURI;
+        }
+        if (basePath != null && !basePath.isEmpty()) {
+            resultUri += basePath;
+        } else {
+            resultUri += RestAssured.basePath;
+        }
+        return resultUri;
+    }
+
+    /**
+     * Возвращает объект RequestSpecBuilder для настройки запроса.
+     *
+     * @return объект RequestSpecBuilder
+     */
+    public RequestSpecBuilder getRequestBuilder() {
+        return requestBuilder;
+    }
+
+    /**
+     * Проверяет, соответствует ли ответ заданным условиям.
+     *
+     * @param conditions условия для проверки
+     * @return текущий экземпляр RestExecutor
+     */
+    public RestExecutor shouldHave(Condition... conditions) {
+        new RestValidator(response).shouldHave(conditions);
+        return this;
+    }
+
+    // ========================== RESPONSE METHODS =============================
 
     /**
      * Возвращает объект Response последнего запроса.
@@ -566,6 +594,35 @@ public class RestExecutor {
     }
 
     /**
+     * Возвращает статусный код ответа.
+     *
+     * @return статусный код
+     */
+    public int getStatusCode() {
+        return response.getStatusCode();
+    }
+
+    /**
+     * Возвращает статусную строку последнего запроса.
+     *
+     * @return строка статуса
+     */
+    public String getResponseMessage() {
+        return response.getStatusLine();
+    }
+
+    // ============================= RESPONSE BODY METHODS ===========================
+
+    /**
+     * Возвращает тело ответа последнего запроса в виде строки.
+     *
+     * @return строка тела ответа
+     */
+    public String getResponseAsString() {
+        return response.asString();
+    }
+
+    /**
      * Возвращает тело ответа последнего запроса в виде объекта указанного класса.
      *
      * @param tClass класс, в который будет преобразовано тело ответа
@@ -574,6 +631,44 @@ public class RestExecutor {
     public <T> T getResponseAs(Class<T> tClass) {
         return response.as(tClass);
     }
+
+    /**
+     * Возвращает тело ответа последнего запроса в виде объекта JsonPath.
+     *
+     * @return объект JsonPath
+     */
+    public JsonPath getResponseAsJson() {
+        return response.jsonPath();
+    }
+
+    /**
+     * Возвращает тело ответа последнего запроса в виде объекта XmlPath (HTML).
+     *
+     * @return объект XmlPath
+     */
+    public XmlPath getResponseAsHtml() {
+        return response.htmlPath();
+    }
+
+    /**
+     * Возвращает тело ответа последнего запроса в виде объекта XmlPath (XML).
+     *
+     * @return объект XmlPath
+     */
+    public XmlPath getResponseAsXml() {
+        return response.xmlPath();
+    }
+
+    /**
+     * Возвращает тело ответа в виде карты.
+     *
+     * @return карта значений из тела ответа
+     */
+    public Map<String, Object> getResponseAsMap() {
+        return response.jsonPath().getMap("");
+    }
+
+    // ========================== JSON PATH METHODS ============================
 
     /**
      * Возвращает объект по заданному пути JSON из тела ответа.
@@ -597,139 +692,6 @@ public class RestExecutor {
     }
 
     /**
-     * Возвращает статусную строку последнего запроса.
-     *
-     * @return строка статуса
-     */
-    public String getResponseMessage() {
-        return response.getStatusLine();
-    }
-
-    /**
-     * Возвращает тело ответа последнего запроса в виде объекта JsonPath.
-     *
-     * @return объект JsonPath
-     */
-    public JsonPath getResponseAsJson() {
-        return response.jsonPath();
-    }
-
-    /**
-     * Возвращает тело ответа последнего запроса в виде строки
-     *
-     * @return строка тела ответа
-     */
-    public String getResponseAsString() {
-        return response.asString();
-    }
-
-    /**
-     * Возвращает тело ответа последнего запроса в виде объекта XmlPath (HTML).
-     *
-     * @return объект XmlPath
-     */
-    public XmlPath getResponseAsHtml() {
-        return response.htmlPath();
-    }
-
-    /**
-     * Возвращает тело ответа последнего запроса в виде объекта XmlPath (XML).
-     *
-     * @return объект XmlPath
-     */
-    public XmlPath getResponseAsXml() {
-        return response.xmlPath();
-    }
-
-    /**
-     * Возвращает список объектов из тела ответа по указанному пути JSON.
-     *
-     * @param path   путь JSON в теле ответа
-     * @param tClass класс объектов в списке
-     * @param <T>    тип объектов в списке
-     * @return список объектов указанного типа
-     */
-    public <T> List<T> getResponseAsList(String path, Class<T> tClass) {
-        return response.jsonPath().getList(path, tClass);
-    }
-
-    /**
-     * Возвращает список объектов из тела ответа.
-     *
-     * @param tClass класс объектов в списке
-     * @param <T>    тип объектов в списке
-     * @return список объектов указанного типа
-     */
-    public <T> List<T> getResponseAsList(Class<T> tClass) {
-        return response.jsonPath().getList("$", tClass);
-    }
-
-    /**
-     * Возвращает тело ответа в виде карты.
-     *
-     * @return карта значений из тела ответа
-     */
-    public Map<String, Object> getResponseAsMap() {
-        return response.jsonPath().getMap("");
-    }
-
-    /**
-     * Возвращает тело ответа в виде строки JSON.
-     *
-     * @return тело ответа в формате JSON
-     */
-    public String getResponseJsonBody() {
-        return response.body().print();
-    }
-
-    /**
-     * Возвращает все заголовки ответа.
-     *
-     * @return заголовки ответа
-     */
-    public Headers getHeaders() {
-        return response.getHeaders();
-    }
-
-    /**
-     * Возвращает значение заголовка по его имени.
-     *
-     * @param headerName имя заголовка
-     * @return значение заголовка
-     */
-    public String getHeader(String headerName) {
-        return response.header(headerName);
-    }
-
-    /**
-     * Возвращает статусный код ответа.
-     *
-     * @return статусный код
-     */
-    public int getStatusCode() {
-        return response.getStatusCode();
-    }
-
-    /**
-     * Возвращает все cookies из ответа.
-     *
-     * @return карта cookies
-     */
-    public Map<String, String> getAllCookies() {
-        return response.getCookies();
-    }
-
-    /**
-     * Возвращает значение cookie по его имени.
-     *
-     * @param name имя cookie
-     * @return значение cookie
-     */
-    public String getCookiesByName(String name) {
-        return response.getCookie(name);
-    }
-
-    /**
      * Возвращает значение по указанному пути JSON в виде строки.
      *
      * @param jsonPath путь JSON
@@ -740,23 +702,23 @@ public class RestExecutor {
     }
 
     /**
-     * Возвращает значение по указанному HTML пути в виде строки.
+     * Возвращает значение по указанному пути JSON в виде целого числа.
      *
-     * @param htmlPath путь в HTML
-     * @return строка со значением
+     * @param jsonPath путь JSON
+     * @return значение целого числа
      */
-    public String getHtmlPathValue(String htmlPath) {
-        return response.htmlPath().getString(htmlPath).replace("\"", "");
+    public int getValueLikeInt(String jsonPath) {
+        return response.jsonPath().getInt(jsonPath);
     }
 
     /**
-     * Возвращает значение из тела ответа по указанному пути.
+     * Возвращает значение по указанному пути JSON в виде булевого значения.
      *
-     * @param path путь к значению
-     * @return строковое представление значения
+     * @param jsonPath путь JSON
+     * @return булево значение
      */
-    public String getBodyByPath(String path) {
-        return response.path(path).toString();
+    public boolean getValueLikeBoolean(String jsonPath) {
+        return response.jsonPath().getBoolean(jsonPath);
     }
 
     /**
@@ -801,33 +763,87 @@ public class RestExecutor {
     }
 
     /**
-     * Возвращает значение по указанному пути JSON в виде целого числа.
+     * Возвращает список объектов из тела ответа по указанному пути JSON.
      *
-     * @param jsonPath путь JSON
-     * @return значение целого числа
+     * @param path   путь JSON в теле ответа
+     * @param tClass класс объектов в списке
+     * @param <T>    тип объектов в списке
+     * @return список объектов указанного типа
      */
-    public int getValueLikeInt(String jsonPath) {
-        return response.jsonPath().getInt(jsonPath);
+    public <T> List<T> getResponseAsList(String path, Class<T> tClass) {
+        return response.jsonPath().getList(path, tClass);
     }
 
     /**
-     * Возвращает значение по указанному пути JSON в виде булевого значения.
+     * Возвращает список объектов из тела ответа.
      *
-     * @param jsonPath путь JSON
-     * @return булево значение
+     * @param tClass класс объектов в списке
+     * @param <T>    тип объектов в списке
+     * @return список объектов указанного типа
      */
-    public boolean getValueLikeBoolean(String jsonPath) {
-        return response.jsonPath().getBoolean(jsonPath);
+    public <T> List<T> getResponseAsList(Class<T> tClass) {
+        return response.jsonPath().getList("$", tClass);
+    }
+
+    // ========================== HTML PATH METHODS ============================
+
+    /**
+     * Возвращает значение по указанному HTML пути в виде строки.
+     *
+     * @param htmlPath путь в HTML
+     * @return строка со значением
+     */
+    public String getHtmlPathValue(String htmlPath) {
+        return response.htmlPath().getString(htmlPath).replace("\"", "");
     }
 
     /**
-     * Проверяет, соответствует ли ответ заданным условиям.
+     * Возвращает значение из тела ответа по указанному пути.
      *
-     * @param conditions условия для проверки
-     * @return текущий экземпляр RestExecutor
+     * @param path путь к значению
+     * @return строковое представление значения
      */
-    public RestExecutor shouldHave(Condition... conditions) {
-        new RestValidator(response).shouldHave(conditions);
-        return this;
+    public String getBodyByPath(String path) {
+        return response.path(path).toString();
+    }
+
+    // ======================== HEADERS AND COOKIES METHODS ====================
+
+    /**
+     * Возвращает все заголовки ответа.
+     *
+     * @return заголовки ответа
+     */
+    public Headers getHeaders() {
+        return response.getHeaders();
+    }
+
+    /**
+     * Возвращает значение заголовка по его имени.
+     *
+     * @param headerName имя заголовка
+     * @return значение заголовка
+     */
+    public String getHeader(String headerName) {
+        return response.header(headerName);
+    }
+
+    /**
+     * Возвращает все cookies из ответа.
+     *
+     * @return карта cookies
+     */
+    public Map<String, String> getAllCookies() {
+        return response.getCookies();
+    }
+
+    /**
+     * Возвращает значение cookie по его имени.
+     *
+     * @param name имя cookie
+     * @return значение cookie
+     */
+    public String getCookiesByName(String name) {
+        return response.getCookie(name);
     }
 }

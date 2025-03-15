@@ -13,7 +13,7 @@ import static com.codeborne.selenide.Selenide.open;
 @Layer("ui")
 @Feature("Тестирование функциональности добавления и удаления элементов")
 @DisplayName("Тесты страницы 'Add/Remove Elements'")
-public class AddRemoveElementsTest extends UITest {
+public class AddRemoveElementsTests extends UITest {
 
     @BeforeEach
     public void setUp() {

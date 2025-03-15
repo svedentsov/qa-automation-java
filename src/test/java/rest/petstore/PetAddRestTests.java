@@ -20,7 +20,7 @@ import static rest.enums.PetStatus.AVAILABLE;
 @Owner("svedentsov")
 @Epic("Регресс магазина питомцев")
 @Feature("Питомец")
-public class PetAddRestTest extends RestTest {
+public class PetAddRestTests extends RestTest {
 
     private final String incorrectJson = DataGenerator.INCORRECT_JSON;
     private final long notFoundId = -1;

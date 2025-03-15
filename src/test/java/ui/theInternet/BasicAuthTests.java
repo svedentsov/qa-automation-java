@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 @Layer("ui")
 @Feature("Тестирование функционала авторизации")
 @DisplayName("Тесты страницы 'Basic Auth'")
-public class BasicAuthTest extends UITest {
+public class BasicAuthTests extends UITest {
 
     @Test
     @Story("Проверка авторизации")

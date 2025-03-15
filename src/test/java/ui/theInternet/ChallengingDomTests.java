@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 @Layer("ui")
 @Feature("Тестирование функционала страницы 'Challenging DOM'")
 @DisplayName("Тесты страницы 'Challenging DOM'")
-public class ChallengingDomTest extends UITest {
+public class ChallengingDomTests extends UITest {
 
     @Test
     @DisplayName("Проверка видимости холста на странице")
