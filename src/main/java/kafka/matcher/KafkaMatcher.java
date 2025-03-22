@@ -10,6 +10,7 @@ import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -42,7 +43,7 @@ public class KafkaMatcher {
      * @return условие для проверки значения записи
      */
     public static Condition<ConsumerRecord<String, String>> value(StringCondition sc) {
-        return valueInternal(ConsumerRecord::value, sc::check);
+        return property(ConsumerRecord::value, sc);
     }
 
     /**
@@ -55,10 +56,7 @@ public class KafkaMatcher {
      * @return условие для проверки числового значения
      */
     public static <T extends Number & Comparable<T>> Condition<ConsumerRecord<String, String>> value(String jsonPath, NumberCondition<T> nc, Class<T> type) {
-        return record -> {
-            T val = getJsonValue(record.value(), jsonPath, type);
-            nc.check(val);
-        };
+        return jsonValue(jsonPath, nc::check, type);
     }
 
     /**
@@ -69,10 +67,7 @@ public class KafkaMatcher {
      * @return условие для проверки булевого значения
      */
     public static Condition<ConsumerRecord<String, String>> value(String jsonPath, BooleanCondition bc) {
-        return record -> {
-            Boolean val = getJsonValue(record.value(), jsonPath, Boolean.class);
-            bc.check(val);
-        };
+        return jsonValue(jsonPath, bc::check, Boolean.class);
     }
 
     /**
@@ -83,10 +78,7 @@ public class KafkaMatcher {
      * @return условие для проверки строкового значения
      */
     public static Condition<ConsumerRecord<String, String>> value(String jsonPath, StringCondition sc) {
-        return record -> {
-            String val = getJsonValue(record.value(), jsonPath, String.class);
-            sc.check(val);
-        };
+        return jsonValue(jsonPath, sc::check, String.class);
     }
 
     /**
@@ -96,7 +88,7 @@ public class KafkaMatcher {
      * @return условие для проверки ключа записи
      */
     public static Condition<ConsumerRecord<String, String>> key(StringCondition sc) {
-        return valueInternal(ConsumerRecord::key, sc::check);
+        return property(ConsumerRecord::key, sc);
     }
 
     /**
@@ -106,7 +98,7 @@ public class KafkaMatcher {
      * @return условие для проверки топика записи
      */
     public static Condition<ConsumerRecord<String, String>> topic(StringCondition sc) {
-        return valueInternal(ConsumerRecord::topic, sc::check);
+        return property(ConsumerRecord::topic, sc);
     }
 
     /**
@@ -116,7 +108,7 @@ public class KafkaMatcher {
      * @return условие для проверки номера партиции записи
      */
     public static Condition<ConsumerRecord<String, String>> partition(NumberCondition<Integer> nc) {
-        return record -> nc.check(record.partition());
+        return property(ConsumerRecord::partition, nc::check);
     }
 
     /**
@@ -126,7 +118,7 @@ public class KafkaMatcher {
      * @return условие для проверки смещения записи
      */
     public static Condition<ConsumerRecord<String, String>> offset(NumberCondition<Long> nc) {
-        return record -> nc.check(record.offset());
+        return property(ConsumerRecord::offset, nc::check);
     }
 
     /**
@@ -136,7 +128,7 @@ public class KafkaMatcher {
      * @return условие для проверки временной метки записи
      */
     public static Condition<ConsumerRecord<String, String>> timestamp(TimeCondition tc) {
-        return record -> tc.check(Instant.ofEpochMilli(record.timestamp()));
+        return property(record -> Instant.ofEpochMilli(record.timestamp()), tc::check);
     }
 
     /**
@@ -198,10 +190,15 @@ public class KafkaMatcher {
      * @throws AssertionError если извлечённое значение не соответствует ожидаемому типу
      */
     private static <T> T getJsonValue(String json, String jsonPath, Class<T> expectedType) {
+        Objects.requireNonNull(json, "JSON строка не может быть null");
+        Objects.requireNonNull(jsonPath, "JSONPath не может быть null");
+        Objects.requireNonNull(expectedType, "Ожидаемый тип не может быть null");
+
         Object val = JsonPath.parse(json).read(jsonPath);
         if (!expectedType.isInstance(val)) {
-            throw new AssertionError(String.format("Ожидалось, что значение по пути '%s' будет типа %s, но было: %s",
-                    jsonPath, expectedType.getSimpleName(), val));
+            String actualType = val != null ? val.getClass().getSimpleName() : "null";
+            throw new AssertionError(String.format("Ожидалось, что значение по пути '%s' будет типа %s, но было: %s (%s)",
+                    jsonPath, expectedType.getSimpleName(), val, actualType));
         }
         return expectedType.cast(val);
     }
@@ -217,5 +214,34 @@ public class KafkaMatcher {
      */
     private static <R> Condition<ConsumerRecord<String, String>> valueInternal(Function<ConsumerRecord<String, String>, R> getter, Consumer<R> checker) {
         return record -> checker.accept(getter.apply(record));
+    }
+
+    /**
+     * Внутренний универсальный метод для создания условия на основе функции-геттера и условия для проверки.
+     *
+     * @param getter функция для получения свойства из Kafka-записи
+     * @param cond   условие для проверки полученного значения
+     * @param <R>    тип свойства
+     * @return условие для проверки Kafka-записи
+     */
+    private static <R> Condition<ConsumerRecord<String, String>> property(Function<ConsumerRecord<String, String>, R> getter, Condition<R> cond) {
+        return record -> cond.check(getter.apply(record));
+    }
+
+    /**
+     * Внутренний универсальный метод для создания условия на основе JSONPath,
+     * потребителя для проверки и ожидаемого типа.
+     *
+     * @param jsonPath     путь JSONPath для извлечения значения
+     * @param checker      потребитель, выполняющий проверку извлечённого значения
+     * @param expectedType класс ожидаемого типа значения
+     * @param <T>          тип извлекаемого значения
+     * @return условие для проверки значения из JSON
+     */
+    private static <T> Condition<ConsumerRecord<String, String>> jsonValue(String jsonPath, Consumer<T> checker, Class<T> expectedType) {
+        return record -> {
+            T val = getJsonValue(record.value(), jsonPath, expectedType);
+            checker.accept(val);
+        };
     }
 }

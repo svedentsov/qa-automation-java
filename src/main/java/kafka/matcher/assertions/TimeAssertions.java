@@ -1,6 +1,6 @@
 package kafka.matcher.assertions;
 
-import db.matcher.Condition;
+import kafka.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 

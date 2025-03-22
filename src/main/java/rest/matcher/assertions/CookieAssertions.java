@@ -6,6 +6,7 @@ import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
 import rest.matcher.Condition;
 
+import java.util.Date;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -234,7 +235,7 @@ public class CookieAssertions {
      * @return условие для проверки даты истечения куки
      * @throws IllegalArgumentException если cookieName или expirationDate равно null
      */
-    public static CookieCondition cookieExpiresAt(String cookieName, java.util.Date expirationDate) {
+    public static CookieCondition cookieExpiresAt(String cookieName, Date expirationDate) {
         Objects.requireNonNull(cookieName, "cookieName не может быть null");
         Objects.requireNonNull(expirationDate, "expirationDate не может быть null");
         return response -> {
@@ -242,7 +243,7 @@ public class CookieAssertions {
             if (detailedCookie == null) {
                 throw new AssertionError(String.format("Ожидалось, что кука '%s' существует", cookieName));
             }
-            java.util.Date actualExpiration = detailedCookie.getExpiryDate();
+            Date actualExpiration = detailedCookie.getExpiryDate();
             Assertions.assertThat(actualExpiration)
                     .as("Ожидалось, что дата истечения куки '%s' будет '%s', но была '%s'", cookieName, expirationDate, actualExpiration)
                     .isEqualTo(expirationDate);
@@ -267,26 +268,15 @@ public class CookieAssertions {
                 throw new AssertionError(String.format("Ожидалось, что кука '%s' существует", cookieName));
             }
 
-            boolean hasAttribute;
-            switch (attrNameLower) {
-                case "httponly":
-                    hasAttribute = detailedCookie.isHttpOnly();
-                    break;
-                case "domain":
-                    hasAttribute = detailedCookie.getDomain() != null;
-                    break;
-                case "path":
-                    hasAttribute = detailedCookie.getPath() != null;
-                    break;
-                case "expires":
-                    hasAttribute = detailedCookie.getExpiryDate() != null;
-                    break;
-                case "max-age":
-                    hasAttribute = detailedCookie.getMaxAge() != -1;
-                    break;
-                default:
-                    throw new IllegalArgumentException(String.format("Неизвестный атрибут куки: '%s'", attributeName));
-            }
+            boolean hasAttribute = switch (attrNameLower) {
+                case "httponly" -> detailedCookie.isHttpOnly();
+                case "domain" -> detailedCookie.getDomain() != null;
+                case "path" -> detailedCookie.getPath() != null;
+                case "expires" -> detailedCookie.getExpiryDate() != null;
+                case "max-age" -> detailedCookie.getMaxAge() != -1;
+                default ->
+                        throw new IllegalArgumentException(String.format("Неизвестный атрибут куки: '%s'", attributeName));
+            };
 
             Assertions.assertThat(hasAttribute)
                     .as("Ожидалось, что кука '%s' не имеет атрибута '%s'", cookieName, attributeName)
