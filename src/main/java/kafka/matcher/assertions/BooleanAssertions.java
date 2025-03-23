@@ -47,4 +47,26 @@ public class BooleanAssertions {
                 .as("Значение должно быть false")
                 .isFalse();
     }
+
+    /**
+     * Проверяет, что булево значение является null.
+     *
+     * @return условие, которое проходит если значение null
+     */
+    public static BooleanCondition isNull() {
+        return value -> Assertions.assertThat(value)
+                .as("Значение должно быть null")
+                .isNull();
+    }
+
+    /**
+     * Проверяет, что булево значение не является null.
+     *
+     * @return условие, которое проходит если значение не null
+     */
+    public static BooleanCondition isNotNull() {
+        return value -> Assertions.assertThat(value)
+                .as("Значение не должно быть null")
+                .isNotNull();
+    }
 }
