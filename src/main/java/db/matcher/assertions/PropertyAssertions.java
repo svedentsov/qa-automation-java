@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Утилитный класс для проверки различных свойств сущности: равенство, null, принадлежность к списку, тип, сравнения и т.д.
@@ -51,6 +52,18 @@ public class PropertyAssertions {
     }
 
     /**
+     * Возвращает условие, проверяющее, что значение свойства не равно null.
+     *
+     * @param <T> тип проверяемого свойства
+     * @return условие проверки, что значение не равно null
+     */
+    public static <T> Condition<T> isNotNull() {
+        return value -> Assertions.assertThat(value)
+                .as("Значение не должно быть null")
+                .isNotNull();
+    }
+
+    /**
      * Возвращает условие, проверяющее, что значение свойства (строка или коллекция) пустое.
      *
      * @param <T> тип проверяемого свойства
@@ -70,8 +83,46 @@ public class PropertyAssertions {
                 Assertions.assertThat((Collection<?>) value)
                         .as("Коллекция должна быть пустой")
                         .isEmpty();
+            } else if (value instanceof Map) {
+                Assertions.assertThat((Map<?, ?>) value)
+                        .as("Карта должна быть пустой")
+                        .isEmpty();
             } else {
-                throw new IllegalArgumentException("Значение не является строкой или коллекцией");
+                throw new IllegalArgumentException("Значение не является строкой, коллекцией или картой");
+            }
+        };
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что значение свойства (строка, коллекция или карта) не пустое.
+     *
+     * @param <T> тип проверяемого свойства
+     * @return условие проверки непустоты значения
+     * @throws IllegalArgumentException если значение не является строкой, коллекцией или картой
+     */
+    public static <T> Condition<T> propertyIsNotEmpty() {
+        return value -> {
+            Assertions.assertThat(value)
+                    .as("Значение не должно быть null")
+                    .isNotNull();
+            if (value instanceof String) {
+                Assertions.assertThat((String) value)
+                        .as("Строка не должна быть пустой")
+                        .isNotEmpty();
+            } else if (value instanceof Collection) {
+                Assertions.assertThat((Collection<?>) value)
+                        .as("Коллекция не должна быть пустой")
+                        .isNotEmpty();
+            } else if (value instanceof Map) {
+                Assertions.assertThat((Map<?, ?>) value)
+                        .as("Карта не должна быть пустой")
+                        .isNotEmpty();
+            } else if (value.getClass().isArray()) {
+                Assertions.assertThat(((Object[]) value).length)
+                        .as("Массив не должен быть пустым")
+                        .isGreaterThan(0);
+            } else {
+                throw new IllegalArgumentException("Значение не является строкой, коллекцией, картой или массивом");
             }
         };
     }
@@ -90,6 +141,19 @@ public class PropertyAssertions {
     }
 
     /**
+     * Возвращает условие, проверяющее, что значение не имеет точный тип {@code expectedType}.
+     *
+     * @param expectedType ожидаемый тип значения
+     * @param <T>          тип проверяемого свойства
+     * @return условие проверки типа (строгое сравнение классов)
+     */
+    public static <T> Condition<T> isNotOfType(Class<?> expectedType) {
+        return value -> Assertions.assertThat(value.getClass())
+                .as("Значение не должно быть типа %s", expectedType.getName())
+                .isNotEqualTo(expectedType);
+    }
+
+    /**
      * Возвращает условие, проверяющее, что значение является экземпляром (или подклассом) указанного типа.
      *
      * @param type ожидаемый класс или интерфейс
@@ -100,6 +164,19 @@ public class PropertyAssertions {
         return value -> Assertions.assertThat(value)
                 .as("Значение должно быть экземпляром %s", type.getName())
                 .isInstanceOf(type);
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что значение не является экземпляром (или подклассом) указанного типа.
+     *
+     * @param type ожидаемый класс или интерфейс
+     * @param <T>  тип проверяемого свойства
+     * @return условие проверки принадлежности к типу
+     */
+    public static <T> Condition<T> isNotInstanceOf(Class<?> type) {
+        return value -> Assertions.assertThat(value)
+                .as("Значение не должно быть экземпляром %s", type.getName())
+                .isNotInstanceOf(type);
     }
 
     /**
@@ -149,6 +226,19 @@ public class PropertyAssertions {
     }
 
     /**
+     * Возвращает условие, проверяющее, что значение не входит в заданный список.
+     *
+     * @param values список недопустимых значений
+     * @param <T>    тип проверяемого свойства
+     * @return условие проверки отсутствия значения в списке
+     */
+    public static <T> Condition<T> notIn(List<?> values) {
+        return value -> Assertions.assertThat(value)
+                .as("Значение не должно входить в список %s", values)
+                .isNotIn(values);
+    }
+
+    /**
      * Возвращает условие, проверяющее, что значение больше указанного.
      *
      * @param lowerBound нижняя граница (исключительно)
@@ -162,6 +252,19 @@ public class PropertyAssertions {
     }
 
     /**
+     * Возвращает условие, проверяющее, что значение больше или равно указанному.
+     *
+     * @param lowerBound нижняя граница
+     * @param <T>        тип проверяемого свойства, реализующего Comparable
+     * @return условие проверки, что значение больше или равно нижней границе
+     */
+    public static <T extends Comparable<T>> Condition<T> greaterThanOrEqualTo(T lowerBound) {
+        return value -> Assertions.assertThat(value)
+                .as("Значение должно быть больше или равно %s", lowerBound)
+                .isGreaterThanOrEqualTo(lowerBound);
+    }
+
+    /**
      * Возвращает условие, проверяющее, что значение меньше указанного.
      *
      * @param upperBound верхняя граница (исключительно)
@@ -172,6 +275,19 @@ public class PropertyAssertions {
         return value -> Assertions.assertThat(value)
                 .as("Значение должно быть меньше %s", upperBound)
                 .isLessThan(upperBound);
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что значение меньше или равно указанному.
+     *
+     * @param upperBound верхняя граница
+     * @param <T>        тип проверяемого свойства, реализующего Comparable
+     * @return условие проверки, что значение меньше или равно верхней границы
+     */
+    public static <T extends Comparable<T>> Condition<T> lessThanOrEqualTo(T upperBound) {
+        return value -> Assertions.assertThat(value)
+                .as("Значение должно быть меньше или равно %s", upperBound)
+                .isLessThanOrEqualTo(upperBound);
     }
 
     /**
@@ -202,6 +318,45 @@ public class PropertyAssertions {
     }
 
     /**
+     * Возвращает условие, проверяющее, что строковое представление значения начинается с заданного префикса.
+     *
+     * @param prefix префикс, с которого должно начинаться строковое представление
+     * @param <T>    тип проверяемого свойства
+     * @return условие проверки начала строкового представления
+     */
+    public static <T> Condition<T> toStringStartsWith(String prefix) {
+        return value -> Assertions.assertThat(value.toString())
+                .as("Строковое представление должно начинаться с %s", prefix)
+                .startsWith(prefix);
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что строковое представление значения заканчивается заданным суффиксом.
+     *
+     * @param suffix суффикс, которым должно заканчиваться строковое представление
+     * @param <T>    тип проверяемого свойства
+     * @return условие проверки конца строкового представления
+     */
+    public static <T> Condition<T> toStringEndsWith(String suffix) {
+        return value -> Assertions.assertThat(value.toString())
+                .as("Строковое представление должно заканчиваться на %s", suffix)
+                .endsWith(suffix);
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что строковое представление значения соответствует заданному регулярному выражению.
+     *
+     * @param regex регулярное выражение
+     * @param <T>   тип проверяемого свойства
+     * @return условие проверки соответствия строкового представления регулярному выражению
+     */
+    public static <T> Condition<T> toStringMatchesRegex(String regex) {
+        return value -> Assertions.assertThat(value.toString())
+                .as("Строковое представление должно соответствовать рег. выражению %s", regex)
+                .matches(regex);
+    }
+
+    /**
      * Возвращает условие, проверяющее, что строка содержит заданную подстроку.
      *
      * @param substring подстрока, которую должна содержать строка
@@ -211,6 +366,18 @@ public class PropertyAssertions {
         return value -> Assertions.assertThat(value)
                 .as("Строка должна содержать подстроку %s", substring)
                 .contains(substring);
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что строка содержит заданную подстроку, игнорируя регистр.
+     *
+     * @param substring подстрока, которую должна содержать строка (регистр игнорируется)
+     * @return условие проверки наличия подстроки без учета регистра
+     */
+    public static Condition<String> containsSubstringIgnoringCase(String substring) {
+        return value -> Assertions.assertThat(value.toLowerCase())
+                .as("Строка должна содержать подстроку '%s' (без учета регистра)", substring)
+                .contains(substring.toLowerCase());
     }
 
     /**
@@ -253,6 +420,20 @@ public class PropertyAssertions {
     }
 
     /**
+     * Возвращает условие для проверки того, что карта не содержит заданный ключ.
+     *
+     * @param key ключ, который не должна содержать карта
+     * @param <K> тип ключей в карте
+     * @param <V> тип значений в карте
+     * @return условие проверки отсутствия ключа в карте
+     */
+    public static <K, V> Condition<Map<K, V>> mapDoesNotContainKey(K key) {
+        return map -> Assertions.assertThat(map)
+                .as("Карта не должна содержать ключ %s", key)
+                .doesNotContainKey(key);
+    }
+
+    /**
      * Возвращает условие для проверки того, что карта содержит указанную запись (ключ и значение).
      *
      * @param key   ключ записи
@@ -265,6 +446,60 @@ public class PropertyAssertions {
         return map -> Assertions.assertThat(map)
                 .as("Карта должна содержать запись [%s=%s]", key, value)
                 .containsEntry(key, value);
+    }
+
+    /**
+     * Возвращает условие для проверки того, что карта содержит заданное значение.
+     *
+     * @param value значение, которое должна содержать карта
+     * @param <K>   тип ключей в карте
+     * @param <V>   тип значений в карте
+     * @return условие проверки наличия значения в карте
+     */
+    public static <K, V> Condition<Map<K, V>> mapContainsValue(V value) {
+        return map -> Assertions.assertThat(map)
+                .as("Карта должна содержать значение %s", value)
+                .containsValue(value);
+    }
+
+    /**
+     * Возвращает условие для проверки того, что карта не содержит заданное значение.
+     *
+     * @param value значение, которое не должна содержать карта
+     * @param <K>   тип ключей в карте
+     * @param <V>   тип значений в карте
+     * @return условие проверки отсутствия значения в карте
+     */
+    public static <K, V> Condition<Map<K, V>> mapDoesNotContainValue(V value) {
+        return map -> Assertions.assertThat(map)
+                .as("Карта не должна содержать значение %s", value)
+                .doesNotContainValue(value);
+    }
+
+    /**
+     * Возвращает условие для проверки того, что карта пуста.
+     *
+     * @param <K> тип ключей в карте
+     * @param <V> тип значений в карте
+     * @return условие проверки, что карта пуста
+     */
+    public static <K, V> Condition<Map<K, V>> mapIsEmpty() {
+        return map -> Assertions.assertThat(map)
+                .as("Карта должна быть пустой")
+                .isEmpty();
+    }
+
+    /**
+     * Возвращает условие для проверки того, что карта не пуста.
+     *
+     * @param <K> тип ключей в карте
+     * @param <V> тип значений в карте
+     * @return условие проверки, что карта не пуста
+     */
+    public static <K, V> Condition<Map<K, V>> mapIsNotEmpty() {
+        return map -> Assertions.assertThat(map)
+                .as("Карта не должна быть пустой")
+                .isNotEmpty();
     }
 
     /**
@@ -334,6 +569,66 @@ public class PropertyAssertions {
     }
 
     /**
+     * Проверяет, что размер коллекции, массива, строки или карты больше указанного значения.
+     */
+    public static <T> Condition<T> propertyHasSizeGreaterThan(int minSize) {
+        return value -> {
+            Assertions.assertThat(value)
+                    .as("Значение не должно быть null")
+                    .isNotNull();
+            if (value instanceof Collection) {
+                Assertions.assertThat(((Collection<?>) value).size())
+                        .as("Размер коллекции должен быть больше %d", minSize)
+                        .isGreaterThan(minSize);
+            } else if (value.getClass().isArray()) {
+                Assertions.assertThat(((Object[]) value).length)
+                        .as("Размер массива должен быть больше %d", minSize)
+                        .isGreaterThan(minSize);
+            } else if (value instanceof String) {
+                Assertions.assertThat(((String) value).length())
+                        .as("Длина строки должна быть больше %d", minSize)
+                        .isGreaterThan(minSize);
+            } else if (value instanceof Map) {
+                Assertions.assertThat(((Map<?, ?>) value).size())
+                        .as("Размер карты должен быть больше %d", minSize)
+                        .isGreaterThan(minSize);
+            } else {
+                throw new IllegalArgumentException("Невозможно определить размер для типа " + value.getClass());
+            }
+        };
+    }
+
+    /**
+     * Проверяет, что размер коллекции, массива, строки или карты меньше указанного значения.
+     */
+    public static <T> Condition<T> propertyHasSizeLessThan(int maxSize) {
+        return value -> {
+            Assertions.assertThat(value)
+                    .as("Значение не должно быть null")
+                    .isNotNull();
+            if (value instanceof Collection) {
+                Assertions.assertThat(((Collection<?>) value).size())
+                        .as("Размер коллекции должен быть меньше %d", maxSize)
+                        .isLessThan(maxSize);
+            } else if (value.getClass().isArray()) {
+                Assertions.assertThat(((Object[]) value).length)
+                        .as("Размер массива должен быть меньше %d", maxSize)
+                        .isLessThan(maxSize);
+            } else if (value instanceof String) {
+                Assertions.assertThat(((String) value).length())
+                        .as("Длина строки должна быть меньше %d", maxSize)
+                        .isLessThan(maxSize);
+            } else if (value instanceof Map) {
+                Assertions.assertThat(((Map<?, ?>) value).size())
+                        .as("Размер карты должен быть меньше %d", maxSize)
+                        .isLessThan(maxSize);
+            } else {
+                throw new IllegalArgumentException("Невозможно определить размер для типа " + value.getClass());
+            }
+        };
+    }
+
+    /**
      * Проверяет, что строка состоит только из пробельных символов или пуста.
      */
     public static Condition<String> isBlank() {
@@ -343,35 +638,12 @@ public class PropertyAssertions {
     }
 
     /**
-     * Проверяет, что строковое представление значения начинается с заданного префикса.
+     * Проверяет, что строка не состоит только из пробельных символов и не пуста.
      */
-    public static <T> Condition<T> toStringStartsWith(String prefix) {
-        return value -> Assertions.assertThat(value.toString())
-                .as("Строковое представление должно начинаться с %s", prefix)
-                .startsWith(prefix);
-    }
-
-    /**
-     * Проверяет, что строковое представление значения заканчивается заданным суффиксом.
-     */
-    public static <T> Condition<T> toStringEndsWith(String suffix) {
-        return value -> Assertions.assertThat(value.toString())
-                .as("Строковое представление должно заканчиваться на %s", suffix)
-                .endsWith(suffix);
-    }
-
-    /**
-     * Возвращает условие для проверки того, что карта содержит заданное значение.
-     *
-     * @param value значение, которое должна содержать карта
-     * @param <K>   тип ключей в карте
-     * @param <V>   тип значений в карте
-     * @return условие проверки наличия значения в карте
-     */
-    public static <K, V> Condition<Map<K, V>> mapContainsValue(V value) {
-        return map -> Assertions.assertThat(map)
-                .as("Карта должна содержать значение %s", value)
-                .containsValue(value);
+    public static Condition<String> isNotBlank() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка не должна быть пустой или состоять только из пробелов")
+                .isNotBlank();
     }
 
     /**
@@ -391,5 +663,96 @@ public class PropertyAssertions {
                 elementConsumer.accept(element);
             }
         };
+    }
+
+    /**
+     * Возвращает условие для проверки того, что каждый элемент коллекции удовлетворяет заданному предикату.
+     *
+     * @param predicate   функция-предикат для проверки каждого элемента
+     * @param description описание условия (для сообщения об ошибке)
+     * @param <E>         тип элементов коллекции
+     * @return условие проверки всех элементов коллекции
+     */
+    public static <E> Condition<Collection<E>> allElementsMatchPredicate(Function<E, Boolean> predicate, String description) {
+        return collection -> {
+            for (E element : collection) {
+                Assertions.assertThat(predicate.apply(element))
+                        .as("Каждый элемент должен удовлетворять условию: %s. Не удовлетворил: %s", description, element)
+                        .isTrue();
+            }
+        };
+    }
+
+    /**
+     * Возвращает условие для проверки того, что хотя бы один элемент коллекции удовлетворяет заданному предикату.
+     *
+     * @param predicate   функция-предикат для проверки элемента
+     * @param description описание условия (для сообщения об ошибке)
+     * @param <E>         тип элементов коллекции
+     * @return условие проверки наличия хотя бы одного элемента, удовлетворяющего предикату
+     */
+    public static <E> Condition<Collection<E>> anyElementMatchesPredicate(Function<E, Boolean> predicate, String description) {
+        return collection -> {
+            boolean matches = false;
+            for (E element : collection) {
+                if (predicate.apply(element)) {
+                    matches = true;
+                    break;
+                }
+            }
+            Assertions.assertThat(matches)
+                    .as("Хотя бы один элемент должен удовлетворять условию: %s", description)
+                    .isTrue();
+        };
+    }
+
+    /**
+     * Возвращает условие для проверки того, что коллекция содержит заданный элемент.
+     *
+     * @param element элемент, который должна содержать коллекция
+     * @param <E>     тип элементов коллекции
+     * @return условие проверки наличия элемента в коллекции
+     */
+    public static <E> Condition<Collection<E>> collectionContains(E element) {
+        return collection -> Assertions.assertThat(collection)
+                .as("Коллекция должна содержать элемент %s", element)
+                .contains(element);
+    }
+
+    /**
+     * Проверяет, что строковое представление значения соответствует заданному регулярному выражению, игнорируя регистр.
+     *
+     * @param regex регулярное выражение
+     * @param <T>   тип проверяемого свойства
+     * @return условие проверки соответствия строкового представления регулярному выражению без учета регистра
+     */
+    public static <T> Condition<T> stringMatchesRegexIgnoringCase(String regex) {
+        return value -> Assertions.assertThat(value.toString())
+                .as("Строковое представление должно соответствовать рег. выражению '%s' (без учета регистра)", regex)
+                .matches(Pattern.compile(regex, Pattern.CASE_INSENSITIVE).asPredicate());
+    }
+
+    /**
+     * Проверяет, что строка равна другой строке, игнорируя регистр.
+     *
+     * @param expected ожидаемая строка
+     * @return условие проверки равенства строк без учета регистра
+     */
+    public static Condition<String> equalsIgnoreCase(String expected) {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна быть равна '%s' (без учета регистра)", expected)
+                .isEqualToIgnoringCase(expected);
+    }
+
+    /**
+     * Проверяет, что коллекция содержит только уникальные элементы.
+     *
+     * @param <E> тип элементов коллекции
+     * @return условие проверки уникальности элементов коллекции
+     */
+    public static <E> Condition<Collection<E>> collectionHasUniqueElements() {
+        return collection -> Assertions.assertThat(collection)
+                .as("Коллекция должна содержать только уникальные элементы")
+                .doesNotHaveDuplicates();
     }
 }

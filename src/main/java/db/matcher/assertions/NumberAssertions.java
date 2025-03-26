@@ -37,6 +37,19 @@ public class NumberAssertions {
     }
 
     /**
+     * Проверяет, что число не равно ожидаемому значению.
+     *
+     * @param expected ожидаемое значение
+     * @param <T>      тип числа
+     * @return условие неравенства
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> notEqualTo(T expected) {
+        return actual -> Assertions.assertThat(actual)
+                .as("Значение не должно быть равно %s", expected)
+                .isNotEqualTo(expected);
+    }
+
+    /**
      * Проверяет, что число находится в диапазоне (исключая границы).
      *
      * @param start начало диапазона (исключается)
@@ -229,6 +242,21 @@ public class NumberAssertions {
     }
 
     /**
+     * Проверяет, что число не равно нулю.
+     *
+     * @param <T> тип числа
+     * @return условие "не равно 0"
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isNotZero() {
+        return number -> {
+            BigDecimal actual = toBigDecimal(number);
+            Assertions.assertThat(actual.compareTo(BigDecimal.ZERO) != 0)
+                    .as("Значение не должно быть равно 0, но было %s", actual)
+                    .isTrue();
+        };
+    }
+
+    /**
      * Проверяет, что число положительное (строго больше 0).
      *
      * @param <T> тип числа
@@ -342,7 +370,7 @@ public class NumberAssertions {
     }
 
     /**
-     * Проверяет, что число является чётным (применимо только к целым числам).
+     * Проверяет, является ли число чётным (применимо только к целым числам).
      *
      * @param <T> тип числа
      * @return условие "чётное"
@@ -362,7 +390,7 @@ public class NumberAssertions {
     }
 
     /**
-     * Проверяет, что число является нечётным (применимо только к целым числам).
+     * Проверяет, является ли число нечётным (применимо только к целым числам).
      *
      * @param <T> тип числа
      * @return условие "нечётное"
@@ -582,6 +610,48 @@ public class NumberAssertions {
     }
 
     /**
+     * Проверяет, что число является NaN (Not-a-Number) для Float и Double.
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isNaN() {
+        return number -> {
+            if (number instanceof Double) {
+                double d = (Double) number;
+                Assertions.assertThat(Double.isNaN(d))
+                        .as("Число %s должно быть NaN", d)
+                        .isTrue();
+            } else if (number instanceof Float) {
+                float f = (Float) number;
+                Assertions.assertThat(Float.isNaN(f))
+                        .as("Число %s должно быть NaN", f)
+                        .isTrue();
+            } else {
+                Assertions.fail("Проверка на NaN применима только к типам Float и Double, но был передан тип %s", number.getClass().getName());
+            }
+        };
+    }
+
+    /**
+     * Проверяет, что число является бесконечным (для Float и Double).
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isInfinite() {
+        return number -> {
+            if (number instanceof Double) {
+                double d = (Double) number;
+                Assertions.assertThat(Double.isInfinite(d))
+                        .as("Число %s должно быть бесконечным", d)
+                        .isTrue();
+            } else if (number instanceof Float) {
+                float f = (Float) number;
+                Assertions.assertThat(Float.isInfinite(f))
+                        .as("Число %s должно быть бесконечным", f)
+                        .isTrue();
+            } else {
+                Assertions.fail("Проверка на бесконечность применима только к типам Float и Double, но был передан тип %s", number.getClass().getName());
+            }
+        };
+    }
+
+    /**
      * Проверяет, что абсолютное значение числа больше указанного порога.
      *
      * @param threshold пороговое значение
@@ -707,6 +777,33 @@ public class NumberAssertions {
                     .as("Число %s должно иметь точность (precision) %d", actual, expectedPrecision)
                     .isEqualTo(expectedPrecision);
         };
+    }
+
+    /**
+     * Проверяет, что число имеет указанное количество знаков в целой части.
+     *
+     * @param expectedDigits ожидаемое количество знаков
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> hasNumberOfDigits(int expectedDigits) {
+        return number -> {
+            BigDecimal actual = toBigDecimal(number);
+            BigInteger integerPart = actual.toBigInteger();
+            int numberOfDigits = integerPart.abs().toString().length();
+            Assertions.assertThat(numberOfDigits)
+                    .as("Число %s должно иметь %d знаков в целой части", actual, expectedDigits)
+                    .isEqualTo(expectedDigits);
+        };
+    }
+
+    /**
+     * Проверяет, что число является экземпляром указанного типа Number.
+     *
+     * @param expectedType ожидаемый тип Number (например, Integer.class, Double.class)
+     */
+    public static <T extends Number & Comparable<T>> NumberCondition<T> isInstanceOf(Class<? extends Number> expectedType) {
+        return number -> Assertions.assertThat(number)
+                .as("Число должно быть экземпляром типа %s", expectedType.getName())
+                .isInstanceOf(expectedType);
     }
 
     /**

@@ -4,10 +4,7 @@ import db.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
-import java.time.DayOfWeek;
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.WeekFields;
 
@@ -160,6 +157,18 @@ public class TimeAssertions {
     }
 
     /**
+     * Проверяет, что месяц значения LocalDateTime равен указанному.
+     *
+     * @param month ожидаемый месяц
+     * @return условие проверки месяца
+     */
+    public static TimeCondition hasMonth(Month month) {
+        return timestamp -> Assertions.assertThat(timestamp.getMonth())
+                .as("Месяц должен быть %s", month)
+                .isEqualTo(month);
+    }
+
+    /**
      * Проверяет, что день месяца значения LocalDateTime равен указанному.
      *
      * @param day ожидаемый день месяца
@@ -169,6 +178,18 @@ public class TimeAssertions {
         return timestamp -> Assertions.assertThat(timestamp.getDayOfMonth())
                 .as("День месяца должен быть %d", day)
                 .isEqualTo(day);
+    }
+
+    /**
+     * Проверяет, что день года значения LocalDateTime равен указанному.
+     *
+     * @param dayOfYear ожидаемый день года
+     * @return условие проверки дня года
+     */
+    public static TimeCondition hasDayOfYear(int dayOfYear) {
+        return timestamp -> Assertions.assertThat(timestamp.getDayOfYear())
+                .as("День года должен быть %d", dayOfYear)
+                .isEqualTo(dayOfYear);
     }
 
     /**
@@ -486,6 +507,185 @@ public class TimeAssertions {
             Assertions.assertThat(truncatedTimestamp)
                     .as("Время (без секунд) должно быть до %s", truncatedOther)
                     .isBefore(truncatedOther);
+        };
+    }
+
+    /**
+     * Проверяет, является ли год високосным.
+     *
+     * @return условие проверки на високосный год
+     */
+    public static TimeCondition isLeapYear() {
+        return timestamp -> Assertions.assertThat(timestamp.toLocalDate().isLeapYear())
+                .as("Год должен быть високосным")
+                .isTrue();
+    }
+
+    /**
+     * Проверяет, что значение является первым днем месяца.
+     *
+     * @return условие проверки на первый день месяца
+     */
+    public static TimeCondition isFirstDayOfMonth() {
+        return timestamp -> Assertions.assertThat(timestamp.getDayOfMonth())
+                .as("Дата должна быть первым днем месяца")
+                .isEqualTo(1);
+    }
+
+    /**
+     * Проверяет, что значение является последним днем месяца.
+     *
+     * @return условие проверки на последний день месяца
+     */
+    public static TimeCondition isLastDayOfMonth() {
+        return timestamp -> {
+            int dayOfMonth = timestamp.getDayOfMonth();
+            int lengthOfMonth = timestamp.toLocalDate().lengthOfMonth();
+            Assertions.assertThat(dayOfMonth)
+                    .as("Дата должна быть последним днем месяца (ожидалось %d)", lengthOfMonth)
+                    .isEqualTo(lengthOfMonth);
+        };
+    }
+
+    /**
+     * Проверяет, что значение находится в первой половине месяца (1-15 числа).
+     *
+     * @return условие проверки на первую половину месяца
+     */
+    public static TimeCondition isInFirstHalfOfMonth() {
+        return timestamp -> Assertions.assertThat(timestamp.getDayOfMonth())
+                .as("Дата должна быть в первой половине месяца (1-15)")
+                .isBetween(1, 15);
+    }
+
+    /**
+     * Проверяет, что значение находится во второй половине месяца (с 16 числа до конца месяца).
+     *
+     * @return условие проверки на вторую половину месяца
+     */
+    public static TimeCondition isInSecondHalfOfMonth() {
+        return timestamp -> Assertions.assertThat(timestamp.getDayOfMonth())
+                .as("Дата должна быть во второй половине месяца (с 16 до конца)")
+                .isGreaterThanOrEqualTo(16);
+    }
+
+    /**
+     * Проверяет, что время находится утром (с 06:00 до 12:00, исключая 12:00).
+     *
+     * @return условие проверки на утро
+     */
+    public static TimeCondition isMorning() {
+        return timestamp -> {
+            LocalTime time = timestamp.toLocalTime();
+            Assertions.assertThat(time)
+                    .as("Время должно быть утром (между 06:00 и 12:00)")
+                    .isAfterOrEqualTo(LocalTime.of(6, 0))
+                    .isBefore(LocalTime.of(12, 0));
+        };
+    }
+
+    /**
+     * Проверяет, что время находится днем (с 12:00 до 18:00, исключая 18:00).
+     *
+     * @return условие проверки на день
+     */
+    public static TimeCondition isAfternoon() {
+        return timestamp -> {
+            LocalTime time = timestamp.toLocalTime();
+            Assertions.assertThat(time)
+                    .as("Время должно быть днем (между 12:00 и 18:00)")
+                    .isAfterOrEqualTo(LocalTime.of(12, 0))
+                    .isBefore(LocalTime.of(18, 0));
+        };
+    }
+
+    /**
+     * Проверяет, что время находится вечером (с 18:00 до 22:00, исключая 22:00).
+     *
+     * @return условие проверки на вечер
+     */
+    public static TimeCondition isEvening() {
+        return timestamp -> {
+            LocalTime time = timestamp.toLocalTime();
+            Assertions.assertThat(time)
+                    .as("Время должно быть вечером (между 18:00 и 22:00)")
+                    .isAfterOrEqualTo(LocalTime.of(18, 0))
+                    .isBefore(LocalTime.of(22, 0));
+        };
+    }
+
+    /**
+     * Проверяет, что время находится ночью (с 22:00 до 06:00, исключая 06:00).
+     *
+     * @return условие проверки на ночь
+     */
+    public static TimeCondition isNight() {
+        return timestamp -> {
+            LocalTime time = timestamp.toLocalTime();
+            Assertions.assertThat(time)
+                    .as("Время должно быть ночью (между 22:00 и 06:00)")
+                    .isAfterOrEqualTo(LocalTime.of(22, 0))
+                    .isBefore(LocalTime.of(6, 0));
+        };
+    }
+
+    /**
+     * Проверяет, что месяц имеет указанное количество дней.
+     *
+     * @param days ожидаемое количество дней в месяце
+     * @return условие проверки количества дней в месяце
+     */
+    public static TimeCondition hasDaysInMonth(int days) {
+        return timestamp -> Assertions.assertThat(timestamp.toLocalDate().lengthOfMonth())
+                .as("Месяц должен иметь %d дней", days)
+                .isEqualTo(days);
+    }
+
+    /**
+     * Проверяет, что значение находится в пределах указанного количества минут от другой даты.
+     *
+     * @param other   другая дата для сравнения
+     * @param minutes количество минут
+     * @return условие проверки нахождения в пределах минут
+     */
+    public static TimeCondition isWithinMinutesOf(LocalDateTime other, long minutes) {
+        return timestamp -> {
+            Duration diff = Duration.between(timestamp, other).abs();
+            Assertions.assertThat(diff)
+                    .as("Разница между %s и %s должна быть не больше %d минут", timestamp, other, minutes)
+                    .isLessThanOrEqualTo(Duration.ofMinutes(minutes));
+        };
+    }
+
+    /**
+     * Проверяет, что значение находится в пределах указанного количества часов от другой даты.
+     *
+     * @param other другая дата для сравнения
+     * @param hours количество часов
+     * @return условие проверки нахождения в пределах часов
+     */
+    public static TimeCondition isWithinHoursOf(LocalDateTime other, long hours) {
+        return timestamp -> {
+            Duration diff = Duration.between(timestamp, other).abs();
+            Assertions.assertThat(diff)
+                    .as("Разница между %s и %s должна быть не больше %d часов", timestamp, other, hours)
+                    .isLessThanOrEqualTo(Duration.ofHours(hours));
+        };
+    }
+
+    /**
+     * Проверяет, что значение находится в пределах указанного количества секунд от другой даты.
+     *
+     * @param other   другая дата для сравнения
+     * @param seconds количество секунд
+     * @return условие проверки нахождения в пределах секунд
+     */
+    public static TimeCondition isWithinSecondsOf(LocalDateTime other, long seconds) {
+        return timestamp -> {
+            Duration diff = Duration.between(timestamp, other).abs();
+            Assertions.assertThat(diff)
+                    .as("Разница между %s и %s должна быть не больше %d секунд", timestamp, other, seconds)
+                    .isLessThanOrEqualTo(Duration.ofSeconds(seconds));
         };
     }
 }

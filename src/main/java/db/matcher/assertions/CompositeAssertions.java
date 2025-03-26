@@ -21,8 +21,7 @@ public class CompositeAssertions {
      */
     @SafeVarargs
     public static <T> Condition<T> and(Condition<T>... conditions) {
-        return entity -> Arrays.stream(conditions)
-                .forEach(checker -> checker.check(entity));
+        return entity -> Arrays.stream(conditions).forEach(condition -> condition.check(entity));
     }
 
     /**
@@ -35,9 +34,8 @@ public class CompositeAssertions {
     @SafeVarargs
     public static <T> Condition<T> or(Condition<T>... conditions) {
         return entity -> {
-            boolean atLeastOnePassed = Arrays.stream(conditions)
-                    .anyMatch(checker -> passes(checker, entity));
-            Assertions.assertThat(atLeastOnePassed)
+            boolean anyMatch = Arrays.stream(conditions).anyMatch(condition -> passes(condition, entity));
+            Assertions.assertThat(anyMatch)
                     .as("Ни одно из OR-условий не выполнено")
                     .isTrue();
         };
@@ -53,11 +51,26 @@ public class CompositeAssertions {
     @SafeVarargs
     public static <T> Condition<T> not(Condition<T>... conditions) {
         return entity -> {
-            boolean nonePassed = Arrays.stream(conditions)
-                    .noneMatch(checker -> passes(checker, entity));
-            Assertions.assertThat(nonePassed)
+            boolean noneMatch = Arrays.stream(conditions).noneMatch(condition -> passes(condition, entity));
+            Assertions.assertThat(noneMatch)
                     .as("Ожидалось, что ни одна проверка не пройдет, но хотя бы одна выполнилась")
                     .isTrue();
+        };
+    }
+
+    /**
+     * Возвращает составную проверку, которая проходит, если ни одна из переданных проверок не пройдена.
+     *
+     * @param condition проверка
+     * @param <T>       тип сущности
+     * @return составная проверка
+     */
+    public static <T> Condition<T> not(Condition<T> condition) {
+        return entity -> {
+            boolean passed = passes(condition, entity);
+            Assertions.assertThat(passed)
+                    .as("Ожидалось, что проверка не пройдет, но она выполнилась")
+                    .isFalse();
         };
     }
 
@@ -73,11 +86,70 @@ public class CompositeAssertions {
     public static <T> Condition<T> nOf(int n, Condition<T>... conditions) {
         return entity -> {
             long successCount = Arrays.stream(conditions)
-                    .filter(checker -> passes(checker, entity))
+                    .filter(condition -> passes(condition, entity))
                     .count();
             Assertions.assertThat(successCount)
                     .as("Ожидалось, что хотя бы %d условий будут выполнены, но выполнено %d", n, successCount)
                     .isGreaterThanOrEqualTo(n);
+        };
+    }
+
+    /**
+     * Возвращает составную проверку, которая проходит, если выполнено ровно n из переданных проверок.
+     *
+     * @param n          точное число проверок, которые должны пройти
+     * @param conditions набор проверок
+     * @param <T>        тип сущности
+     * @return составная проверка
+     */
+    @SafeVarargs
+    public static <T> Condition<T> exactlyNOf(int n, Condition<T>... conditions) {
+        return entity -> {
+            long successCount = Arrays.stream(conditions)
+                    .filter(condition -> passes(condition, entity))
+                    .count();
+            Assertions.assertThat(successCount)
+                    .as("Ожидалось, что ровно %d условий будут выполнены, но выполнено %d", n, successCount)
+                    .isEqualTo(n);
+        };
+    }
+
+    /**
+     * Возвращает составную проверку, которая проходит, если выполнено не более n из переданных проверок.
+     *
+     * @param n          максимальное число проверок, которые должны пройти
+     * @param conditions набор проверок
+     * @param <T>        тип сущности
+     * @return составная проверка
+     */
+    @SafeVarargs
+    public static <T> Condition<T> atMostNOf(int n, Condition<T>... conditions) {
+        return entity -> {
+            long successCount = Arrays.stream(conditions)
+                    .filter(condition -> passes(condition, entity))
+                    .count();
+            Assertions.assertThat(successCount)
+                    .as("Ожидалось, что не более %d условий будут выполнены, но выполнено %d", n, successCount)
+                    .isLessThanOrEqualTo(n);
+        };
+    }
+
+    /**
+     * Возвращает составную проверку, которая проходит, если ровно одна из переданных проверок пройдена (исключающее ИЛИ).
+     *
+     * @param conditions набор проверок
+     * @param <T>        тип сущности
+     * @return составная проверка
+     */
+    @SafeVarargs
+    public static <T> Condition<T> xor(Condition<T>... conditions) {
+        return entity -> {
+            long successCount = Arrays.stream(conditions)
+                    .filter(condition -> passes(condition, entity))
+                    .count();
+            Assertions.assertThat(successCount)
+                    .as("Ожидалось, что ровно одно условие будет выполнено, но выполнено %d", successCount)
+                    .isEqualTo(1);
         };
     }
 
