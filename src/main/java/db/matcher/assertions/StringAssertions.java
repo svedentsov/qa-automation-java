@@ -10,6 +10,11 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.Arrays;
+import java.util.Locale;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -63,6 +68,18 @@ public class StringAssertions {
     }
 
     /**
+     * Проверяет, что строка начинается с указанного префикса без учёта регистра.
+     *
+     * @param prefix префикс, с которого должна начинаться строка
+     * @return условие проверки начала строки без учёта регистра
+     */
+    public static StringCondition startsWithIgnoreCase(String prefix) {
+        return value -> Assertions.assertThat(value.toLowerCase(Locale.ROOT))
+                .as("Строка должна начинаться с '%s' (без учёта регистра)", prefix)
+                .startsWith(prefix.toLowerCase(Locale.ROOT));
+    }
+
+    /**
      * Проверяет, что строка заканчивается указанным суффиксом.
      *
      * @param suffix суффикс, которым должна заканчиваться строка
@@ -72,6 +89,18 @@ public class StringAssertions {
         return value -> Assertions.assertThat(value)
                 .as("Строка должна заканчиваться на '%s'", suffix)
                 .endsWith(suffix);
+    }
+
+    /**
+     * Проверяет, что строка заканчивается указанным суффиксом без учёта регистра.
+     *
+     * @param suffix суффикс, которым должна заканчиваться строка
+     * @return условие проверки конца строки без учёта регистра
+     */
+    public static StringCondition endsWithIgnoreCase(String suffix) {
+        return value -> Assertions.assertThat(value.toLowerCase(Locale.ROOT))
+                .as("Строка должна заканчиваться на '%s' (без учёта регистра)", suffix)
+                .endsWith(suffix.toLowerCase(Locale.ROOT));
     }
 
     /**
@@ -180,6 +209,57 @@ public class StringAssertions {
     }
 
     /**
+     * Проверяет, что длина строки больше заданного значения.
+     *
+     * @param length значение, которое длина строки должна превышать
+     * @return условие проверки, что длина строки больше заданного значения
+     */
+    public static StringCondition hasLengthGreaterThan(int length) {
+        return value -> Assertions.assertThat(value)
+                .as("Длина строки должна быть больше %d", length)
+                .hasSizeGreaterThan(length);
+    }
+
+    /**
+     * Проверяет, что длина строки меньше заданного значения.
+     *
+     * @param length значение, которое длина строки должна быть меньше
+     * @return условие проверки, что длина строки меньше заданного значения
+     */
+    public static StringCondition hasLengthLessThan(int length) {
+        return value -> Assertions.assertThat(value)
+                .as("Длина строки должна быть меньше %d", length)
+                .hasSizeLessThan(length);
+    }
+
+    /**
+     * Проверяет, что длина строки находится в заданном диапазоне (включительно).
+     *
+     * @param minLength минимальная длина строки
+     * @param maxLength максимальная длина строки
+     * @return условие проверки диапазона длины строки
+     */
+    public static StringCondition hasLengthBetween(int minLength, int maxLength) {
+        return value -> Assertions.assertThat(value)
+                .as("Длина строки должна быть между %d и %d (включительно)", minLength, maxLength)
+                .hasSizeBetween(minLength, maxLength);
+    }
+
+    /**
+     * Проверяет, что длина строки находится в заданном диапазоне (исключительно).
+     *
+     * @param minLength минимальная длина строки (не включительно)
+     * @param maxLength максимальная длина строки (не включительно)
+     * @return условие проверки диапазона длины строки (исключительно)
+     */
+    public static StringCondition hasLengthBetweenExclusive(int minLength, int maxLength) {
+        return value -> Assertions.assertThat(value)
+                .as("Длина строки должна быть больше %d и меньше %d", minLength, maxLength)
+                .hasSizeGreaterThan(minLength)
+                .hasSizeLessThan(maxLength);
+    }
+
+    /**
      * Проверяет, что строка состоит только из пробельных символов.
      *
      * @return условие проверки, что строка состоит только из пробелов
@@ -271,7 +351,7 @@ public class StringAssertions {
     public static StringCondition isUpperCase() {
         return value -> Assertions.assertThat(value)
                 .as("Строка '%s' должна быть записана заглавными буквами", value)
-                .isEqualTo(value.toUpperCase());
+                .isEqualTo(value.toUpperCase(Locale.ROOT));
     }
 
     /**
@@ -282,7 +362,7 @@ public class StringAssertions {
     public static StringCondition isLowerCase() {
         return value -> Assertions.assertThat(value)
                 .as("Строка '%s' должна быть записана строчными буквами", value)
-                .isEqualTo(value.toLowerCase());
+                .isEqualTo(value.toLowerCase(Locale.ROOT));
     }
 
     /**
@@ -308,6 +388,30 @@ public class StringAssertions {
         return value -> Assertions.assertThat(value.trim().split("\\s+"))
                 .as("Строка должна содержать %d слов", expectedCount)
                 .hasSize(expectedCount);
+    }
+
+    /**
+     * Проверяет, что строка содержит заданное слово.
+     *
+     * @param word слово, которое должна содержать строка
+     * @return условие проверки на содержание слова
+     */
+    public static StringCondition hasWord(String word) {
+        return value -> Assertions.assertThat(value.trim().split("\\s+"))
+                .as("Строка должна содержать слово '%s'", word)
+                .contains(word);
+    }
+
+    /**
+     * Проверяет, что строка содержит заданное слово без учёта регистра.
+     *
+     * @param word слово для проверки
+     * @return условие проверки на содержание слова без учёта регистра
+     */
+    public static StringCondition hasWordIgnoreCase(String word) {
+        return value -> Assertions.assertThat(Arrays.asList(value.trim().split("\\s+")))
+                .as("Строка должна содержать слово '%s' (без учёта регистра)", word)
+                .anyMatch(actualWord -> actualWord.equalsIgnoreCase(word));
     }
 
     /**
@@ -486,5 +590,290 @@ public class StringAssertions {
                     .as("Строка должна содержать '%s' %d раз(а)", text, count)
                     .isEqualTo(count);
         };
+    }
+
+    /**
+     * Проверяет, что строка содержит хотя бы одну цифру.
+     *
+     * @return условие проверки наличия цифры
+     */
+    public static StringCondition containsDigit() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать хотя бы одну цифру")
+                .matches(".*\\d.*");
+    }
+
+    /**
+     * Проверяет, что строка содержит хотя бы одну букву.
+     *
+     * @return условие проверки наличия буквы
+     */
+    public static StringCondition containsLetter() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать хотя бы одну букву")
+                .matches(".*[a-zA-Z].*");
+    }
+
+    /**
+     * Проверяет, что строка содержит хотя бы один символ в верхнем регистре.
+     *
+     * @return условие проверки наличия символа в верхнем регистре
+     */
+    public static StringCondition containsUpperCase() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать хотя бы один символ в верхнем регистре")
+                .matches(".*[A-Z].*");
+    }
+
+    /**
+     * Проверяет, что строка содержит хотя бы один символ в нижнем регистре.
+     *
+     * @return условие проверки наличия символа в нижнем регистре
+     */
+    public static StringCondition containsLowerCase() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать хотя бы один символ в нижнем регистре")
+                .matches(".*[a-z].*");
+    }
+
+    /**
+     * Проверяет, что строка содержит хотя бы один пробельный символ.
+     *
+     * @return условие проверки наличия пробельного символа
+     */
+    public static StringCondition containsWhitespace() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать хотя бы один пробельный символ")
+                .matches(".*\\s.*");
+    }
+
+    /**
+     * Проверяет, что строка не содержит пробельных символов.
+     *
+     * @return условие проверки отсутствия пробельных символов
+     */
+    public static StringCondition containsNoWhitespace() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка не должна содержать пробельных символов")
+                .doesNotContainPattern("\\s");
+    }
+
+    /**
+     * Проверяет, что строка является корректным номером телефона (простая проверка формата).
+     *
+     * @return условие проверки номера телефона
+     */
+    public static StringCondition isValidPhoneNumber() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка '%s' должна быть корректным номером телефона", value)
+                .matches("^\\+?\\d{1,}([- ]?\\d{1,})*$");
+    }
+
+    /**
+     * Проверяет, что строка является корректным IP-адресом (версии 4).
+     *
+     * @return условие проверки IP-адреса
+     */
+    public static StringCondition isValidIpAddress() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка '%s' должна быть корректным IP-адресом", value)
+                .matches("^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$");
+    }
+
+    /**
+     * Проверяет, что строка является корректным MAC-адресом.
+     *
+     * @return условие проверки MAC-адреса
+     */
+    public static StringCondition isValidMacAddress() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка '%s' должна быть корректным MAC-адресом", value)
+                .matches("^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$");
+    }
+
+    /**
+     * Проверяет, что строка представляет собой дату в формате ISO 8601 (YYYY-MM-DD).
+     *
+     * @return условие проверки формата даты ISO 8601
+     */
+    public static StringCondition isIso8601Date() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка '%s' должна быть датой в формате ISO 8601 (YYYY-MM-DD)", value)
+                .matches("^\\d{4}-\\d{2}-\\d{2}$");
+    }
+
+    /**
+     * Проверяет, что строка представляет собой дату и время в формате ISO 8601 (YYYY-MM-DDTHH:mm:ssZ).
+     *
+     * @return условие проверки формата даты и времени ISO 8601
+     */
+    public static StringCondition isIso8601DateTime() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка '%s' должна быть датой и временем в формате ISO 8601 (YYYY-MM-DDTHH:mm:ssZ)", value)
+                .matches("^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(Z|[+-]\\d{2}:\\d{2})$");
+    }
+
+    /**
+     * Проверяет, что строка является корректным временем в формате HH:mm:ss.
+     *
+     * @return условие проверки формата времени HH:mm:ss
+     */
+    public static StringCondition isValidTime() {
+        return value -> {
+            try {
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                LocalTime.parse(value, formatter);
+                Assertions.assertThat(true)
+                        .as("Строка '%s' должна быть корректным временем в формате HH:mm:ss", value)
+                        .isTrue();
+            } catch (DateTimeParseException e) {
+                Assertions.fail("Строка '%s' не является корректным временем в формате HH:mm:ss: %s", value, e.getMessage());
+            }
+        };
+    }
+
+    /**
+     * Проверяет, что строка содержит только заданные символы (альтернативный вариант).
+     *
+     * @param allowedCharacters строка с разрешенными символами
+     * @return условие проверки на содержание только разрешенных символов
+     */
+    public static StringCondition containsOnly(String allowedCharacters) {
+        return value -> Assertions.assertThat(value)
+                .as("Строка '%s' должна содержать только символы из '%s'", value, allowedCharacters)
+                .matches("[" + Pattern.quote(allowedCharacters) + "]+");
+    }
+
+    /**
+     * Проверяет, что строка является корректным цветом в HEX-формате (например, #RRGGBB).
+     *
+     * @return условие проверки HEX-цвета
+     */
+    public static StringCondition isValidHexColor() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка '%s' должна быть корректным цветом в HEX-формате (#RRGGBB)", value)
+                .matches("^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$");
+    }
+
+    /**
+     * Проверяет, что строка содержит заданное количество символов.
+     *
+     * @param character символ для поиска
+     * @param count     ожидаемое количество вхождений символа
+     * @return условие проверки количества вхождений символа
+     */
+    public static StringCondition hasCharacterCount(char character, int count) {
+        return value -> {
+            long actualCount = value.chars().filter(ch -> ch == character).count();
+            Assertions.assertThat(actualCount)
+                    .as("Строка должна содержать символ '%c' %d раз(а)", character, count)
+                    .isEqualTo(count);
+        };
+    }
+
+    /**
+     * Проверяет, что строка начинается с цифры.
+     *
+     * @return условие проверки начала с цифры
+     */
+    public static StringCondition startsWithDigit() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна начинаться с цифры")
+                .matches("^\\d.*");
+    }
+
+    /**
+     * Проверяет, что строка заканчивается цифрой.
+     *
+     * @return условие проверки окончания на цифру
+     */
+    public static StringCondition endsWithDigit() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна заканчиваться цифрой")
+                .matches(".*\\d$");
+    }
+
+    /**
+     * Проверяет, что строка начинается с буквы.
+     *
+     * @return условие проверки начала с буквы
+     */
+    public static StringCondition startsWithLetter() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна начинаться с буквы")
+                .matches("^[a-zA-Z].*");
+    }
+
+    /**
+     * Проверяет, что строка заканчивается буквой.
+     *
+     * @return условие проверки окончания на букву
+     */
+    public static StringCondition endsWithLetter() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна заканчиваться буквой")
+                .matches(".*[a-zA-Z]$");
+    }
+
+    /**
+     * Проверяет, что строка содержит последовательность цифр.
+     *
+     * @return условие проверки наличия последовательности цифр
+     */
+    public static StringCondition containsDigits() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать последовательность цифр")
+                .matches(".*\\d+.*");
+    }
+
+    /**
+     * Проверяет, что строка содержит последовательность букв.
+     *
+     * @return условие проверки наличия последовательности букв
+     */
+    public static StringCondition containsLetters() {
+        return value -> Assertions.assertThat(value)
+                .as("Строка должна содержать последовательность букв")
+                .matches(".*[a-zA-Z]+.*");
+    }
+
+    /**
+     * Проверяет, что строка представляет собой логическое значение (true или false, без учёта регистра).
+     *
+     * @return условие проверки на логическое значение
+     */
+    public static StringCondition isBoolean() {
+        return value -> Assertions.assertThat(value.toLowerCase(Locale.ROOT))
+                .as("Строка '%s' должна представлять собой логическое значение (true или false)", value)
+                .isIn("true", "false");
+    }
+
+    /**
+     * Проверяет, что строка является корректным UUID без дефисов.
+     *
+     * @return условие проверки на UUID без дефисов
+     */
+    public static StringCondition isValidUuidWithoutHyphens() {
+        return value -> {
+            try {
+                UUID.fromString(value.replaceFirst("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})", "$1-$2-$3-$4-$5"));
+                Assertions.assertThat(true)
+                        .as("Строка '%s' должна быть корректным UUID без дефисов", value)
+                        .isTrue();
+            } catch (IllegalArgumentException e) {
+                Assertions.fail("Строка '%s' не является корректным UUID без дефисов: %s", value, e.getMessage());
+            }
+        };
+    }
+
+    /**
+     * Проверяет, что строка содержит только уникальные символы.
+     *
+     * @return условие проверки на уникальность символов
+     */
+    public static StringCondition containsOnlyUniqueCharacters() {
+        return value -> Assertions.assertThat(value.chars().distinct().count())
+                .as("Строка '%s' должна содержать только уникальные символы", value)
+                .isEqualTo(value.length());
     }
 }

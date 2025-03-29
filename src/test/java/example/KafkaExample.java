@@ -9,8 +9,7 @@ import java.util.List;
 import static kafka.matcher.KafkaMatcher.*;
 import static kafka.matcher.assertions.BooleanAssertions.isBoolean;
 import static kafka.matcher.assertions.BooleanAssertions.isTrue;
-import static kafka.matcher.assertions.NumberAssertions.greaterThan;
-import static kafka.matcher.assertions.NumberAssertions.lessOrEqualTo;
+import static kafka.matcher.assertions.NumberAssertions.*;
 import static kafka.matcher.assertions.StringAssertions.*;
 import static kafka.matcher.assertions.TimeAssertions.before;
 
