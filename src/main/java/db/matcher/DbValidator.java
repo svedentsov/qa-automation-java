@@ -48,9 +48,24 @@ public final class DbValidator<T> {
      */
     @SafeVarargs
     public final DbValidator<T> shouldHave(@NonNull Condition<T>... conditions) {
-        Condition<T> compositeCondition = CompositeAssertions.and(conditions);
-        log.debug("Проверка условия '{}' для {} сущностей", compositeCondition, entities.size());
-        executeCheck(() -> compositeCondition.checkAll(entities), compositeCondition, "entities");
+        Condition<T> composite = CompositeAssertions.and(conditions);
+        log.debug("Проверка условия '{}' для {} сущностей", composite, entities.size());
+        entities.forEach(entity -> executeCheck(() -> composite.check(entity), composite, "сущности"));
+        return this;
+    }
+
+    /**
+     * Применяет переданные условия проверки ко всем сущностям в виде списка.
+     * Все условия объединяются с помощью логической операции И (AND).
+     *
+     * @param conditions набор условий проверки сущностей в виде списка
+     * @return текущий экземпляр DbValidator для дальнейшей цепочки вызовов
+     */
+    @SafeVarargs
+    public final DbValidator<T> shouldHaveList(@NonNull Condition<List<T>>... conditions) {
+        Condition<List<T>> composite = CompositeAssertions.and(conditions);
+        log.debug("Проверка LIST-условий '{}' для {} сущностей", composite, entities.size());
+        executeCheck(() -> composite.check(entities), composite, "сущности");
         return this;
     }
 
@@ -65,12 +80,10 @@ public final class DbValidator<T> {
         try {
             check.run();
         } catch (AssertionError error) {
-            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s",
-                    condition, entityLabel, error.getMessage());
+            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s", condition, entityLabel, error.getMessage());
             throw new AssertionError(errorMessage, error);
         } catch (Exception exception) {
-            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s",
-                    condition, entityLabel, exception.getMessage());
+            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s", condition, entityLabel, exception.getMessage());
             throw new RuntimeException(errorMessage, exception);
         }
     }

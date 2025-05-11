@@ -4,10 +4,11 @@ import db.matcher.assertions.CompositeAssertions;
 import db.matcher.assertions.NumberAssertions.NumberCondition;
 import db.matcher.assertions.PropertyAssertions.PropertyCondition;
 import db.matcher.assertions.StringAssertions.StringCondition;
-import db.matcher.assertions.TimeAssertions;
+import db.matcher.assertions.TimeAssertions.TimeCondition;
 import lombok.experimental.UtilityClass;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -28,6 +29,7 @@ public class DbMatcher {
      * @return условие для проверки сущности
      */
     public static <T, R> Condition<T> value(Function<T, R> getter, Condition<R> cond) {
+        Objects.requireNonNull(cond, "condition не может быть null");
         return valueInternal(getter, cond::check);
     }
 
@@ -64,7 +66,7 @@ public class DbMatcher {
      * @param <T>    тип сущности
      * @return условие для проверки сущности
      */
-    public static <T> Condition<T> value(Function<T, LocalDateTime> getter, TimeAssertions.TimeCondition tc) {
+    public static <T> Condition<T> value(Function<T, LocalDateTime> getter, TimeCondition tc) {
         return valueInternal(getter, tc::check);
     }
 
@@ -141,6 +143,8 @@ public class DbMatcher {
      * @return условие для проверки сущности
      */
     private static <T, V> Condition<T> valueInternal(Function<T, V> getter, Consumer<V> checker) {
+        Objects.requireNonNull(getter, "getter не может быть null");
+        Objects.requireNonNull(checker, "checker не может быть null");
         return entity -> checker.accept(getter.apply(entity));
     }
 }

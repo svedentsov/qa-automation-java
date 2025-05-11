@@ -1,7 +1,5 @@
 package db.matcher;
 
-import java.util.Collection;
-
 /**
  * Функциональный интерфейс для проверки одной сущности.
  *
@@ -16,14 +14,4 @@ public interface Condition<T> {
      * @param entity проверяемая сущность
      */
     void check(T entity);
-
-    /**
-     * Дефолтный метод для проверки коллекции сущностей.
-     * Вызывает метод {@link #check(Object)} для каждой сущности в коллекции.
-     *
-     * @param entities коллекция сущностей для проверки
-     */
-    default void checkAll(Collection<T> entities) {
-        entities.forEach(this::check);
-    }
 }

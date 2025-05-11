@@ -4,12 +4,13 @@ import db.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
-import java.util.List;
-import java.util.function.Function;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 
 /**
- * Утилитный класс для проверки списков сущностей.
+ * Утилитный класс для проверок коллекции сущностей.
  */
 @UtilityClass
 public class EntityAssertions {
@@ -18,423 +19,292 @@ public class EntityAssertions {
      * Проверяет, что список сущностей не пуст.
      *
      * @param <T> тип сущности
-     * @return проверка наличия хотя бы одной сущности
+     * @return условие: список не должен быть пустым
+     * @throws NullPointerException если список null
      */
-    public static <T> Condition<T> exists() {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                Assertions.assertThat(list)
-                        .as("Проверка наличия хотя бы одной сущности")
-                        .isNotEmpty();
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> exists() {
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            Assertions.assertThat(list)
+                    .as("Ожидалось, что список сущностей не пуст")
+                    .isNotEmpty();
         };
     }
 
     /**
-     * Проверяет, что количество сущностей равно заданному значению.
+     * Проверяет, что количество сущностей равно заданному.
      *
-     * @param count ожидаемое количество сущностей
-     * @param <T>   тип сущности
-     * @return проверка количества сущностей
+     * @param expected ожидаемое количество
+     * @param <T>      тип сущности
+     * @return условие: размер списка == expected
+     * @throws NullPointerException     если список null
+     * @throws IllegalArgumentException если expected < 0
      */
-    public static <T> Condition<T> countEqual(int count) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                Assertions.assertThat(list)
-                        .as("Количество сущностей должно быть равно %d", count)
-                        .hasSize(count);
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> countEqual(int expected) {
+        if (expected < 0) {
+            throw new IllegalArgumentException("Ожидаемое количество не может быть отрицательным");
+        }
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            Assertions.assertThat(list)
+                    .as("Ожидалось, что количество сущностей равно %d, но было %d", expected, list.size())
+                    .hasSize(expected);
         };
     }
 
     /**
-     * Проверяет, что количество сущностей больше заданного значения.
+     * Проверяет, что количество сущностей больше заданного.
      *
-     * @param count минимальное количество сущностей
-     * @param <T>   тип сущности
-     * @return проверка количества сущностей
+     * @param min минимальное количество +1
+     * @param <T> тип сущности
+     * @return условие: размер списка > min
+     * @throws NullPointerException     если список null
+     * @throws IllegalArgumentException если min < 0
      */
-    public static <T> Condition<T> countGreater(int count) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                Assertions.assertThat(list)
-                        .as("Количество сущностей должно быть больше %d", count)
-                        .hasSizeGreaterThan(count);
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> countGreater(int min) {
+        if (min < 0) {
+            throw new IllegalArgumentException("Минимальное количество не может быть отрицательным");
+        }
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            Assertions.assertThat(list.size())
+                    .as("Ожидалось, что количество сущностей больше %d, но было %d", min, list.size())
+                    .isGreaterThan(min);
         };
     }
 
     /**
-     * Проверяет, что все сущности удовлетворяют указанной проверке.
+     * Проверяет, что количество сущностей не меньше заданного.
      *
-     * @param condition проверка для каждой сущности
+     * @param minCount минимальное количество
+     * @param <T>      тип сущности
+     * @return условие: размер списка >= minCount
+     * @throws NullPointerException     если список null
+     * @throws IllegalArgumentException если minCount < 0
+     */
+    public static <T> Condition<List<T>> hasMinimumCount(int minCount) {
+        if (minCount < 0) {
+            throw new IllegalArgumentException("Минимальное количество не может быть отрицательным");
+        }
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            Assertions.assertThat(list.size())
+                    .as("Ожидалось, что количество сущностей не меньше %d, но было %d", minCount, list.size())
+                    .isGreaterThanOrEqualTo(minCount);
+        };
+    }
+
+    /**
+     * Проверяет, что количество сущностей не больше заданного.
+     *
+     * @param maxCount максимальное количество
+     * @param <T>      тип сущности
+     * @return условие: размер списка <= maxCount
+     * @throws NullPointerException     если список null
+     * @throws IllegalArgumentException если maxCount < 0
+     */
+    public static <T> Condition<List<T>> hasMaximumCount(int maxCount) {
+        if (maxCount < 0) {
+            throw new IllegalArgumentException("Максимальное количество не может быть отрицательным");
+        }
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            Assertions.assertThat(list.size())
+                    .as("Ожидалось, что количество сущностей не больше %d, но было %d", maxCount, list.size())
+                    .isLessThanOrEqualTo(maxCount);
+        };
+    }
+
+    /**
+     * Проверяет, что размер списка находится между min и max (включительно).
+     *
+     * @param min минимум
+     * @param max максимум
+     * @param <T> тип сущности
+     * @return условие: min <= размер списка <= max
+     * @throws IllegalArgumentException если min > max или min<0
+     */
+    public static <T> Condition<List<T>> hasSizeBetween(int min, int max) {
+        if (min < 0 || max < min) {
+            throw new IllegalArgumentException("Неверные границы: min=" + min + ", max=" + max);
+        }
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            Assertions.assertThat(list.size())
+                    .as("Ожидалось, что размер списка между %d и %d, но было %d", min, max, list.size())
+                    .isBetween(min, max);
+        };
+    }
+
+    /**
+     * Проверяет, что хотя бы одна сущность удовлетворяет условию.
+     *
+     * @param condition условие для одной сущности
      * @param <T>       тип сущности
-     * @return проверка сущностей
+     * @return условие для списка: anyMatch
+     * @throws NullPointerException если список или condition null
      */
-    public static <T> Condition<T> allMatch(Condition<T> condition) {
-        return entity -> condition.check(entity);
+    public static <T> Condition<List<T>> anyEntityMatches(Condition<T> condition) {
+        Objects.requireNonNull(condition, "Условие не должно быть null");
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            boolean found = list.stream().anyMatch(item -> {
+                try {
+                    condition.check(item);
+                    return true;
+                } catch (AssertionError ignored) {
+                    return false;
+                }
+            });
+            Assertions.assertThat(found)
+                    .as("Ожидалось, что хотя бы одна сущность удовлетворяет условию")
+                    .isTrue();
+        };
     }
 
     /**
-     * Проверяет, что хотя бы одна сущность удовлетворяет указанной проверке.
+     * Проверяет, что ни одна сущность не удовлетворяет условию.
      *
-     * @param condition проверка для сущности
+     * @param condition условие для одной сущности
      * @param <T>       тип сущности
-     * @return проверка сущностей
+     * @return условие для списка: noneMatch
+     * @throws NullPointerException если список или condition null
      */
-    public static <T> Condition<T> anyEntityMatches(Condition<T> condition) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                boolean matchFound = list.stream().anyMatch(entity -> {
-                    try {
-                        condition.check(entity);
-                        return true;
-                    } catch (AssertionError e) {
-                        return false;
-                    }
-                });
-                Assertions.assertThat(matchFound)
-                        .as("Ожидалось, что хотя бы одна сущность удовлетворяет условию")
-                        .isTrue();
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> noMatches(Condition<T> condition) {
+        Objects.requireNonNull(condition, "Условие не должно быть null");
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            boolean any = list.stream().anyMatch(item -> {
+                try {
+                    condition.check(item);
+                    return true;
+                } catch (AssertionError ignored) {
+                    return false;
+                }
+            });
+            Assertions.assertThat(any)
+                    .as("Ожидалось, что ни одна сущность не удовлетворяет условию")
+                    .isFalse();
         };
     }
 
     /**
-     * Проверяет, что ни одна сущность не удовлетворяет указанной проверке.
-     *
-     * @param condition проверка для сущности
-     * @param <T>       тип сущности
-     * @return проверка сущностей
-     */
-    public static <T> Condition<T> noMatches(Condition<T> condition) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                boolean anyMatch = list.stream().anyMatch(entity -> {
-                    try {
-                        condition.check(entity);
-                        return true;
-                    } catch (AssertionError e) {
-                        return false;
-                    }
-                });
-                Assertions.assertThat(anyMatch)
-                        .as("Найдена сущность, соответствующая условию, хотя ожидалось отсутствие совпадений")
-                        .isFalse();
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
-        };
-    }
-
-    /**
-     * Проверяет, что значение свойства для каждой сущности равно ожидаемому.
-     *
-     * @param getter        функция для получения свойства
-     * @param expectedValue ожидаемое значение свойства
-     * @param <T>           тип сущности
-     * @return проверка сущностей
-     */
-    public static <T> Condition<T> valuesEqual(Function<T, ?> getter, Object expectedValue) {
-        return entity -> {
-            Object actualValue = getter.apply(entity);
-            Assertions.assertThat(actualValue)
-                    .as("Значение должно быть равно %s", expectedValue)
-                    .isEqualTo(expectedValue);
-        };
-    }
-
-    /**
-     * Проверяет, что все сущности в списке уникальны (без дублирующихся элементов).
+     * Проверяет, что все сущности уникальны (без повторов).
      *
      * @param <T> тип сущности
-     * @return условие проверки уникальности сущностей
+     * @return условие: distinct count == size
+     * @throws NullPointerException если список null
      */
-    public static <T> Condition<T> entitiesAreUnique() {
-        return entities -> {
-            if (entities instanceof List) {
-                List<?> list = (List<?>) entities;
-                long distinctCount = list.stream().distinct().count();
-                Assertions.assertThat(distinctCount)
-                        .as("Все сущности должны быть уникальными")
-                        .isEqualTo(list.size());
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> entitiesAreUnique() {
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            long distinct = list.stream().distinct().count();
+            Assertions.assertThat(distinct)
+                    .as("Ожидалось, что все сущности будут уникальными")
+                    .isEqualTo(list.size());
         };
     }
 
     /**
-     * Проверяет, что список отсортирован согласно заданному компаратору.
+     * Проверяет, что список отсортирован согласно компаратору.
      *
-     * @param comparator компаратор для сравнения сущностей
+     * @param comparator компаратор для сравнения соседних элементов
      * @param <T>        тип сущности
-     * @return условие проверки сортировки списка
+     * @return условие: list[i] <= list[i+1] для всех i
+     * @throws NullPointerException если список или comparator null
      */
-    public static <T> Condition<T> isSorted(Comparator<T> comparator) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                for (int i = 0; i < list.size() - 1; i++) {
-                    T current = list.get(i);
-                    T next = list.get(i + 1);
-                    Assertions.assertThat(comparator.compare(current, next))
-                            .as("Список должен быть отсортирован согласно заданному компаратору: элементы %s и %s", current, next)
-                            .isLessThanOrEqualTo(0);
-                }
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
+    public static <T> Condition<List<T>> isSorted(Comparator<T> comparator) {
+        Objects.requireNonNull(comparator, "Компаратор не должен быть null");
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            for (int i = 0; i + 1 < list.size(); i++) {
+                T curr = list.get(i);
+                T next = list.get(i + 1);
+                Assertions.assertThat(comparator.compare(curr, next))
+                        .as("Ожидалось, что элемент %s не больше %s", curr, next)
+                        .isLessThanOrEqualTo(0);
             }
         };
     }
 
     /**
-     * Проверяет, что список содержит не менее указанного количества сущностей.
+     * Проверяет, что значения свойства, полученные через getter, равны expected для каждой сущности.
      *
-     * @param minCount минимальное ожидаемое количество сущностей
-     * @param <T>      тип сущности
-     * @return условие проверки минимального количества сущностей
-     */
-    public static <T> Condition<T> hasMinimumCount(int minCount) {
-        return entities -> {
-            if (entities instanceof List) {
-                List<?> list = (List<?>) entities;
-                Assertions.assertThat(list.size())
-                        .as("Количество сущностей должно быть не меньше %d", minCount)
-                        .isGreaterThanOrEqualTo(minCount);
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
-        };
-    }
-
-    /**
-     * Проверяет, что список содержит не более указанного количества сущностей.
-     *
-     * @param maxCount максимальное ожидаемое количество сущностей
-     * @param <T>      тип сущности
-     * @return условие проверки максимального количества сущностей
-     */
-    public static <T> Condition<T> hasMaximumCount(int maxCount) {
-        return entities -> {
-            if (entities instanceof List) {
-                List<?> list = (List<?>) entities;
-                Assertions.assertThat(list.size())
-                        .as("Количество сущностей должно быть не больше %d", maxCount)
-                        .isLessThanOrEqualTo(maxCount);
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
-        };
-    }
-
-    /**
-     * Проверяет, что для каждой сущности, значение, полученное с помощью getter, равно ожидаемому.
-     *
-     * @param getter        функция для получения свойства из сущности
-     * @param expectedValue ожидаемое значение свойства
+     * @param getter        функция получения свойства
+     * @param expectedValue ожидаемое значение
      * @param <T>           тип сущности
-     * @return условие проверки свойства для каждой сущности
+     * @return условие для списка: все элементы имеют property == expectedValue
+     * @throws NullPointerException если список или getter null
      */
-    public static <T> Condition<T> allEntitiesSatisfy(Function<T, ?> getter, Object expectedValue) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                for (T entity : list) {
-                    Object actual = getter.apply(entity);
-                    Assertions.assertThat(actual)
-                            .as("Значение, полученное с помощью getter, должно быть равно %s", expectedValue)
-                            .isEqualTo(expectedValue);
-                }
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> valuesEqual(Function<T, ?> getter, Object expectedValue) {
+        Objects.requireNonNull(getter, "Getter не должен быть null");
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            list.forEach(item -> {
+                Object actual = getter.apply(item);
+                Assertions.assertThat(actual)
+                        .as("Ожидалось, что значение свойства равно %s, но было %s", expectedValue, actual)
+                        .isEqualTo(expectedValue);
+            });
         };
     }
 
     /**
-     * Проверяет, что значения свойства, извлечённые из каждой сущности с помощью getter, отсортированы в естественном порядке.
+     * Проверяет, что свойства, полученные через getter, уникальны среди всех сущностей.
      *
-     * @param getter функция для получения сравнимого свойства из сущности
+     * @param getter функция получения свойства
      * @param <T>    тип сущности
-     * @return условие проверки сортировки свойств сущностей
+     * @return условие: distinct(property) == size
+     * @throws NullPointerException если список или getter null
      */
-    public static <T> Condition<T> entityPropertyIsSorted(Function<T, ? extends Comparable> getter) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                for (int i = 0; i < list.size() - 1; i++) {
-                    Comparable current = getter.apply(list.get(i));
-                    Comparable next = getter.apply(list.get(i + 1));
-                    Assertions.assertThat(current.compareTo(next))
-                            .as("Свойства сущностей должны быть отсортированы: %s и %s", current, next)
-                            .isLessThanOrEqualTo(0);
-                }
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> entitiesPropertyAreDistinct(Function<T, ?> getter) {
+        Objects.requireNonNull(getter, "Getter не должен быть null");
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            long distinct = list.stream()
+                    .map(getter)
+                    .distinct()
+                    .count();
+            Assertions.assertThat(distinct)
+                    .as("Ожидалось, что значения свойства будут уникальными")
+                    .isEqualTo(list.size());
         };
     }
 
     /**
-     * Проверяет, что хотя бы одна сущность имеет значение свойства (полученного с помощью getter),
-     * равное ожидаемому.
-     *
-     * @param getter        функция для получения свойства из сущности
-     * @param expectedValue ожидаемое значение свойства
-     * @param <T>           тип сущности
-     * @return условие проверки наличия хотя бы одной сущности с нужным значением свойства
-     */
-    public static <T> Condition<T> anyEntityHasProperty(Function<T, ?> getter, Object expectedValue) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                boolean found = list.stream().anyMatch(entity -> expectedValue.equals(getter.apply(entity)));
-                Assertions.assertThat(found)
-                        .as("Ожидалось, что хотя бы одна сущность имеет свойство, равное %s", expectedValue)
-                        .isTrue();
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
-        };
-    }
-
-    /**
-     * Проверяет, что для каждой сущности значение, полученное с помощью getter, не равно null.
-     *
-     * @param getter функция для получения свойства из сущности
-     * @param <T>    тип сущности
-     * @return условие проверки отсутствия null в свойствах сущностей
-     */
-    public static <T> Condition<T> allEntitiesHaveNonNullProperties(Function<T, ?> getter) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                for (T entity : list) {
-                    Object val = getter.apply(entity);
-                    Assertions.assertThat(val)
-                            .as("Свойство сущности не должно быть null")
-                            .isNotNull();
-                }
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
-        };
-    }
-
-    /**
-     * Проверяет, что список сущностей не содержит null-значений.
+     * Проверяет, что список не содержит null-значений.
      *
      * @param <T> тип сущности
-     * @return условие проверки отсутствия null в списке
+     * @return условие: все элементы != null
+     * @throws NullPointerException если список null
      */
-    public static <T> Condition<T> entitiesContainNoNulls() {
-        return entities -> {
-            if (entities instanceof List) {
-                List<?> list = (List<?>) entities;
-                // Используем позитивную проверку: каждый элемент списка не равен null.
-                Assertions.assertThat(list)
-                        .as("Список сущностей не должен содержать null")
-                        .allSatisfy(entity -> Assertions.assertThat(entity)
-                                .isNotNull());
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> entitiesContainNoNulls() {
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            Assertions.assertThat(list)
+                    .as("Ожидалось, что список не содержит null")
+                    .noneMatch(Objects::isNull);
         };
     }
 
     /**
-     * Проверяет, что значения свойства, извлечённые из каждой сущности с помощью getter, являются уникальными.
+     * Проверяет, что порядок свойств, полученных через getter, точно соответствует expectedOrder.
      *
-     * @param getter функция для получения свойства из сущности
-     * @param <T>    тип сущности
-     * @return условие проверки уникальности значений свойства
-     */
-    public static <T> Condition<T> entitiesPropertyAreDistinct(Function<T, ?> getter) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                long distinctCount = list.stream()
-                        .map(getter)
-                        .filter(v -> v != null)
-                        .distinct()
-                        .count();
-                Assertions.assertThat(distinctCount)
-                        .as("Свойства, извлечённые с помощью getter, должны быть уникальными")
-                        .isEqualTo(list.size());
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
-        };
-    }
-
-    /**
-     * Проверяет, что порядок значений свойства, извлечённых из сущностей с помощью getter,
-     * точно соответствует ожидаемому.
-     *
-     * @param getter        функция для получения свойства из сущности
-     * @param expectedOrder список ожидаемого порядка значений
+     * @param getter        функция получения Comparable-свойства
+     * @param expectedOrder ожидаемый порядок значений
      * @param <T>           тип сущности
-     * @return условие проверки порядка значений свойства
+     * @return условие: actualOrder == expectedOrder
+     * @throws NullPointerException если список или getter или expectedOrder null
      */
-    public static <T> Condition<T> entitiesMatchOrder(Function<T, ? extends Comparable> getter, List<?> expectedOrder) {
-        return entities -> {
-            if (entities instanceof List) {
-                @SuppressWarnings("unchecked")
-                List<T> list = (List<T>) entities;
-                List<?> actualOrder = list.stream().map(getter).toList();
-                Assertions.assertThat(actualOrder)
-                        .as("Порядок значений свойства должен соответствовать ожидаемому: %s", expectedOrder)
-                        .isEqualTo(expectedOrder);
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
-        };
-    }
-
-    /**
-     * Проверяет, что размер списка сущностей находится между заданными границами (включительно).
-     *
-     * @param min минимальное количество сущностей
-     * @param max максимальное количество сущностей
-     * @param <T> тип сущности
-     * @return условие проверки размера списка
-     */
-    public static <T> Condition<T> hasSizeBetween(int min, int max) {
-        return entities -> {
-            if (entities instanceof List) {
-                List<?> list = (List<?>) entities;
-                int size = list.size();
-                Assertions.assertThat(size)
-                        .as("Размер списка должен быть между %d и %d", min, max)
-                        .isBetween(min, max);
-            } else {
-                throw new IllegalArgumentException("Ожидался список сущностей");
-            }
+    public static <T> Condition<List<T>> entitiesMatchOrder(Function<T, ? extends Comparable<?>> getter, List<?> expectedOrder) {
+        Objects.requireNonNull(getter, "Getter не должен быть null");
+        Objects.requireNonNull(expectedOrder, "Ожидаемый порядок не должен быть null");
+        return list -> {
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            List<?> actual = list.stream().map(getter).toList();
+            Assertions.assertThat(actual)
+                    .as("Ожидалось, что порядок значений будет %s, но был %s", expectedOrder, actual)
+                    .isEqualTo(expectedOrder);
         };
     }
 }

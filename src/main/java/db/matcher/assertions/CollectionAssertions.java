@@ -6,7 +6,6 @@ import org.assertj.core.api.Assertions;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * Утилитный класс для проверок свойств, представляющих коллекции, строки или массивы.
@@ -255,36 +254,6 @@ public class CollectionAssertions {
             Assertions.assertThat(thisLength)
                     .as("Длина значения должна быть равна длине другого значения")
                     .isEqualTo(otherLength);
-        };
-    }
-
-    /**
-     * Проверяет, что элементы коллекции или массива расположены в порядке сортировки (естественном порядке).
-     * Элементы должны реализовывать интерфейс Comparable.
-     *
-     * @param <T> тип проверяемого значения (Collection или массив)
-     * @return условие, проверяющее, что элементы отсортированы
-     */
-    public static <T> Condition<T> isSorted() {
-        return value -> {
-            Collection<?> collection = getValueAsCollection(value);
-            if (collection.size() <= 1) {
-                return; // Одноэлементные коллекции всегда отсортированы
-            }
-            List<?> list = List.copyOf(collection);
-            for (int i = 0; i < list.size() - 1; i++) {
-                Object current = list.get(i);
-                Object next = list.get(i + 1);
-                if (current instanceof Comparable && next instanceof Comparable) {
-                    @SuppressWarnings("unchecked")
-                    Comparable<Object> cmpCurrent = (Comparable<Object>) current;
-                    Assertions.assertThat(cmpCurrent.compareTo(next))
-                            .as("Элемент %s должен быть меньше или равен элементу %s", current, next)
-                            .isLessThanOrEqualTo(0);
-                } else {
-                    throw new IllegalArgumentException("Элементы коллекции не реализуют Comparable: " + current + ", " + next);
-                }
-            }
         };
     }
 

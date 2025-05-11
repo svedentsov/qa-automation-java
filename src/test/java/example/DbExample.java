@@ -12,17 +12,15 @@ import java.util.Comparator;
 import java.util.List;
 
 import static db.matcher.DbMatcher.*;
-import static db.matcher.assertions.CollectionAssertions.isSorted;
 import static db.matcher.assertions.CollectionAssertions.*;
-import static db.matcher.assertions.EntityAssertions.isSorted;
 import static db.matcher.assertions.EntityAssertions.*;
 import static db.matcher.assertions.NumberAssertions.*;
 import static db.matcher.assertions.PropertyAssertions.*;
+import static db.matcher.assertions.StringAssertions.*;
 import static db.matcher.assertions.StringAssertions.contains;
 import static db.matcher.assertions.StringAssertions.endsWith;
 import static db.matcher.assertions.StringAssertions.equalsTo;
 import static db.matcher.assertions.StringAssertions.startsWith;
-import static db.matcher.assertions.StringAssertions.*;
 import static db.matcher.assertions.TimeAssertions.*;
 
 /**
@@ -31,24 +29,21 @@ import static db.matcher.assertions.TimeAssertions.*;
 public class DbExample {
 
     public void validateEntities(List<MyEntity> entities) {
-        new DbValidator<>(entities).shouldHave(
+        new DbValidator<>(entities).shouldHaveList(
                 exists(), // проверка наличия хотя бы одной сущности
                 countEqual(10), // количество сущностей равно 10
                 countGreater(5), // количество сущностей больше 5
-                value(MyEntity::getStatus, equalsTo("ACTIVE")), // статус равен "ACTIVE"
-                value(MyEntity::getName, contains("Editor")), // имя содержит подстроку "Editor"
-                value(MyEntity::getStatus, not(equalsTo("GUEST"))), // статус не равен "GUEST"
-                valuesEqual(MyEntity::getStatus, "USER"), // все статусы равны "USER"
                 entitiesAreUnique(), // проверка уникальности всех сущностей
                 hasMinimumCount(5), // количество сущностей не меньше 5
                 hasMaximumCount(15), // количество сущностей не больше 15
                 hasSizeBetween(5, 15), // размер списка находится между 5 и 15
-                allEntitiesSatisfy(MyEntity::getStatus, "ACTIVE"), // для каждой сущности статус равен "ACTIVE"
-                anyEntityHasProperty(MyEntity::getName, "TestUser"), // хотя бы одна сущность имеет имя "TestUser"
                 entitiesContainNoNulls(), // в списке нет null-значений
+                anyEntityMatches(value(MyEntity::getStatus, equalsTo("ACTIVE"))), // в списке нет null-значений
+                noMatches(value(MyEntity::getStatus, equalsTo("GUEST"))), // ни одна сущность не GUEST
+                valuesEqual(MyEntity::getStatus, "USER"), // все статусы равны USER
                 entitiesPropertyAreDistinct(MyEntity::getId), // все id уникальны
-                isSorted(Comparator.comparing(MyEntity::getCreationDate)), // список отсортирован по дате создания
-                entityPropertyIsSorted(MyEntity::getCreationDate) // значения creationDate отсортированы по возрастанию
+                isSorted(Comparator.comparing(MyEntity::getCreationDate)), // дополнительно проверяем сортировку всего списка
+                entitiesMatchOrder(MyEntity::getStatus, Arrays.asList("NEW", "ACTIVE", "SUSPENDED", "DELETED")) // порядок статусов соответствует ожидаемому
         );
     }
 
@@ -94,7 +89,6 @@ public class DbExample {
                 value(MyEntity::getRoles, allElementsInstanceOf(String.class)), // все элементы ролей являются строками
                 value(MyEntity::getRoles, lengthGreaterThanOrEqual(1)), // в списке ролей не менее 1 элемента
                 value(MyEntity::getRoles, hasSameSizeAs(Arrays.asList("A", "B", "C"))), // размер списка ролей равен 3
-                value(MyEntity::getRoles, isSorted()), // список ролей отсортирован
                 value(MyEntity::getRoles, containsAtLeast(2, "ADMIN")), // "ADMIN" встречается как минимум 2 раза
 
                 // TimeAssertions
@@ -129,7 +123,7 @@ public class DbExample {
                         value(MyEntity::getStatus, equalsTo("ACTIVE")), // статус равен "ACTIVE"
                         value(MyEntity::getName, contains("Test")) // имя содержит "Test"
                 ),
-                or(  // хотя бы одна из проверок (имя начинается с "Editor" или имя заканчивается на "User") проходит
+                or( // хотя бы одна из проверок (имя начинается с "Editor" или имя заканчивается на "User") проходит
                         value(MyEntity::getName, startsWith("Editor")), // имя начинается с "Editor"
                         value(MyEntity::getName, endsWith("User")) // имя заканчивается на "User"
                 ),

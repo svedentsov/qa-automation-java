@@ -4,168 +4,235 @@ import db.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
-import java.util.Arrays;
+import java.util.Objects;
+import java.util.stream.Stream;
 
 /**
- * Утилитный класс для композиционных (логических) операций над проверками: AND, OR, NOT, nOf.
+ * Утилитный класс для композиционных (логических) операций над проверками: AND, OR, NOT, nOf, exactlyNOf, atMostNOf, xor.
  */
 @UtilityClass
 public class CompositeAssertions {
 
     /**
-     * Возвращает составную проверку, которая проходит, если пройдены все переданные проверки.
+     * Возвращает проверку, которая проходит, если **все** переданные условия выполняются.
      *
-     * @param conditions набор проверок
+     * @param conditions набор условий; не может быть null или пустым
      * @param <T>        тип сущности
-     * @return составная проверка
+     * @return составное условие AND
+     * @throws NullPointerException     если массив или любой из элементов равен null
+     * @throws IllegalArgumentException если передан пустой массив условий
      */
     @SafeVarargs
     public static <T> Condition<T> and(Condition<T>... conditions) {
-        return entity -> Arrays.stream(conditions).forEach(condition -> condition.check(entity));
+        validateConditions(conditions, "AND");
+        return entity -> Stream.of(conditions).forEach(cond -> cond.check(entity));
     }
 
     /**
-     * Возвращает составную проверку, которая проходит, если хотя бы одна из переданных проверок пройдена.
+     * Возвращает проверку, которая проходит, если **хотя бы одно** из переданных условий выполняется.
      *
-     * @param conditions набор проверок
+     * @param conditions набор условий; не может быть null или пустым
      * @param <T>        тип сущности
-     * @return составная проверка
+     * @return составное условие OR
+     * @throws NullPointerException     если массив или любой из элементов равен null
+     * @throws IllegalArgumentException если передан пустой массив условий
      */
     @SafeVarargs
     public static <T> Condition<T> or(Condition<T>... conditions) {
+        validateConditions(conditions, "OR");
         return entity -> {
-            boolean anyMatch = Arrays.stream(conditions).anyMatch(condition -> passes(condition, entity));
-            Assertions.assertThat(anyMatch)
+            long passed = countPassed(entity, conditions);
+            Assertions.assertThat(passed)
                     .as("Ни одно из OR-условий не выполнено")
-                    .isTrue();
+                    .isGreaterThan(0);
         };
     }
 
     /**
-     * Возвращает составную проверку, которая проходит, если ни одна из переданных проверок не пройдена.
+     * Возвращает проверку, которая проходит, если **ни одно** из переданных условий не выполняется.
      *
-     * @param conditions набор проверок
+     * @param conditions набор условий; не может быть null или пустым
      * @param <T>        тип сущности
-     * @return составная проверка
+     * @return составное условие NOT (ни одно не выполняется)
+     * @throws NullPointerException     если массив или любой из элементов равен null
+     * @throws IllegalArgumentException если передан пустой массив условий
      */
     @SafeVarargs
     public static <T> Condition<T> not(Condition<T>... conditions) {
+        validateConditions(conditions, "NOT");
         return entity -> {
-            boolean noneMatch = Arrays.stream(conditions).noneMatch(condition -> passes(condition, entity));
-            Assertions.assertThat(noneMatch)
-                    .as("Ожидалось, что ни одна проверка не пройдет, но хотя бы одна выполнилась")
-                    .isTrue();
+            long passed = countPassed(entity, conditions);
+            Assertions.assertThat(passed)
+                    .as("Ожидалось, что ни одно условие не выполнится, но выполнено %d", passed)
+                    .isEqualTo(0);
         };
     }
 
     /**
-     * Возвращает составную проверку, которая проходит, если ни одна из переданных проверок не пройдена.
+     * Возвращает проверку, которая проходит, если **единичное** условие не выполняется.
      *
-     * @param condition проверка
+     * @param condition условие; не может быть null
      * @param <T>       тип сущности
-     * @return составная проверка
+     * @return инвертированное условие
+     * @throws NullPointerException если условие равно null
      */
     public static <T> Condition<T> not(Condition<T> condition) {
+        Objects.requireNonNull(condition, "Условие не может быть null");
         return entity -> {
             boolean passed = passes(condition, entity);
             Assertions.assertThat(passed)
-                    .as("Ожидалось, что проверка не пройдет, но она выполнилась")
+                    .as("Ожидалось, что условие не выполнится, но оно выполнилось")
                     .isFalse();
         };
     }
 
     /**
-     * Возвращает составную проверку, которая проходит, если выполнено хотя бы n из переданных проверок.
+     * Возвращает проверку, которая проходит, если **хотя бы n** из переданных условий выполняются.
      *
-     * @param n          минимальное число проверок, которые должны пройти
-     * @param conditions набор проверок
+     * @param n          минимальное число успешных условий (>0)
+     * @param conditions набор условий; не может быть null или пустым
      * @param <T>        тип сущности
-     * @return составная проверка
+     * @return составное условие nOf
+     * @throws NullPointerException     если массив или любой элемент равен null
+     * @throws IllegalArgumentException если массив пуст или n < 1
      */
     @SafeVarargs
     public static <T> Condition<T> nOf(int n, Condition<T>... conditions) {
+        validateCountArgs(n, conditions, "nOf", true);
         return entity -> {
-            long successCount = Arrays.stream(conditions)
-                    .filter(condition -> passes(condition, entity))
-                    .count();
-            Assertions.assertThat(successCount)
-                    .as("Ожидалось, что хотя бы %d условий будут выполнены, но выполнено %d", n, successCount)
+            long passed = countPassed(entity, conditions);
+            Assertions.assertThat(passed)
+                    .as("Ожидалось, что минимум %d условий выполнится, но выполнено %d", n, passed)
                     .isGreaterThanOrEqualTo(n);
         };
     }
 
     /**
-     * Возвращает составную проверку, которая проходит, если выполнено ровно n из переданных проверок.
+     * Возвращает проверку, которая проходит, если **ровно n** из переданных условий выполняются.
      *
-     * @param n          точное число проверок, которые должны пройти
-     * @param conditions набор проверок
+     * @param n          точное число успешных условий (>=0)
+     * @param conditions набор условий; не может быть null или пустым
      * @param <T>        тип сущности
-     * @return составная проверка
+     * @return составное условие exactlyNOf
+     * @throws NullPointerException     если массив или любой элемент равен null
+     * @throws IllegalArgumentException если массив пуст или n < 0
      */
     @SafeVarargs
     public static <T> Condition<T> exactlyNOf(int n, Condition<T>... conditions) {
+        validateCountArgs(n, conditions, "exactlyNOf", false);
         return entity -> {
-            long successCount = Arrays.stream(conditions)
-                    .filter(condition -> passes(condition, entity))
-                    .count();
-            Assertions.assertThat(successCount)
-                    .as("Ожидалось, что ровно %d условий будут выполнены, но выполнено %d", n, successCount)
+            long passed = countPassed(entity, conditions);
+            Assertions.assertThat(passed)
+                    .as("Ожидалось, что ровно %d условий выполнится, но выполнено %d", n, passed)
                     .isEqualTo(n);
         };
     }
 
     /**
-     * Возвращает составную проверку, которая проходит, если выполнено не более n из переданных проверок.
+     * Возвращает проверку, которая проходит, если **не более n** из переданных условий выполняются.
      *
-     * @param n          максимальное число проверок, которые должны пройти
-     * @param conditions набор проверок
+     * @param n          максимальное число успешных условий (>=0)
+     * @param conditions набор условий; не может быть null или пустым
      * @param <T>        тип сущности
-     * @return составная проверка
+     * @return составное условие atMostNOf
+     * @throws NullPointerException     если массив или любой элемент равен null
+     * @throws IllegalArgumentException если массив пуст или n < 0
      */
     @SafeVarargs
     public static <T> Condition<T> atMostNOf(int n, Condition<T>... conditions) {
+        validateCountArgs(n, conditions, "atMostNOf", false);
         return entity -> {
-            long successCount = Arrays.stream(conditions)
-                    .filter(condition -> passes(condition, entity))
-                    .count();
-            Assertions.assertThat(successCount)
-                    .as("Ожидалось, что не более %d условий будут выполнены, но выполнено %d", n, successCount)
+            long passed = countPassed(entity, conditions);
+            Assertions.assertThat(passed)
+                    .as("Ожидалось, что не более %d условий выполнится, но выполнено %d", n, passed)
                     .isLessThanOrEqualTo(n);
         };
     }
 
     /**
-     * Возвращает составную проверку, которая проходит, если ровно одна из переданных проверок пройдена (исключающее ИЛИ).
+     * Возвращает проверку, которая проходит, если **ровно одно** из переданных условий выполняется.
      *
-     * @param conditions набор проверок
+     * @param conditions набор условий; не может быть null или пустым
      * @param <T>        тип сущности
-     * @return составная проверка
+     * @return составное условие XOR
+     * @throws NullPointerException     если массив или любой элемент равен null
+     * @throws IllegalArgumentException если массив пуст
      */
     @SafeVarargs
     public static <T> Condition<T> xor(Condition<T>... conditions) {
+        validateConditions(conditions, "XOR");
         return entity -> {
-            long successCount = Arrays.stream(conditions)
-                    .filter(condition -> passes(condition, entity))
-                    .count();
-            Assertions.assertThat(successCount)
-                    .as("Ожидалось, что ровно одно условие будет выполнено, но выполнено %d", successCount)
+            long passed = countPassed(entity, conditions);
+            Assertions.assertThat(passed)
+                    .as("Ожидалось, что ровно одно условие выполнится, но выполнено %d", passed)
                     .isEqualTo(1);
         };
     }
 
     /**
-     * Вспомогательный метод для проверки, проходит ли переданная проверка для заданной сущности.
+     * Проверяет массив условий на null, пустоту и наличие null-элементов.
      *
-     * @param condition проверка
-     * @param entity    сущность
+     * @param conditions набор условий
+     * @param name       имя операции (для сообщений об ошибке)
+     * @param <T>        тип сущности
+     * @throws NullPointerException     если массив или любой элемент равен null
+     * @throws IllegalArgumentException если массив пуст
+     */
+    private static <T> void validateConditions(Condition<T>[] conditions, String name) {
+        Objects.requireNonNull(conditions, name + ": массив условий не может быть null");
+        if (conditions.length == 0) {
+            throw new IllegalArgumentException(name + " требует хотя бы одного условия");
+        }
+        Stream.of(conditions).forEach(cond ->
+                Objects.requireNonNull(cond, name + ": элемент массива условий не может быть null")
+        );
+    }
+
+    /**
+     * Проверяет корректность аргументов для методов с подсчётом n.
+     *
+     * @param n             число успешных условий
+     * @param conditions    массив условий
+     * @param name          имя операции
+     * @param requireNAtOne если true, то n >= 1, иначе n >= 0
+     * @param <T>           тип сущности
+     */
+    private static <T> void validateCountArgs(int n, Condition<T>[] conditions, String name, boolean requireNAtOne) {
+        validateConditions(conditions, name);
+        if (requireNAtOne && n < 1) {
+            throw new IllegalArgumentException(name + ": n должно быть >= 1");
+        }
+        if (!requireNAtOne && n < 0) {
+            throw new IllegalArgumentException(name + ": n должно быть >= 0");
+        }
+    }
+
+    /**
+     * Подсчитывает, сколько условий прошло успешно.
+     *
+     * @param entity     тестируемая сущность
+     * @param conditions массив условий
+     * @param <T>        тип сущности
+     * @return количество успешных проверок
+     */
+    private static <T> long countPassed(T entity, Condition<T>[] conditions) {
+        return Stream.of(conditions).filter(cond -> passes(cond, entity)).count();
+    }
+
+    /**
+     * Проверяет одно условие, возвращает true, если оно не бросило AssertionError.
+     *
+     * @param condition условие; не может быть null
+     * @param entity    тестируемая сущность
      * @param <T>       тип сущности
-     * @return {@code true}, если проверка прошла, иначе {@code false}
+     * @return true, если проверка успешна, иначе false
      */
     private static <T> boolean passes(Condition<T> condition, T entity) {
+        Objects.requireNonNull(condition, "Условие не может быть null");
         try {
             condition.check(entity);
             return true;
-        } catch (AssertionError e) {
+        } catch (AssertionError ignored) {
             return false;
         }
     }
