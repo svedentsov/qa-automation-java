@@ -1,15 +1,9 @@
 package db.matcher;
 
 import db.matcher.assertions.CompositeAssertions;
-import db.matcher.assertions.NumberAssertions.NumberCondition;
-import db.matcher.assertions.PropertyAssertions.PropertyCondition;
-import db.matcher.assertions.StringAssertions.StringCondition;
-import db.matcher.assertions.TimeAssertions.TimeCondition;
 import lombok.experimental.UtilityClass;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -28,59 +22,10 @@ public class DbMatcher {
      * @param <R>    тип свойства
      * @return условие для проверки сущности
      */
-    public static <T, R> Condition<T> value(Function<T, R> getter, Condition<R> cond) {
+    public static <T, R> Condition<T> value(Function<? super T, ? extends R> getter, Condition<? super R> cond) {
+        Objects.requireNonNull(getter, "getter не может быть null");
         Objects.requireNonNull(cond, "condition не может быть null");
-        return valueInternal(getter, cond::check);
-    }
-
-    /**
-     * Создаёт условие для проверки строкового свойства сущности.
-     *
-     * @param getter функция для получения строки из сущности
-     * @param sc     условие для проверки строки
-     * @param <T>    тип сущности
-     * @return условие для проверки сущности
-     */
-    public static <T> Condition<T> value(Function<T, String> getter, StringCondition sc) {
-        return valueInternal(getter, sc::check);
-    }
-
-    /**
-     * Создаёт условие для проверки числового свойства сущности.
-     *
-     * @param getter функция для получения числа из сущности
-     * @param nc     условие для проверки числа
-     * @param <T>    тип сущности
-     * @param <N>    тип числа, который наследуется от Number и реализует Comparable
-     * @return условие для проверки сущности
-     */
-    public static <T, N extends Number & Comparable<N>> Condition<T> value(Function<T, N> getter, NumberCondition<N> nc) {
-        return valueInternal(getter, nc::check);
-    }
-
-    /**
-     * Создаёт условие для проверки свойства типа LocalDateTime сущности.
-     *
-     * @param getter функция для получения LocalDateTime из сущности
-     * @param tc     условие для проверки даты и времени
-     * @param <T>    тип сущности
-     * @return условие для проверки сущности
-     */
-    public static <T> Condition<T> value(Function<T, LocalDateTime> getter, TimeCondition tc) {
-        return valueInternal(getter, tc::check);
-    }
-
-    /**
-     * Создаёт условие для проверки свойства сущности с помощью пользовательского условия.
-     *
-     * @param getter функция для получения свойства из сущности
-     * @param pc     пользовательское условие для проверки свойства
-     * @param <T>    тип сущности
-     * @param <V>    тип свойства
-     * @return условие для проверки сущности
-     */
-    public static <T, V> Condition<T> value(Function<T, V> getter, PropertyCondition<V> pc) {
-        return valueInternal(getter, pc::check);
+        return entity -> cond.check(getter.apply(entity));
     }
 
     /**
@@ -130,21 +75,5 @@ public class DbMatcher {
     @SafeVarargs
     public static <T> Condition<T> nOf(int n, Condition<T>... conditions) {
         return CompositeAssertions.nOf(n, conditions);
-    }
-
-    /**
-     * Внутренний универсальный метод для создания условия на основе функции получения свойства и потребителя,
-     * выполняющего проверку.
-     *
-     * @param getter  функция для получения свойства из сущности
-     * @param checker потребитель, выполняющий проверку свойства
-     * @param <T>     тип сущности
-     * @param <V>     тип свойства
-     * @return условие для проверки сущности
-     */
-    private static <T, V> Condition<T> valueInternal(Function<T, V> getter, Consumer<V> checker) {
-        Objects.requireNonNull(getter, "getter не может быть null");
-        Objects.requireNonNull(checker, "checker не может быть null");
-        return entity -> checker.accept(getter.apply(entity));
     }
 }
