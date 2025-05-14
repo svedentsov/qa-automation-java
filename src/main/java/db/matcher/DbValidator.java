@@ -1,6 +1,7 @@
 package db.matcher;
 
 import db.matcher.assertions.CompositeAssertions;
+import db.matcher.assertions.ListAssertions.ListCondition;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,7 +51,7 @@ public final class DbValidator<T> {
     public final DbValidator<T> shouldHave(@NonNull Condition<T>... conditions) {
         Condition<T> composite = CompositeAssertions.and(conditions);
         log.debug("Проверка условия '{}' для {} сущностей", composite, entities.size());
-        entities.forEach(entity -> executeCheck(() -> composite.check(entity), composite, "сущности"));
+        entities.forEach(entity -> executeCheck(() -> composite.check(entity), composite, "сущность"));
         return this;
     }
 
@@ -64,9 +65,27 @@ public final class DbValidator<T> {
     @SafeVarargs
     public final DbValidator<T> shouldHaveList(@NonNull Condition<List<T>>... conditions) {
         Condition<List<T>> composite = CompositeAssertions.and(conditions);
-        log.debug("Проверка LIST-условий '{}' для {} сущностей", composite, entities.size());
-        executeCheck(() -> composite.check(entities), composite, "сущности");
+        log.debug("Проверка списка условий '{}' для {} сущностей", composite, entities.size());
+        executeCheck(() -> composite.check(entities), composite, "список сущностей");
         return this;
+    }
+
+    @SafeVarargs
+    public final DbValidator<T> shouldHaveNew(@NonNull Condition<?>... conditions) {
+        for (Condition<?> cond : conditions) {
+            if (cond instanceof ListCondition<?>) {
+                //noinspection unchecked
+                executeCheck(() -> ((Condition<List<T>>) cond).check(entities), cond, "список");
+            } else {
+                //noinspection unchecked
+                executeCheckEach((Condition<T>) cond);
+            }
+        }
+        return this;
+    }
+
+    private void executeCheckEach(Condition<T> cond) {
+        entities.forEach(e -> executeCheck(() -> cond.check(e), cond, "сущность"));
     }
 
     /**

@@ -17,6 +17,7 @@ import java.util.Map;
 import static io.restassured.http.ContentType.*;
 import static rest.matcher.RestMatcher.*;
 import static rest.matcher.assertions.BodyAssertions.*;
+import static rest.matcher.assertions.CompositeAssertions.*;
 import static rest.matcher.assertions.CookieAssertions.*;
 import static rest.matcher.assertions.HeaderAssertions.*;
 import static rest.matcher.assertions.StatusAssertions.*;

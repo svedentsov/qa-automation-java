@@ -1,6 +1,7 @@
 package db.matcher.assertions;
 
 import db.matcher.Condition;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 
@@ -13,7 +14,14 @@ import java.util.function.Function;
  * Утилитный класс для проверок коллекции сущностей.
  */
 @UtilityClass
-public class EntityAssertions {
+public class ListAssertions {
+
+    /**
+     * Маркерный функциональный интерфейс для проверок списка сущностей.
+     */
+    @FunctionalInterface
+    public interface ListCondition<T> extends Condition<List<T>> {
+    }
 
     /**
      * Проверяет, что список сущностей не пуст.
@@ -22,7 +30,7 @@ public class EntityAssertions {
      * @return условие: список не должен быть пустым
      * @throws NullPointerException если список null
      */
-    public static <T> Condition<List<T>> exists() {
+    public static <T> ListCondition<T> exists() {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             Assertions.assertThat(list)
@@ -40,7 +48,7 @@ public class EntityAssertions {
      * @throws NullPointerException     если список null
      * @throws IllegalArgumentException если expected < 0
      */
-    public static <T> Condition<List<T>> countEqual(int expected) {
+    public static <T> ListCondition<T> countEqual(int expected) {
         if (expected < 0) {
             throw new IllegalArgumentException("Ожидаемое количество не может быть отрицательным");
         }
@@ -61,7 +69,7 @@ public class EntityAssertions {
      * @throws NullPointerException     если список null
      * @throws IllegalArgumentException если min < 0
      */
-    public static <T> Condition<List<T>> countGreater(int min) {
+    public static <T> ListCondition<T> countGreater(int min) {
         if (min < 0) {
             throw new IllegalArgumentException("Минимальное количество не может быть отрицательным");
         }
@@ -82,7 +90,7 @@ public class EntityAssertions {
      * @throws NullPointerException     если список null
      * @throws IllegalArgumentException если minCount < 0
      */
-    public static <T> Condition<List<T>> hasMinimumCount(int minCount) {
+    public static <T> ListCondition<T> hasMinimumCount(int minCount) {
         if (minCount < 0) {
             throw new IllegalArgumentException("Минимальное количество не может быть отрицательным");
         }
@@ -103,7 +111,7 @@ public class EntityAssertions {
      * @throws NullPointerException     если список null
      * @throws IllegalArgumentException если maxCount < 0
      */
-    public static <T> Condition<List<T>> hasMaximumCount(int maxCount) {
+    public static <T> ListCondition<T> hasMaximumCount(int maxCount) {
         if (maxCount < 0) {
             throw new IllegalArgumentException("Максимальное количество не может быть отрицательным");
         }
@@ -124,7 +132,7 @@ public class EntityAssertions {
      * @return условие: min <= размер списка <= max
      * @throws IllegalArgumentException если min > max или min<0
      */
-    public static <T> Condition<List<T>> hasSizeBetween(int min, int max) {
+    public static <T> ListCondition<T> hasSizeBetween(int min, int max) {
         if (min < 0 || max < min) {
             throw new IllegalArgumentException("Неверные границы: min=" + min + ", max=" + max);
         }
@@ -144,8 +152,7 @@ public class EntityAssertions {
      * @return условие для списка: anyMatch
      * @throws NullPointerException если список или condition null
      */
-    public static <T> Condition<List<T>> anyEntityMatches(Condition<T> condition) {
-        Objects.requireNonNull(condition, "Условие не должно быть null");
+    public static <T> ListCondition<T> anyEntityMatches(@NonNull Condition<T> condition) {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             boolean found = list.stream().anyMatch(item -> {
@@ -170,8 +177,7 @@ public class EntityAssertions {
      * @return условие для списка: noneMatch
      * @throws NullPointerException если список или condition null
      */
-    public static <T> Condition<List<T>> noMatches(Condition<T> condition) {
-        Objects.requireNonNull(condition, "Условие не должно быть null");
+    public static <T> ListCondition<T> noMatches(@NonNull Condition<T> condition) {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             boolean any = list.stream().anyMatch(item -> {
@@ -195,7 +201,7 @@ public class EntityAssertions {
      * @return условие: distinct count == size
      * @throws NullPointerException если список null
      */
-    public static <T> Condition<List<T>> entitiesAreUnique() {
+    public static <T> ListCondition<T> entitiesAreUnique() {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             long distinct = list.stream().distinct().count();
@@ -213,8 +219,7 @@ public class EntityAssertions {
      * @return условие: list[i] <= list[i+1] для всех i
      * @throws NullPointerException если список или comparator null
      */
-    public static <T> Condition<List<T>> isSorted(Comparator<T> comparator) {
-        Objects.requireNonNull(comparator, "Компаратор не должен быть null");
+    public static <T> ListCondition<T> isSorted(@NonNull Comparator<T> comparator) {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             for (int i = 0; i + 1 < list.size(); i++) {
@@ -236,8 +241,7 @@ public class EntityAssertions {
      * @return условие для списка: все элементы имеют property == expectedValue
      * @throws NullPointerException если список или getter null
      */
-    public static <T> Condition<List<T>> valuesEqual(Function<T, ?> getter, Object expectedValue) {
-        Objects.requireNonNull(getter, "Getter не должен быть null");
+    public static <T> ListCondition<T> valuesEqual(@NonNull Function<T, ?> getter, Object expectedValue) {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             list.forEach(item -> {
@@ -257,8 +261,7 @@ public class EntityAssertions {
      * @return условие: distinct(property) == size
      * @throws NullPointerException если список или getter null
      */
-    public static <T> Condition<List<T>> entitiesPropertyAreDistinct(Function<T, ?> getter) {
-        Objects.requireNonNull(getter, "Getter не должен быть null");
+    public static <T> ListCondition<T> entitiesPropertyAreDistinct(@NonNull Function<T, ?> getter) {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             long distinct = list.stream()
@@ -278,7 +281,7 @@ public class EntityAssertions {
      * @return условие: все элементы != null
      * @throws NullPointerException если список null
      */
-    public static <T> Condition<List<T>> entitiesContainNoNulls() {
+    public static <T> ListCondition<T> entitiesContainNoNulls() {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             Assertions.assertThat(list)
@@ -296,9 +299,9 @@ public class EntityAssertions {
      * @return условие: actualOrder == expectedOrder
      * @throws NullPointerException если список или getter или expectedOrder null
      */
-    public static <T> Condition<List<T>> entitiesMatchOrder(Function<T, ? extends Comparable<?>> getter, List<?> expectedOrder) {
-        Objects.requireNonNull(getter, "Getter не должен быть null");
-        Objects.requireNonNull(expectedOrder, "Ожидаемый порядок не должен быть null");
+    public static <T> ListCondition<T> entitiesMatchOrder(
+            @NonNull Function<T, ? extends Comparable<?>> getter,
+            @NonNull List<?> expectedOrder) {
         return list -> {
             Objects.requireNonNull(list, "Список сущностей не должен быть null");
             List<?> actual = list.stream().map(getter).toList();

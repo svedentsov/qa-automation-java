@@ -11,9 +11,11 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import static db.matcher.DbMatcher.*;
+import static db.matcher.DbMatcher.records;
+import static db.matcher.DbMatcher.value;
 import static db.matcher.assertions.CollectionAssertions.*;
-import static db.matcher.assertions.EntityAssertions.*;
+import static db.matcher.assertions.CompositeAssertions.*;
+import static db.matcher.assertions.ListAssertions.*;
 import static db.matcher.assertions.NumberAssertions.*;
 import static db.matcher.assertions.PropertyAssertions.*;
 import static db.matcher.assertions.StringAssertions.*;
@@ -29,7 +31,7 @@ import static db.matcher.assertions.TimeAssertions.*;
 public class DbExample {
 
     public void validateEntities(List<MyEntity> entities) {
-        new DbValidator<>(entities).shouldHaveList(
+        new DbValidator<>(entities).shouldHaveList(records(
                 exists(), // проверка наличия хотя бы одной сущности
                 countEqual(10), // количество сущностей равно 10
                 countGreater(5), // количество сущностей больше 5
@@ -38,18 +40,17 @@ public class DbExample {
                 hasMaximumCount(15), // количество сущностей не больше 15
                 hasSizeBetween(5, 15), // размер списка находится между 5 и 15
                 entitiesContainNoNulls(), // в списке нет null-значений
-                anyEntityMatches(value(MyEntity::getStatus, equalsTo("ACTIVE"))), // в списке нет null-значений
+                anyEntityMatches(value(MyEntity::getStatus, equalsTo("ACTIVE"))), // найдена хотя бы одна ACTIVE
                 noMatches(value(MyEntity::getStatus, equalsTo("GUEST"))), // ни одна сущность не GUEST
                 valuesEqual(MyEntity::getStatus, "USER"), // все статусы равны USER
                 entitiesPropertyAreDistinct(MyEntity::getId), // все id уникальны
                 isSorted(Comparator.comparing(MyEntity::getCreationDate)), // дополнительно проверяем сортировку всего списка
-                entitiesMatchOrder(MyEntity::getStatus, Arrays.asList("NEW", "ACTIVE", "SUSPENDED", "DELETED")) // порядок статусов соответствует ожидаемому
+                entitiesMatchOrder(MyEntity::getStatus, Arrays.asList("NEW", "ACTIVE", "SUSPENDED", "DELETED"))) // порядок статусов соответствует ожидаемому
         );
     }
 
     public void validateEntity(MyEntity entity) {
         new DbValidator<>(entity).shouldHave(
-
                 // StringAssertions
                 value(MyEntity::getName, contains("Test")), // имя содержит "Test"
                 value(MyEntity::getEmail, matchesRegex("^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$")), // проверка корректного формата email
