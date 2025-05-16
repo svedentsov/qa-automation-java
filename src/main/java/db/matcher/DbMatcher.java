@@ -1,10 +1,7 @@
 package db.matcher;
 
-import db.matcher.assertions.CompositeAssertions;
-import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -28,11 +25,5 @@ public class DbMatcher {
         Objects.requireNonNull(getter, "getter не может быть null");
         Objects.requireNonNull(cond, "condition не может быть null");
         return entity -> cond.check(getter.apply(entity));
-    }
-
-    @SafeVarargs
-    public static <T> Condition<List<T>> records(@NonNull Condition<List<T>>... conditions) {
-        Objects.requireNonNull(conditions, "records: conditions не могут быть null");
-        return CompositeAssertions.and(conditions);
     }
 }

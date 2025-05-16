@@ -1,4 +1,4 @@
-package kafka.matcher;
+package core.matcher;
 
 /**
  * Функциональный интерфейс для проверки одной сущности.

@@ -11,6 +11,8 @@ import java.util.List;
 /**
  * Класс для валидации одной или нескольких записей Apache Kafka с применением заданных проверок.
  * Все записи объединяются в единый список, что позволяет выполнять проверки единообразно.
+ *
+ * @param <T> тип записи для валидации
  */
 @Slf4j
 public final class KafkaValidator<T> {
@@ -46,22 +48,34 @@ public final class KafkaValidator<T> {
      */
     @SafeVarargs
     public final KafkaValidator<T> shouldHave(@NonNull Condition<T>... conditions) {
-        Condition<T> compositeCondition = CompositeAssertions.and(conditions);
-        log.debug("Проверка условия '{}' для {} записей", compositeCondition, records.size());
-        execute(() -> compositeCondition.checkAll(records), compositeCondition, "records");
+        Condition<T> composite = CompositeAssertions.and(conditions);
+        log.debug("Проверка условия '{}' для {} записей", composite, records.size());
+        records.forEach(record -> executeCheck(() -> composite.check(record), composite, "запись"));
         return this;
     }
 
-    private void execute(Runnable check, Object condition, String recordLabel) {
+    public final KafkaValidator<T> shouldHaveList(@NonNull Condition<List<T>>... conditions) {
+        Condition<List<T>> composite = CompositeAssertions.and(conditions);
+        log.debug("Проверка списка условий '{}' для {} записей", composite, records.size());
+        executeCheck(() -> composite.check(records), composite, "список записей");
+        return this;
+    }
+
+    /**
+     * Выполняет проверку и обрабатывает исключения, возникающие при выполнении условия.
+     *
+     * @param check       проверка, представленная в виде {@code Runnable}
+     * @param condition   условие, которое проверяется (для формирования сообщения об ошибке)
+     * @param recordLabel идентификатор или описание записи (или группы записей)
+     */
+    private void executeCheck(Runnable check, Object condition, String recordLabel) {
         try {
             check.run();
         } catch (AssertionError error) {
-            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s",
-                    condition, recordLabel, error.getMessage());
+            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s", condition, recordLabel, error.getMessage());
             throw new ValidationException(errorMessage, error);
         } catch (Exception exception) {
-            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s",
-                    condition, recordLabel, exception.getMessage());
+            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s", condition, recordLabel, exception.getMessage());
             throw new ValidationException(errorMessage, exception);
         }
     }

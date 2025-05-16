@@ -2,10 +2,9 @@ package kafka.matcher;
 
 import com.jayway.jsonpath.JsonPath;
 import kafka.matcher.assertions.BooleanAssertions.BooleanCondition;
-import kafka.matcher.assertions.CompositeAssertions;
+import kafka.matcher.assertions.InstantAssertions.InstantCondition;
 import kafka.matcher.assertions.NumberAssertions.NumberCondition;
 import kafka.matcher.assertions.StringAssertions.StringCondition;
-import kafka.matcher.assertions.TimeAssertions.TimeCondition;
 import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -127,55 +126,9 @@ public class KafkaMatcher {
      * @param tc условие для проверки временной метки
      * @return условие для проверки временной метки записи
      */
-    public static Condition<ConsumerRecord<String, String>> timestamp(TimeCondition tc) {
+    public static Condition<ConsumerRecord<String, String>> timestamp(InstantCondition tc) {
         return property(record -> Instant.ofEpochMilli(record.timestamp()), tc::check);
     }
-
-    /**
-     * Объединяет несколько проверок в одну с помощью логической операции AND.
-     *
-     * @param conditions набор проверок для объединения
-     * @return составное условие, которое считается выполненным, если выполнены все переданные проверки
-     */
-    @SafeVarargs
-    public static Condition<ConsumerRecord<String, String>> and(Condition<ConsumerRecord<String, String>>... conditions) {
-        return CompositeAssertions.and(conditions);
-    }
-
-    /**
-     * Объединяет несколько проверок в одну с помощью логической операции OR.
-     *
-     * @param conditions набор проверок для объединения
-     * @return составное условие, которое считается выполненным, если выполнена хотя бы одна из переданных проверок
-     */
-    @SafeVarargs
-    public static Condition<ConsumerRecord<String, String>> or(Condition<ConsumerRecord<String, String>>... conditions) {
-        return CompositeAssertions.or(conditions);
-    }
-
-    /**
-     * Инвертирует результаты переданных проверок (логическая операция NOT).
-     *
-     * @param conditions набор проверок для инвертирования
-     * @return составное условие, которое считается выполненным, если ни одна из переданных проверок не выполнена
-     */
-    @SafeVarargs
-    public static Condition<ConsumerRecord<String, String>> not(Condition<ConsumerRecord<String, String>>... conditions) {
-        return CompositeAssertions.not(conditions);
-    }
-
-    /**
-     * Объединяет несколько проверок так, что хотя бы n из них должны выполниться.
-     *
-     * @param n          минимальное число проверок, которые должны выполниться
-     * @param conditions набор проверок для объединения
-     * @return составное условие, которое считается выполненным, если выполнено хотя бы n проверок
-     */
-    @SafeVarargs
-    public static Condition<ConsumerRecord<String, String>> nOf(int n, Condition<ConsumerRecord<String, String>>... conditions) {
-        return CompositeAssertions.nOf(n, conditions);
-    }
-
 
     // =================== Вспомогательные методы ===================
 

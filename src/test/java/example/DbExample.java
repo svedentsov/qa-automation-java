@@ -11,7 +11,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import static db.matcher.DbMatcher.records;
 import static db.matcher.DbMatcher.value;
 import static db.matcher.assertions.CollectionAssertions.*;
 import static db.matcher.assertions.CompositeAssertions.*;
@@ -23,15 +22,16 @@ import static db.matcher.assertions.StringAssertions.contains;
 import static db.matcher.assertions.StringAssertions.endsWith;
 import static db.matcher.assertions.StringAssertions.equalsTo;
 import static db.matcher.assertions.StringAssertions.startsWith;
-import static db.matcher.assertions.TimeAssertions.*;
+import static db.matcher.assertions.LocalDateTimeAssertions.*;
 
 /**
  * Пример класса, демонстрирующего использование валидатора и всех доступных матчеров.
  */
 public class DbExample {
 
+    // Пример использования валидатора для списка сущностей
     public void validateEntities(List<MyEntity> entities) {
-        new DbValidator<>(entities).shouldHaveList(records(
+        new DbValidator<>(entities).shouldHaveList(
                 exists(), // проверка наличия хотя бы одной сущности
                 countEqual(10), // количество сущностей равно 10
                 countGreater(5), // количество сущностей больше 5
@@ -45,10 +45,11 @@ public class DbExample {
                 valuesEqual(MyEntity::getStatus, "USER"), // все статусы равны USER
                 entitiesPropertyAreDistinct(MyEntity::getId), // все id уникальны
                 isSorted(Comparator.comparing(MyEntity::getCreationDate)), // дополнительно проверяем сортировку всего списка
-                entitiesMatchOrder(MyEntity::getStatus, Arrays.asList("NEW", "ACTIVE", "SUSPENDED", "DELETED"))) // порядок статусов соответствует ожидаемому
+                entitiesMatchOrder(MyEntity::getStatus, Arrays.asList("NEW", "ACTIVE", "SUSPENDED", "DELETED")) // порядок статусов соответствует ожидаемому
         );
     }
 
+    // Пример использования валидатора для отдельной сущности
     public void validateEntity(MyEntity entity) {
         new DbValidator<>(entity).shouldHave(
                 // StringAssertions

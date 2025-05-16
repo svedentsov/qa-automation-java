@@ -1,7 +1,6 @@
 package db.matcher;
 
 import db.matcher.assertions.CompositeAssertions;
-import db.matcher.assertions.ListAssertions.ListCondition;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -9,83 +8,65 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Класс для валидации одной или нескольких сущностей с применением заданных условий.
- * Все сущности объединяются в один список, что позволяет единообразно применять проверки.
+ * Класс для валидации одной или нескольких записей с применением заданных условий.
+ * Все записи объединяются в один список, что позволяет единообразно применять проверки.
  *
- * @param <T> тип сущности
+ * @param <T> тип записи для валидации
  */
 @Slf4j
 public final class DbValidator<T> {
 
     /**
-     * Список сущностей для валидации.
+     * Список записей для валидации.
      */
-    private final List<T> entities;
+    private final List<T> records;
 
     /**
-     * Конструктор для валидации единственной сущности.
+     * Конструктор для валидации единственной записи.
      *
-     * @param entity сущность для валидации
+     * @param record запись для валидации
      */
-    public DbValidator(@NonNull T entity) {
-        this(Collections.singletonList(entity));
+    public DbValidator(@NonNull T record) {
+        this(Collections.singletonList(record));
     }
 
     /**
-     * Конструктор для валидации списка сущностей.
+     * Конструктор для валидации списка записей.
      *
-     * @param entities список сущностей для валидации
+     * @param records список записей для валидации
      */
-    public DbValidator(@NonNull List<T> entities) {
-        this.entities = entities;
+    public DbValidator(@NonNull List<T> records) {
+        this.records = records;
     }
 
     /**
-     * Применяет переданные условия проверки ко всем сущностям.
+     * Применяет переданные условия проверки ко всем записям.
      * Все условия объединяются с помощью логической операции И (AND).
      *
-     * @param conditions набор условий проверки сущностей
+     * @param conditions набор условий проверки записей
      * @return текущий экземпляр DbValidator для дальнейшей цепочки вызовов
      */
     @SafeVarargs
     public final DbValidator<T> shouldHave(@NonNull Condition<T>... conditions) {
         Condition<T> composite = CompositeAssertions.and(conditions);
-        log.debug("Проверка условия '{}' для {} сущностей", composite, entities.size());
-        entities.forEach(entity -> executeCheck(() -> composite.check(entity), composite, "сущность"));
+        log.debug("Проверка условия '{}' для {} записей", composite, records.size());
+        records.forEach(record -> executeCheck(() -> composite.check(record), composite, "запись"));
         return this;
     }
 
     /**
-     * Применяет переданные условия проверки ко всем сущностям в виде списка.
+     * Применяет переданные условия проверки ко всем записям в виде списка.
      * Все условия объединяются с помощью логической операции И (AND).
      *
-     * @param conditions набор условий проверки сущностей в виде списка
+     * @param conditions набор условий проверки записей в виде списка
      * @return текущий экземпляр DbValidator для дальнейшей цепочки вызовов
      */
     @SafeVarargs
     public final DbValidator<T> shouldHaveList(@NonNull Condition<List<T>>... conditions) {
         Condition<List<T>> composite = CompositeAssertions.and(conditions);
-        log.debug("Проверка списка условий '{}' для {} сущностей", composite, entities.size());
-        executeCheck(() -> composite.check(entities), composite, "список сущностей");
+        log.debug("Проверка списка условий '{}' для {} записей", composite, records.size());
+        executeCheck(() -> composite.check(records), composite, "список записей");
         return this;
-    }
-
-    @SafeVarargs
-    public final DbValidator<T> shouldHaveNew(@NonNull Condition<?>... conditions) {
-        for (Condition<?> cond : conditions) {
-            if (cond instanceof ListCondition<?>) {
-                //noinspection unchecked
-                executeCheck(() -> ((Condition<List<T>>) cond).check(entities), cond, "список");
-            } else {
-                //noinspection unchecked
-                executeCheckEach((Condition<T>) cond);
-            }
-        }
-        return this;
-    }
-
-    private void executeCheckEach(Condition<T> cond) {
-        entities.forEach(e -> executeCheck(() -> cond.check(e), cond, "сущность"));
     }
 
     /**
@@ -93,16 +74,16 @@ public final class DbValidator<T> {
      *
      * @param check       проверка, представленная в виде {@code Runnable}
      * @param condition   условие, которое проверяется (для формирования сообщения об ошибке)
-     * @param entityLabel идентификатор или описание сущности (или группы сущностей)
+     * @param recordLabel идентификатор или описание записи (или группы записей)
      */
-    private void executeCheck(Runnable check, Object condition, String entityLabel) {
+    private void executeCheck(Runnable check, Object condition, String recordLabel) {
         try {
             check.run();
         } catch (AssertionError error) {
-            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s", condition, entityLabel, error.getMessage());
+            String errorMessage = String.format("Условие %s не выполнено для [%s]: %s", condition, recordLabel, error.getMessage());
             throw new AssertionError(errorMessage, error);
         } catch (Exception exception) {
-            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s", condition, entityLabel, exception.getMessage());
+            String errorMessage = String.format("Ошибка при проверке условия %s для [%s]: %s", condition, recordLabel, exception.getMessage());
             throw new RuntimeException(errorMessage, exception);
         }
     }

@@ -84,7 +84,7 @@ public class StatusAssertions {
      *
      * @return условие для проверки успешного кода состояния
      */
-    public static StatusCondition isSuccessful2xx() {
+    public static StatusCondition statusIsSuccessful2xx() {
         return response -> {
             int code = response.getStatusCode();
             Assertions.assertThat(code)
@@ -98,7 +98,7 @@ public class StatusAssertions {
      *
      * @return условие для проверки кода состояния перенаправления (3xx)
      */
-    public static StatusCondition isRedirect3xx() {
+    public static StatusCondition statusIsRedirect3xx() {
         return response -> {
             int code = response.getStatusCode();
             Assertions.assertThat(code)
@@ -112,7 +112,7 @@ public class StatusAssertions {
      *
      * @return условие для проверки кода состояния ошибки клиента
      */
-    public static StatusCondition isClientError4xx() {
+    public static StatusCondition statusIsClientError4xx() {
         return response -> {
             int code = response.getStatusCode();
             Assertions.assertThat(code)
@@ -126,7 +126,7 @@ public class StatusAssertions {
      *
      * @return условие для проверки кода состояния ошибки сервера
      */
-    public static StatusCondition isServerError5xx() {
+    public static StatusCondition statusIsServerError5xx() {
         return response -> {
             int code = response.getStatusCode();
             Assertions.assertThat(code)

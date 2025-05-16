@@ -29,7 +29,6 @@ public class RestValidator {
     public RestValidator shouldHave(Condition... conditions) {
         validateConditions(conditions);
         for (Condition condition : conditions) {
-            log.debug("Проверка условия: {}", condition);
             condition.check(response);
         }
         return this;
