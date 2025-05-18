@@ -1,8 +1,8 @@
 package kafka.helper;
 
+import core.matcher.Condition;
 import kafka.enums.ContentType;
 import kafka.factory.KafkaServiceFactory;
-import kafka.matcher.Condition;
 import kafka.matcher.KafkaValidator;
 import kafka.model.Record;
 import kafka.service.KafkaConsumerService;
@@ -364,7 +364,7 @@ public class KafkaExecutor {
      */
     private void validateProducer() {
         if (Objects.isNull(producer)) {
-            throw new IllegalStateException("Продюсер не установлен. Установите его с помощью метода setProducerType().");
+            throw new IllegalStateException("Продюсер не установлен. Установите его с помощью метода 'setProducerType()'.");
         }
     }
 
@@ -375,7 +375,7 @@ public class KafkaExecutor {
      */
     private void validateConsumer() {
         if (Objects.isNull(consumer)) {
-            throw new IllegalStateException("Консьюмер не установлен. Установите его с помощью метода setConsumerType().");
+            throw new IllegalStateException("Консьюмер не установлен. Установите его с помощью метода 'setConsumerType()'.");
         }
     }
 

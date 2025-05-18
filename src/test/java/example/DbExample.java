@@ -9,43 +9,63 @@ import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
+import static core.matcher.assertions.CollectionAssertions.*;
+import static core.matcher.assertions.CompositeAssertions.*;
+import static core.matcher.assertions.ListAssertions.*;
+import static core.matcher.assertions.LocalDateTimeAssertions.*;
+import static core.matcher.assertions.NumberAssertions.*;
+import static core.matcher.assertions.PropertyAssertions.*;
+import static core.matcher.assertions.StringAssertions.*;
+import static core.matcher.assertions.StringAssertions.contains;
+import static core.matcher.assertions.StringAssertions.endsWith;
+import static core.matcher.assertions.StringAssertions.startsWith;
 import static db.matcher.DbMatcher.value;
-import static db.matcher.assertions.CollectionAssertions.*;
-import static db.matcher.assertions.CompositeAssertions.*;
-import static db.matcher.assertions.ListAssertions.*;
-import static db.matcher.assertions.NumberAssertions.*;
-import static db.matcher.assertions.PropertyAssertions.*;
-import static db.matcher.assertions.StringAssertions.*;
-import static db.matcher.assertions.StringAssertions.contains;
-import static db.matcher.assertions.StringAssertions.endsWith;
-import static db.matcher.assertions.StringAssertions.equalsTo;
-import static db.matcher.assertions.StringAssertions.startsWith;
-import static db.matcher.assertions.LocalDateTimeAssertions.*;
 
 /**
  * Пример класса, демонстрирующего использование валидатора и всех доступных матчеров.
  */
 public class DbExample {
 
-    // Пример использования валидатора для списка сущностей
+    /**
+     * Валидация списка сущностей с применением различных проверок из ListAssertions.
+     *
+     * @param entities список сущностей
+     */
     public void validateEntities(List<MyEntity> entities) {
         new DbValidator<>(entities).shouldHaveList(
-                exists(), // проверка наличия хотя бы одной сущности
-                countEqual(10), // количество сущностей равно 10
-                countGreater(5), // количество сущностей больше 5
-                entitiesAreUnique(), // проверка уникальности всех сущностей
-                hasMinimumCount(5), // количество сущностей не меньше 5
-                hasMaximumCount(15), // количество сущностей не больше 15
-                hasSizeBetween(5, 15), // размер списка находится между 5 и 15
-                entitiesContainNoNulls(), // в списке нет null-значений
-                anyEntityMatches(value(MyEntity::getStatus, equalsTo("ACTIVE"))), // найдена хотя бы одна ACTIVE
-                noMatches(value(MyEntity::getStatus, equalsTo("GUEST"))), // ни одна сущность не GUEST
-                valuesEqual(MyEntity::getStatus, "USER"), // все статусы равны USER
+                allMatch(value(MyEntity::getType, equalToStr("STANDARD"))), // все STANDARD
+                anyMatch(value(MyEntity::getStatus, equalToStr("ACTIVE"))), // хотя бы один ACTIVE
+                noneMatch(value(MyEntity::getStatus, equalToStr("DELETED"))), // ни одного DELETED
+                exactlyMatches(value(MyEntity::getId, equalsTo(true)), 3), // ровно 3 true-флага
+                atLeastMatches(value(MyEntity::getId, equalsTo(false)), 2), // минимум 2 false-флага
+                atMostMatches(value(MyEntity::getId, equalsTo(false)), 5), // не более 5 false-флагов
+                valuesEqual(MyEntity::getType, "STANDARD"), // все type == "STANDARD"
+                isNotEmpty(), // список не пуст
+                noNulls(), // ни один элемент списка не null
+                countEqual(10), // ровно 10 элементов
+                countGreaterThan(5), // больше 5 элементов
+                countLessThan(20), // меньше 20 элементов
+                hasSizeBetween(5, 15), // размер между 5 и 15 включительно
+                isSorted(Comparator.comparing(MyEntity::getId)), // сортировка по id
+                isSortedDescending(Comparator.comparing(MyEntity::getName)), // убывающая по имени
+                containsElement(entities.get(0)), // содержит первый элемент
+                containsAllElements(entities.get(0), entities.get(1)), // содержит оба элемента
+                containsOnly(entities.get(0), entities.get(1)), // только эти два элемента (в любом порядке)
+                containsExactly(Arrays.asList(entities.get(0), entities.get(1))), // точно в этом порядке
+                containsExactlyInAnyOrder(Arrays.asList(entities.get(1), entities.get(0))), // точно, но порядок не важен
+                entitiesAreUnique(), // все элементы уникальны
+                hasDuplicates(), // есть хотя бы один дубликат
+                distinctBy(MyEntity::getAge), // уникальность по полю category
+                sumEqual(MyEntity::getScore, 250.0), // сумма всех score == 250
+                averageEqual(MyEntity::getScore, 25.0), // среднее значение score == 25
                 entitiesPropertyAreDistinct(MyEntity::getId), // все id уникальны
-                isSorted(Comparator.comparing(MyEntity::getCreationDate)), // дополнительно проверяем сортировку всего списка
-                entitiesMatchOrder(MyEntity::getStatus, Arrays.asList("NEW", "ACTIVE", "SUSPENDED", "DELETED")) // порядок статусов соответствует ожидаемому
+                groupedBySize(MyEntity::getStatus, new HashMap<>() {{ // карта ожидаемых размеров групп по статусу
+                    put("ACTIVE", 2); // два ACTIVE
+                    put("INACTIVE", 3); // три INACTIVE
+                }})
         );
     }
 
@@ -67,7 +87,6 @@ public class DbExample {
                 value(MyEntity::getType, isLowerCase()), // тип записан строчными буквами
                 value(MyEntity::getDescription, startsAndEndsWith("*")), // описание начинается и заканчивается символом "*"
                 value(MyEntity::getName, hasWordCount(2)), // имя состоит ровно из 2 слов
-
                 // NumberAssertions
                 value(MyEntity::getAge, equalTo(25)), // возраст равен 25
                 value(MyEntity::getAge, inRange(20, 30)), // возраст находится в диапазоне от 20 до 30
@@ -82,7 +101,6 @@ public class DbExample {
                 value(MyEntity::getScore, hasAbsoluteValueGreaterThan(BigDecimal.ZERO)), // абсолютное значение score больше 0
                 value(MyEntity::getScore, approximatelyEqualRelative(BigDecimal.valueOf(100), BigDecimal.valueOf(0.1))), // score примерно равен 100 с относительной погрешностью 10%
                 value(MyEntity::getScore, isBetweenZeroAndOne()), // score находится между 0 и 1
-
                 // CollectionAssertions
                 value(MyEntity::getRoles, empty()), // список ролей пуст
                 value(MyEntity::getRoles, containsAll("ADMIN", "USER")), // список ролей содержит "ADMIN" и "USER"
@@ -92,7 +110,6 @@ public class DbExample {
                 value(MyEntity::getRoles, lengthGreaterThanOrEqual(1)), // в списке ролей не менее 1 элемента
                 value(MyEntity::getRoles, hasSameSizeAs(Arrays.asList("A", "B", "C"))), // размер списка ролей равен 3
                 value(MyEntity::getRoles, containsAtLeast(2, "ADMIN")), // "ADMIN" встречается как минимум 2 раза
-
                 // TimeAssertions
                 value(MyEntity::getCreationDate, localDateTimeAfter(LocalDateTime.now().minusDays(1))), // дата создания позже, чем вчера
                 value(MyEntity::getCreationDate, isInFuture()), // дата создания находится в будущем
@@ -108,7 +125,6 @@ public class DbExample {
                 value(MyEntity::getCreationDate, hasDayOfWeek(DayOfWeek.MONDAY)), // день недели даты создания — понедельник
                 value(MyEntity::getCreationDate, isInSameYearAs(LocalDateTime.now())), // дата создания в том же году, что и сейчас
                 value(MyEntity::getCreationDate, isAtStartOfDay()), // время даты создания соответствует началу дня
-
                 // PropertyAssertions
                 value(MyEntity::getMiddleName, isNull()), // middleName равен null
                 value(MyEntity::getRoles, isAssignableFrom(List.class)), // роли являются экземпляром List
@@ -119,10 +135,11 @@ public class DbExample {
         );
     }
 
+    // Пример использования валидатора для составных проверок
     public void validateCompositeMatchers(MyEntity entity) {
         new DbValidator<>(entity).shouldHave(
                 and( // выполняются одновременно две проверки: статус равен "ACTIVE" и имя содержит "Test"
-                        value(MyEntity::getStatus, equalsTo("ACTIVE")), // статус равен "ACTIVE"
+                        value(MyEntity::getStatus, equalToStr("ACTIVE")), // статус равен "ACTIVE"
                         value(MyEntity::getName, contains("Test")) // имя содержит "Test"
                 ),
                 or( // хотя бы одна из проверок (имя начинается с "Editor" или имя заканчивается на "User") проходит
@@ -130,11 +147,11 @@ public class DbExample {
                         value(MyEntity::getName, endsWith("User")) // имя заканчивается на "User"
                 ),
                 not( // ни одна из проверок (имя пустое или имя состоит только из цифр) не проходит
-                        value(MyEntity::getName, isEmpty()), // имя не пустое
+                        value(MyEntity::getName, isEmptyStr()), // имя не пустое
                         value(MyEntity::getName, isDigitsOnly()) // имя не состоит только из цифр
                 ),
                 nOf(2, // из трёх проверок хотя бы две проходят
-                        value(MyEntity::getStatus, equalsTo("ACTIVE")), // условие 1: статус равен "ACTIVE"
+                        value(MyEntity::getStatus, equalToStr("ACTIVE")), // условие 1: статус равен "ACTIVE"
                         value(MyEntity::getName, containsIgnoreCase("test")), // условие 2: имя содержит "test" без учёта регистра
                         value(MyEntity::getEmail, matchesRegex(".*@.*\\..*")) // условие 3: email соответствует базовому шаблону
                 )

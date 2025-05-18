@@ -1,5 +1,6 @@
 package db.matcher;
 
+import core.matcher.Condition;
 import lombok.experimental.UtilityClass;
 
 import java.util.Objects;

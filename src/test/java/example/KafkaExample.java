@@ -6,14 +6,13 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import java.time.Instant;
 import java.util.List;
 
+import static core.matcher.assertions.BooleanAssertions.isTrue;
+import static core.matcher.assertions.CompositeAssertions.and;
+import static core.matcher.assertions.InstantAssertions.before;
+import static core.matcher.assertions.NumberAssertions.greaterThan;
+import static core.matcher.assertions.NumberAssertions.lessOrEqualTo;
+import static core.matcher.assertions.StringAssertions.*;
 import static kafka.matcher.KafkaMatcher.*;
-import static kafka.matcher.assertions.BooleanAssertions.isBoolean;
-import static kafka.matcher.assertions.BooleanAssertions.isTrue;
-import static kafka.matcher.assertions.CompositeAssertions.and;
-import static kafka.matcher.assertions.InstantAssertions.before;
-import static kafka.matcher.assertions.NumberAssertions.greaterThan;
-import static kafka.matcher.assertions.NumberAssertions.lessOrEqualTo;
-import static kafka.matcher.assertions.StringAssertions.*;
 
 /**
  * Пример использования DSL для проверки записей Apache Kafka.
@@ -48,14 +47,13 @@ public class KafkaExample {
         // Пример составных условий можно оставить без изменений, если они применяются к отдельной записи
         validateRecord.shouldHave(and(
                 value(contains("John")),
-                value(contains("30"))
-        ));
+                value(contains("30"))));
 
         // Примеры условий по JSONPath и времени остаются без изменений
         validateRecord.shouldHave(
                 timestamp(before(Instant.now().plusSeconds(60))),
                 value("$.name", isString()),
-                value("$.name", equalsTo("John")),
+                value("$.name", equalToStr("John")),
                 value("$.active", isBoolean()),
                 value("$.active", isTrue()),
                 value("$.age", greaterThan(18), Integer.class),

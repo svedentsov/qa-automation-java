@@ -1,9 +1,9 @@
 package kafka.steps;
 
+import core.matcher.Condition;
 import io.qameta.allure.Step;
 import kafka.enums.ContentType;
 import kafka.helper.KafkaExecutor;
-import kafka.matcher.Condition;
 import kafka.matcher.KafkaValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -12,9 +12,9 @@ import org.apache.kafka.common.header.Header;
 
 import java.util.List;
 
+import static core.matcher.assertions.StringAssertions.*;
 import static kafka.matcher.KafkaMatcher.key;
 import static kafka.matcher.KafkaMatcher.value;
-import static kafka.matcher.assertions.StringAssertions.*;
 
 /**
  * Класс {@code KafkaSteps} предоставляет методы для взаимодействия с Kafka,
@@ -99,7 +99,7 @@ public class KafkaSteps {
 
     @Step("Проверить в топике '{topic}', что все записи имеют текст '{value}'")
     public KafkaSteps checkRecordsValueEquals(String topic, String value) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(equalsTo(value)));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(equalToStr(value)));
         return this;
     }
 
@@ -111,13 +111,13 @@ public class KafkaSteps {
 
     @Step("Проверить в топике '{topic}', что все записи содержат текста '{texts}'")
     public KafkaSteps checkRecordsContainTexts(String topic, String... texts) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(containsAll(texts)));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(containsAllStr(texts)));
         return this;
     }
 
     @Step("Проверить в топике '{topic}', что все записи имеют ключ '{key}'")
     public KafkaSteps checkRecordsKeyEquals(String topic, String key) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(key(equalsTo(key)));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(key(equalToStr(key)));
         return this;
     }
 

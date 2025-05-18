@@ -1,7 +1,8 @@
 package kafka.matcher;
 
+import core.matcher.Condition;
+import core.matcher.assertions.CompositeAssertions;
 import kafka.exception.ValidationException;
-import kafka.matcher.assertions.CompositeAssertions;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,6 +55,7 @@ public final class KafkaValidator<T> {
         return this;
     }
 
+    @SafeVarargs
     public final KafkaValidator<T> shouldHaveList(@NonNull Condition<List<T>>... conditions) {
         Condition<List<T>> composite = CompositeAssertions.and(conditions);
         log.debug("Проверка списка условий '{}' для {} записей", composite, records.size());

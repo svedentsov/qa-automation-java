@@ -1,6 +1,7 @@
 package db.matcher;
 
-import db.matcher.assertions.CompositeAssertions;
+import core.matcher.Condition;
+import core.matcher.assertions.CompositeAssertions;
 import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 

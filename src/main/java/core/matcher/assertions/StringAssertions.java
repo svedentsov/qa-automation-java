@@ -118,7 +118,7 @@ public class StringAssertions {
      *
      * @return условие проверки пустоты строки
      */
-    public static StringCondition isEmpty() {
+    public static StringCondition isEmptyStr() {
         return value -> Assertions.assertThat(value)
                 .as("Строка должна быть пустой")
                 .isEmpty();
@@ -129,7 +129,7 @@ public class StringAssertions {
      *
      * @return условие проверки, что строка не пустая
      */
-    public static StringCondition isNotEmpty() {
+    public static StringCondition isNotEmptyStr() {
         return value -> Assertions.assertThat(value)
                 .as("Строка не должна быть пустой")
                 .isNotEmpty();
@@ -151,7 +151,7 @@ public class StringAssertions {
      *
      * @param expected ожидаемое значение строки
      */
-    public static StringCondition equalsTo(String expected) {
+    public static StringCondition equalToStr(String expected) {
         return value -> Assertions.assertThat(value)
                 .as("Строка должна быть равна '%s'", expected)
                 .isEqualTo(expected);
@@ -939,7 +939,7 @@ public class StringAssertions {
      * @param min минимальная длина
      * @param max максимальная длина
      */
-    public static StringCondition lengthBetween(int min, int max) {
+    public static StringCondition lengthBetweenStr(int min, int max) {
         return value -> {
             int actualLength = value.length();
             Assertions.assertThat(actualLength)
@@ -1025,7 +1025,7 @@ public class StringAssertions {
      *
      * @param texts подстроки для поиска
      */
-    public static StringCondition containsAll(String... texts) {
+    public static StringCondition containsAllStr(String... texts) {
         return value -> Arrays.stream(texts).forEach(
                 text -> Assertions.assertThat(value)
                         .as("Строка должна содержать '%s'", text)
@@ -1256,7 +1256,7 @@ public class StringAssertions {
     /**
      * Проверяет, что строка представляет собой валидное число (Integer).
      */
-    public static StringCondition isInteger() {
+    public static StringCondition isIntegerStr() {
         return value -> {
             try {
                 Integer.parseInt(value);

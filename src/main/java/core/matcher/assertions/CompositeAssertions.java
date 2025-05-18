@@ -13,6 +13,10 @@ import java.util.stream.Stream;
 @UtilityClass
 public class CompositeAssertions {
 
+    @FunctionalInterface
+    public interface CompositeCondition<T> extends Condition<T> {
+    }
+
     /**
      * Возвращает проверку, которая проходит, если **все** переданные условия выполняются.
      *
@@ -23,7 +27,7 @@ public class CompositeAssertions {
      * @throws IllegalArgumentException если передан пустой массив условий
      */
     @SafeVarargs
-    public static <T> Condition<T> and(Condition<T>... conditions) {
+    public static <T> CompositeCondition<T> and(Condition<T>... conditions) {
         validateConditions(conditions, "AND");
         return entity -> Stream.of(conditions).forEach(cond -> cond.check(entity));
     }
@@ -38,7 +42,7 @@ public class CompositeAssertions {
      * @throws IllegalArgumentException если передан пустой массив условий
      */
     @SafeVarargs
-    public static <T> Condition<T> or(Condition<T>... conditions) {
+    public static <T> CompositeCondition<T> or(Condition<T>... conditions) {
         validateConditions(conditions, "OR");
         return entity -> {
             long passed = countPassed(entity, conditions);
@@ -58,31 +62,13 @@ public class CompositeAssertions {
      * @throws IllegalArgumentException если передан пустой массив условий
      */
     @SafeVarargs
-    public static <T> Condition<T> not(Condition<T>... conditions) {
+    public static <T> CompositeCondition<T> not(Condition<T>... conditions) {
         validateConditions(conditions, "NOT");
         return entity -> {
             long passed = countPassed(entity, conditions);
             Assertions.assertThat(passed)
                     .as("Ожидалось, что ни одно условие не выполнится, но выполнено %d", passed)
                     .isEqualTo(0);
-        };
-    }
-
-    /**
-     * Возвращает проверку, которая проходит, если **единичное** условие не выполняется.
-     *
-     * @param condition условие; не может быть null
-     * @param <T>       тип сущности
-     * @return инвертированное условие
-     * @throws NullPointerException если условие равно null
-     */
-    public static <T> Condition<T> not(Condition<T> condition) {
-        Objects.requireNonNull(condition, "Условие не может быть null");
-        return entity -> {
-            boolean passed = passes(condition, entity);
-            Assertions.assertThat(passed)
-                    .as("Ожидалось, что условие не выполнится, но оно выполнилось")
-                    .isFalse();
         };
     }
 
@@ -97,7 +83,7 @@ public class CompositeAssertions {
      * @throws IllegalArgumentException если массив пуст или n < 1
      */
     @SafeVarargs
-    public static <T> Condition<T> nOf(int n, Condition<T>... conditions) {
+    public static <T> CompositeCondition<T> nOf(int n, Condition<T>... conditions) {
         validateCountArgs(n, conditions, "nOf", true);
         return entity -> {
             long passed = countPassed(entity, conditions);
@@ -118,7 +104,7 @@ public class CompositeAssertions {
      * @throws IllegalArgumentException если массив пуст или n < 0
      */
     @SafeVarargs
-    public static <T> Condition<T> exactlyNOf(int n, Condition<T>... conditions) {
+    public static <T> CompositeCondition<T> exactlyNOf(int n, Condition<T>... conditions) {
         validateCountArgs(n, conditions, "exactlyNOf", false);
         return entity -> {
             long passed = countPassed(entity, conditions);
@@ -139,7 +125,7 @@ public class CompositeAssertions {
      * @throws IllegalArgumentException если массив пуст или n < 0
      */
     @SafeVarargs
-    public static <T> Condition<T> atMostNOf(int n, Condition<T>... conditions) {
+    public static <T> CompositeCondition<T> atMostNOf(int n, Condition<T>... conditions) {
         validateCountArgs(n, conditions, "atMostNOf", false);
         return entity -> {
             long passed = countPassed(entity, conditions);
@@ -159,7 +145,7 @@ public class CompositeAssertions {
      * @throws IllegalArgumentException если массив пуст
      */
     @SafeVarargs
-    public static <T> Condition<T> xor(Condition<T>... conditions) {
+    public static <T> CompositeCondition<T> xor(Condition<T>... conditions) {
         validateConditions(conditions, "XOR");
         return entity -> {
             long passed = countPassed(entity, conditions);
@@ -168,6 +154,7 @@ public class CompositeAssertions {
                     .isEqualTo(1);
         };
     }
+
 
     /**
      * Проверяет массив условий на null, пустоту и наличие null-элементов.
