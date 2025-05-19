@@ -138,63 +138,74 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что все элементы списка удовлетворяют условию cond.
+     * Проверяет, что каждый элемент списка удовлетворяет всем переданным условиям.
      *
-     * @param cond условие для одного элемента
-     * @param <T>  тип сущности
-     * @return условие: для каждого элемента cond.check(item)
+     * @param <T>   тип сущности
+     * @param conds массив условий, каждое из которых должно быть выполнено для каждого элемента
+     * @return условие: для каждого элемента списка и для каждого условия cond.check(item) не выбрасывает AssertionError
+     * @throws NullPointerException если массив условий или любой элемент массива равен null
      */
-    public static <T> ListCondition<T> allMatch(@NonNull Condition<T> cond) {
+    @SafeVarargs
+    public static <T> ListCondition<T> allMatch(@NonNull Condition<T>... conds) {
+        Condition<T> composite = CompositeAssertions.and(conds);
         return list -> {
-            requireList(list);
-            list.forEach(cond::check);
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
+            list.forEach(composite::check);
         };
     }
 
+
     /**
-     * Проверяет, что хотя бы один элемент списка удовлетворяет условию cond.
+     * Проверяет, что существует хотя бы один элемент списка, удовлетворяющий всем переданным условиям одновременно.
      *
-     * @param cond условие для одного элемента
-     * @param <T>  тип сущности
-     * @return условие: существует элемент, для которого cond.check(item) не бросает AssertionError
+     * @param <T>   тип сущности
+     * @param conds массив условий, все из которых должны быть выполнены хотя бы одним элементом
+     * @return условие: существует элемент, для которого composite.check(item) не выбрасывает AssertionError
+     * @throws NullPointerException если массив условий или любой элемент массива равен null
      */
-    public static <T> ListCondition<T> anyMatch(@NonNull Condition<T> cond) {
+    @SafeVarargs
+    public static <T> ListCondition<T> anyMatch(@NonNull Condition<T>... conds) {
+        Condition<T> composite = CompositeAssertions.and(conds);
         return list -> {
-            requireList(list);
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
             boolean found = list.stream().anyMatch(item -> {
                 try {
-                    cond.check(item);
+                    composite.check(item);
                     return true;
-                } catch (AssertionError e) {
+                } catch (AssertionError ignored) {
                     return false;
                 }
             });
             Assertions.assertThat(found)
-                    .as("Ожидалось, что хотя бы одна сущность удовлетворяет условию")
+                    .as("Ожидалось, что хотя бы один элемент удовлетворяет всем условиям")
                     .isTrue();
         };
     }
 
     /**
-     * Проверяет, что ни один элемент списка не удовлетворяет условию cond.
+     * Проверяет, что ни один элемент списка не удовлетворяет всем переданным условиям одновременно.
      *
-     * @param cond условие для одного элемента
-     * @param <T>  тип сущности
-     * @return условие: ни один элемент не проходит cond.check(item)
+     * @param <T>   тип сущности
+     * @param conds массив условий, ни один элемент не должен удовлетворять всем из них
+     * @return условие: ни один элемент не проходит composite.check(item) без AssertionError
+     * @throws NullPointerException если массив условий или любой элемент массива равен null
      */
-    public static <T> ListCondition<T> noneMatch(@NonNull Condition<T> cond) {
+    @SafeVarargs
+    public static <T> ListCondition<T> noneMatch(Condition<T>... conds) {
+        Objects.requireNonNull(conds, "Массив условий не должен быть null");
+        Condition<T> composite = CompositeAssertions.and(conds);
         return list -> {
-            requireList(list);
+            Objects.requireNonNull(list, "Список сущностей не должен быть null");
             boolean any = list.stream().anyMatch(item -> {
                 try {
-                    cond.check(item);
+                    composite.check(item);
                     return true;
-                } catch (AssertionError e) {
+                } catch (AssertionError ignored) {
                     return false;
                 }
             });
             Assertions.assertThat(any)
-                    .as("Ожидалось, что ни одна сущность не удовлетворяет условию")
+                    .as("Ожидалось, что ни один элемент не удовлетворяет всем условиям")
                     .isFalse();
         };
     }
