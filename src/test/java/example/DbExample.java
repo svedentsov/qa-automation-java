@@ -15,6 +15,7 @@ import java.util.List;
 import static core.matcher.assertions.CollectionAssertions.*;
 import static core.matcher.assertions.CompositeAssertions.*;
 import static core.matcher.assertions.ListAssertions.*;
+import static core.matcher.assertions.ListAssertions.containsOnly;
 import static core.matcher.assertions.LocalDateTimeAssertions.*;
 import static core.matcher.assertions.NumberAssertions.*;
 import static core.matcher.assertions.PropertyAssertions.*;
@@ -54,8 +55,8 @@ public class DbExample {
                 containsElement(entities.get(0)), // содержит первый элемент
                 containsAllElements(entities.get(0), entities.get(1)), // содержит оба элемента
                 containsOnly(entities.get(0), entities.get(1)), // только эти два элемента (в любом порядке)
-                containsExactly(Arrays.asList(entities.get(0), entities.get(1))), // точно в этом порядке
-                containsExactlyInAnyOrder(Arrays.asList(entities.get(1), entities.get(0))), // точно, но порядок не важен
+                matchesExactly(Arrays.asList(entities.get(0), entities.get(1))), // точно в этом порядке
+                matchesExactlyUnordered(Arrays.asList(entities.get(1), entities.get(0))), // точно, но порядок не важен
                 entitiesAreUnique(), // все элементы уникальны
                 hasDuplicates(), // есть хотя бы один дубликат
                 distinctBy(MyEntity::getAge), // уникальность по полю category
