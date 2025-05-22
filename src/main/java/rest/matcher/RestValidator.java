@@ -4,6 +4,7 @@ import io.restassured.response.Response;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -28,9 +29,7 @@ public class RestValidator {
      */
     public RestValidator shouldHave(Condition... conditions) {
         validateConditions(conditions);
-        for (Condition condition : conditions) {
-            condition.check(response);
-        }
+        Arrays.stream(conditions).forEach(condition -> condition.check(response));
         return this;
     }
 

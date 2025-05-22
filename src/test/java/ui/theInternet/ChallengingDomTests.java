@@ -7,7 +7,7 @@ import io.qameta.allure.Feature;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@Layer("ui")
+@Layer("UI")
 @Feature("Тестирование функционала страницы 'Challenging DOM'")
 @DisplayName("Тесты страницы 'Challenging DOM'")
 public class ChallengingDomTests extends UITest {

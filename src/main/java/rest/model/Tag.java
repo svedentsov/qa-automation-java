@@ -16,13 +16,11 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Tag {
-
     /**
      * Идентификатор тега.
      */
     @JsonProperty("id")
     private long id;
-
     /**
      * Название тега.
      */

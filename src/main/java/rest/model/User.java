@@ -16,49 +16,41 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-
     /**
      * Уникальный идентификатор пользователя.
      */
     @JsonProperty("id")
     private Long id;
-
     /**
      * Имя пользователя.
      */
     @JsonProperty("username")
     private String username;
-
     /**
      * Имя пользователя.
      */
     @JsonProperty("firstName")
     private String firstName;
-
     /**
      * Фамилия пользователя.
      */
     @JsonProperty("lastName")
     private String lastName;
-
     /**
      * Email пользователя.
      */
     @JsonProperty("email")
     private String email;
-
     /**
      * Пароль пользователя.
      */
     @JsonProperty("password")
     private String password;
-
     /**
      * Номер телефона пользователя.
      */
     @JsonProperty("phone")
     private String phone;
-
     /**
      * Статус пользователя.
      */

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.codeborne.selenide.Selenide.open;
 
-@Layer("ui")
+@Layer("UI")
 @Feature("Тестирование функциональности сортируемых таблиц")
 @DisplayName("Тесты страницы 'Sortable Data Tables'")
 public class SortableDataTablesTests extends UITest {

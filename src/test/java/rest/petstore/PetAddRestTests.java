@@ -71,11 +71,9 @@ public class PetAddRestTests extends RestTest {
         // Arrange
         Pet createdPet = petStore.petSteps()
                 .createPetSuccessfully(fullDataPet);
-
         // Act
         petStore.petSteps().
                 deletePetById(createdPet.id());
-
         // Assert
         petStore.petSteps()
                 .getNotFoundPetById(createdPet.id());
@@ -99,7 +97,6 @@ public class PetAddRestTests extends RestTest {
         // Arrange
         Pet createdPet = petStore.petSteps()
                 .createPetSuccessfully(fullDataPet);
-
         // Act, Assert
         petStore.petSteps()
                 .assertPetData(createdPet);
@@ -123,7 +120,6 @@ public class PetAddRestTests extends RestTest {
         // Arrange
         petStore.petSteps()
                 .createPetSuccessfully(fullDataPet);
-
         // Act
         petStore.petSteps()
                 .putPetSuccessfully(modifiedPet)
@@ -169,7 +165,6 @@ public class PetAddRestTests extends RestTest {
         // Arrange
         petStore.petSteps()
                 .createPetSuccessfully(fullDataPet);
-
         // Act
         petStore.petSteps()
                 .updatePetWithForm(modifiedPet)

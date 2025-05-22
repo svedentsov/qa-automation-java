@@ -7,7 +7,7 @@ import io.qameta.allure.Story;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@Layer("ui")
+@Layer("UI")
 @Feature("Тестирование функционала авторизации")
 @DisplayName("Тесты страницы 'Basic Auth'")
 public class BasicAuthTests extends UITest {

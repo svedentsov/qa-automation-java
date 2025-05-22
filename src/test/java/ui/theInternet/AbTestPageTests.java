@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.codeborne.selenide.Selenide.open;
 
-@Layer("ui")
+@Layer("UI")
 @Feature("Тестирование функциональности A/B Testing")
 @DisplayName("Тесты страницы 'A/B Testing'")
 public class AbTestPageTests extends UITest {

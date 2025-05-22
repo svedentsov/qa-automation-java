@@ -7,7 +7,7 @@ import io.qameta.allure.Feature;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-@Layer("ui")
+@Layer("UI")
 @Feature("Тестирование страницы с изображениями")
 @DisplayName("Тесты страницы 'Broken Images'")
 public class BrokenImagesTests extends UITest {

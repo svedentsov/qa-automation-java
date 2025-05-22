@@ -33,11 +33,9 @@ public class StoreRestTests extends RestTest {
                 .createPetSuccessfully(minDataPet);
         Order placedOrder = petStore.storeSteps()
                 .placeOrder(order.petId(createdPet.id()));
-
         // Act
         petStore.storeSteps()
                 .deleteOrder(placedOrder.id());
-
         // Assert
         petStore.storeSteps()
                 .getNotFoundOrderById(placedOrder.id());
@@ -51,7 +49,6 @@ public class StoreRestTests extends RestTest {
         // Act
         Map<String, Object> inventory = petStore.storeSteps()
                 .getInventory();
-
         // Assert
         petStore.storeSteps()
                 .assertInventoryAvailable(inventory);
@@ -67,11 +64,9 @@ public class StoreRestTests extends RestTest {
                 .createPetSuccessfully(minDataPet);
         Order placedOrder = petStore.storeSteps()
                 .placeOrder(order.petId(createdPet.id()));
-
         // Act
         Order fetchedOrder = petStore.storeSteps()
                 .getOrderById(placedOrder.id());
-
         // Assert
         petStore.storeSteps()
                 .assertOrderExists(fetchedOrder)
@@ -87,11 +82,9 @@ public class StoreRestTests extends RestTest {
         Pet createdPet = petStore.petSteps()
                 .createPetSuccessfully(minDataPet);
         Order newOrder = order.petId(createdPet.id());
-
         // Act
         Order placedOrder = petStore.storeSteps()
                 .placeOrder(newOrder);
-
         // Assert
         petStore.storeSteps()
                 .assertOrderExists(placedOrder)

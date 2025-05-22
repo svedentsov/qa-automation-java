@@ -28,11 +28,9 @@ public class UserRestTests extends RestTest {
     public void createUserTest() {
         // Arrange
         User user = DataGenerator.generateValidUser();
-
         // Act
         petStore.userSteps()
                 .createUser(user);
-
         // Assert
         petStore.userSteps()
                 .assertUserExists(user);
@@ -45,11 +43,9 @@ public class UserRestTests extends RestTest {
     public void createUsersArrayTest() {
         // Arrange
         List<User> users = DataGenerator.generateValidUsersArray();
-
         // Act
         petStore.userSteps()
                 .createUsersWithArrayInput(users);
-
         // Assert
         users.forEach(petStore.userSteps()::assertUserExists);
     }
@@ -61,11 +57,9 @@ public class UserRestTests extends RestTest {
     public void createUsersListTest() {
         // Arrange
         List<User> users = DataGenerator.generateValidUsersList();
-
         // Act
         petStore.userSteps()
                 .createUsersWithListInput(users);
-
         // Assert
         users.forEach(petStore.userSteps()::assertUserExists);
     }
@@ -79,11 +73,9 @@ public class UserRestTests extends RestTest {
         User user = DataGenerator.generateValidUser();
         petStore.userSteps()
                 .createUser(user);
-
         // Act
         petStore.userSteps()
                 .deleteUser(user.username());
-
         // Assert
         petStore.userSteps()
                 .assertUserNotFound(user.username());
@@ -98,11 +90,9 @@ public class UserRestTests extends RestTest {
         User user = DataGenerator.generateValidUser();
         petStore.userSteps()
                 .createUser(user);
-
         // Act
         User fetchedUser = petStore.userSteps()
                 .getUserByName(user.username());
-
         // Assert
         petStore.userSteps()
                 .assertUserData(user, fetchedUser);
@@ -117,11 +107,9 @@ public class UserRestTests extends RestTest {
         User user = DataGenerator.generateValidUser();
         petStore.userSteps()
                 .createUser(user);
-
         // Act
         String sessionId = petStore.userSteps()
                 .loginUser(user.username(), user.password());
-
         // Assert
         assertNotNull(sessionId, "Ожидается, что сессия будет создана");
     }
@@ -146,11 +134,9 @@ public class UserRestTests extends RestTest {
         petStore.userSteps()
                 .createUser(user);
         User updatedUser = user.toBuilder().firstName("NewFirstName").build();
-
         // Act
         petStore.userSteps()
                 .updateUser(user.username(), updatedUser);
-
         // Assert
         petStore.userSteps()
                 .assertUserExists(updatedUser);
@@ -165,11 +151,9 @@ public class UserRestTests extends RestTest {
         User user = DataGenerator.generateValidUser();
         petStore.userSteps()
                 .createUser(user);
-
         // Act
         petStore.userSteps()
                 .deleteUser(user.username());
-
         // Assert
         petStore.userSteps()
                 .assertUserNotFound(user.username());
@@ -196,11 +180,9 @@ public class UserRestTests extends RestTest {
         petStore.userSteps()
                 .createUser(user);
         User updatedUser = user.toBuilder().firstName("NewFirstName").build();
-
         // Act
         petStore.userSteps()
                 .updateUser(user.username(), updatedUser);
-
         // Assert
         petStore.userSteps()
                 .assertUserExists(updatedUser);

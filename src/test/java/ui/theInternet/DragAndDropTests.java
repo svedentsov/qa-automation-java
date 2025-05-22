@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.codeborne.selenide.Selenide.open;
 
-@Layer("ui")
+@Layer("UI")
 @Feature("Тестирование функциональности перетаскивания")
 @DisplayName("Тесты страницы 'Drag and Drop'")
 public class DragAndDropTests extends UITest {
@@ -29,11 +29,9 @@ public class DragAndDropTests extends UITest {
         // Arrange
         theInternet.dragAndDropSteps()
                 .checkInitialState("A", "B");
-
         // Act
         theInternet.dragAndDropSteps()
                 .dragAtoB();
-
         // Assert
         theInternet.dragAndDropSteps()
                 .checkContainerAText("B")
@@ -47,11 +45,9 @@ public class DragAndDropTests extends UITest {
         // Arrange
         theInternet.dragAndDropSteps()
                 .checkInitialState("A", "B");
-
         // Act
         theInternet.dragAndDropSteps()
                 .dragBtoA();
-
         // Assert
         theInternet.dragAndDropSteps()
                 .checkTextAfterDragAndDrop("B", "A");

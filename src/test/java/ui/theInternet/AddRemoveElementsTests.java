@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import static com.codeborne.selenide.Selenide.open;
 
-@Layer("ui")
+@Layer("UI")
 @Feature("Тестирование функциональности добавления и удаления элементов")
 @DisplayName("Тесты страницы 'Add/Remove Elements'")
 public class AddRemoveElementsTests extends UITest {
@@ -29,8 +29,7 @@ public class AddRemoveElementsTests extends UITest {
         // Arrange
         theInternet.addRemoveElementsSteps()
                 .addDeleteButton();
-
-        // Act & Assert
+        // Act, Assert
         theInternet.addRemoveElementsSteps()
                 .checkTitleTextIsVisible()
                 .checkTitleText("Add/Remove Elements");
@@ -43,7 +42,6 @@ public class AddRemoveElementsTests extends UITest {
         // Act
         theInternet.addRemoveElementsSteps()
                 .addDeleteButton();
-
         // Assert
         theInternet.addRemoveElementsSteps()
                 .checkDeleteButtonIsExist()
@@ -57,11 +55,9 @@ public class AddRemoveElementsTests extends UITest {
         // Arrange
         theInternet.addRemoveElementsSteps()
                 .addDeleteButton();
-
         // Act
         theInternet.addRemoveElementsSteps()
                 .clickDeleteButton();
-
         // Assert
         theInternet.addRemoveElementsSteps()
                 .checkDeleteButtonIsNotExist()
@@ -75,7 +71,6 @@ public class AddRemoveElementsTests extends UITest {
         // Act
         theInternet.addRemoveElementsSteps()
                 .addDeleteButtons(3);
-
         // Assert
         theInternet.addRemoveElementsSteps()
                 .checkNumberOfDeleteButtons(3);
@@ -88,11 +83,9 @@ public class AddRemoveElementsTests extends UITest {
         // Arrange
         theInternet.addRemoveElementsSteps()
                 .addDeleteButtons(3);
-
         // Act
         theInternet.addRemoveElementsSteps()
                 .removeDeleteButtons(3);
-
         // Assert
         theInternet.addRemoveElementsSteps()
                 .checkNumberOfDeleteButtons(0);
@@ -105,11 +98,9 @@ public class AddRemoveElementsTests extends UITest {
         // Arrange
         theInternet.addRemoveElementsSteps()
                 .addDeleteButtons(5);
-
         // Act
         theInternet.addRemoveElementsSteps()
                 .removeDeleteButtons(2);
-
         // Assert
         theInternet.addRemoveElementsSteps()
                 .checkNumberOfDeleteButtons(3);

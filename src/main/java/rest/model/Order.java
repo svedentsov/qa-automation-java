@@ -23,25 +23,21 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Order {
-
     /**
      * Уникальный идентификатор заказа.
      */
     @JsonProperty("id")
     private long id;
-
     /**
      * Идентификатор питомца, связанного с заказом.
      */
     @JsonProperty("petId")
     private long petId;
-
     /**
      * Количество товаров в заказе.
      */
     @JsonProperty("quantity")
     private int quantity;
-
     /**
      * Дата доставки заказа.
      * Для сериализации и десериализации используется формат ISO {@code yyyy-MM-dd'T'HH:mm:ss}.
@@ -50,13 +46,11 @@ public class Order {
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime shipDate;
-
     /**
      * Статус заказа.
      */
     @JsonProperty("status")
     private OrderStatus status;
-
     /**
      * Флаг, указывающий на завершение заказа.
      */
