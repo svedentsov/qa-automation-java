@@ -3,19 +3,24 @@ package kafka.matcher;
 import core.matcher.Condition;
 import core.matcher.assertions.CompositeAssertions;
 import kafka.exception.ValidationException;
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Класс для валидации одной или нескольких записей Apache Kafka с применением заданных проверок.
  * Все записи объединяются в единый список, что позволяет выполнять проверки единообразно.
  *
- * @param <T> тип записи для валидации
+ * @param <T> тип проверяемой записи
  */
 @Slf4j
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class KafkaValidator<T> {
 
     /**
@@ -24,12 +29,16 @@ public final class KafkaValidator<T> {
     private final List<T> records;
 
     /**
-     * Конструктор для валидации единственной записи.
+     * Создаёт валидатор для одной записи.
      *
-     * @param record Запись для проверки
+     * @param record запись для проверки, не должна быть null
+     * @param <T>    тип записи
+     * @return валидатор
+     * @throws NullPointerException если {@code record} == null
      */
-    public KafkaValidator(@NonNull T record) {
-        this(Collections.singletonList(record));
+    public static <T> KafkaValidator<T> forRecords(@Nonnull T record) {
+        Objects.requireNonNull(record, "Запись для валидации не может быть null");
+        return new KafkaValidator<>(Collections.singletonList(record));
     }
 
     /**
@@ -37,8 +46,9 @@ public final class KafkaValidator<T> {
      *
      * @param records Список записей для проверки
      */
-    public KafkaValidator(@NonNull List<T> records) {
-        this.records = records;
+    public static <T> KafkaValidator<T> forRecords(@Nonnull List<T> records) {
+        Objects.requireNonNull(records, "Список записей не может быть null");
+        return new KafkaValidator<>(records);
     }
 
     /**

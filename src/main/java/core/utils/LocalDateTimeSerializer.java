@@ -1,4 +1,4 @@
-package rest.utils;
+package core.utils;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;

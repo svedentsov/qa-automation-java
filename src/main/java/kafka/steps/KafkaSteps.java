@@ -129,12 +129,12 @@ public class KafkaSteps {
 
     @Step("Проверить запись на соответствие условиям")
     public KafkaValidator validateRecord(ConsumerRecord<String, String> record) {
-        return new KafkaValidator(record);
+        return KafkaValidator.forRecords(record);
     }
 
     @Step("Проверить записи на соответствие условиям")
     public KafkaValidator validateRecords(List<ConsumerRecord<String, String>> records) {
-        return new KafkaValidator(records);
+        return KafkaValidator.forRecords(records);
     }
 
     @Step("Получить из топика '{topic}' запись соответствующую условию")

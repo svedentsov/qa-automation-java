@@ -1,35 +1,58 @@
 package rest.matcher;
 
 import io.restassured.response.Response;
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import javax.annotation.Nonnull;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.stream.IntStream;
 
 /**
- * Валидатор для проверки соответствия HTTP-ответа заданным условиям.
- * Условия предоставляются в виде объектов, реализующих интерфейс {@link Condition}.
+ * Валидатор HTTP-ответа REST-запроса.
+ * Предоставляет удобный fluent-интерфейс для последовательной валидации ответа
+ * по набору пользовательских условий {@link Condition}.
  */
 @Slf4j
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class RestValidator {
 
     /**
-     * HTTP-ответ для проверки.
+     * HTTP-ответ, который будет проверяться условиями.
      */
     private final Response response;
 
     /**
-     * Проверяет, что HTTP-ответ удовлетворяет переданным условиям.
+     * Фабричный метод для создания валидатора по заданному ответу.
      *
-     * @param conditions условия для проверки
-     * @return текущий экземпляр {@link RestValidator}
-     * @throws IllegalArgumentException если массив условий некорректен
+     * @param response HTTP-ответ, не должен быть null
+     * @return новый экземпляр {@link RestValidator}
+     * @throws NullPointerException если {@code response} равен null
      */
-    public RestValidator shouldHave(Condition... conditions) {
+    public static RestValidator forResponse(@Nonnull Response response) {
+        Objects.requireNonNull(response, "HTTP-ответ (response) не может быть null");
+        return new RestValidator(response);
+    }
+
+    /**
+     * Проверяет, что HTTP-ответ удовлетворяет всем переданным условиям.
+     * При ошибке валидации конкретное условие само выбросит исключение, описывающее, какое именно условие не выполнено.
+     *
+     * @param conditions массив условий, каждое из которых не должно быть null
+     * @return текущий экземпляр {@link RestValidator} для цепочного вызова
+     * @throws IllegalArgumentException если массив условий null, пуст или содержит null-элементы
+     */
+    public RestValidator shouldHave(@Nonnull Condition... conditions) {
+        log.debug("Начало валидации ответа по {} условиям: {}", conditions.length, Arrays.toString(conditions));
         validateConditions(conditions);
-        Arrays.stream(conditions).forEach(condition -> condition.check(response));
+        Arrays.stream(conditions).forEach(condition -> {
+            log.debug("Применяем условие: {}", condition);
+            condition.check(response);
+            log.debug("Условие {} выполнено успешно", condition);
+        });
+        log.debug("Валидация ответа по всем условиям завершена успешно");
         return this;
     }
 
@@ -40,12 +63,14 @@ public class RestValidator {
      * @throws IllegalArgumentException если массив условий некорректен
      */
     private void validateConditions(Condition... conditions) {
-        Objects.requireNonNull(conditions, "Условия проверки не могут быть null.");
+        if (conditions == null) {
+            throw new IllegalArgumentException("Массив условий не может быть null.");
+        }
         if (conditions.length == 0) {
-            throw new IllegalArgumentException("Условия проверки не могут быть пустыми.");
+            throw new IllegalArgumentException("Необходимо передать хотя бы одно условие.");
         }
-        for (Condition condition : conditions) {
-            Objects.requireNonNull(condition, "Условие проверки не может быть null.");
-        }
+        IntStream.range(0, conditions.length).filter(i -> conditions[i] == null).forEach(i -> {
+            throw new IllegalArgumentException(String.format("Условие в позиции %d не может быть null.", i));
+        });
     }
 }

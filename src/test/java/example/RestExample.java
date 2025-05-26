@@ -39,7 +39,7 @@ public class RestExample {
     @Test
     public void testStatusCode() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 statusCode(200),
                 statusIsSuccessful2xx(),
                 statusCodeBetween(200, 299),
@@ -53,7 +53,7 @@ public class RestExample {
     @Test
     public void testHeaders() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 headerExists("Content-Type"),
                 headerEqualsIgnoringCase("Content-Type", "application/json; charset=utf-8"),
                 headerContains("Content-Type", "application/json"),
@@ -71,7 +71,7 @@ public class RestExample {
     @Test
     public void testBody() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyContains("sunt aut facere repellat provident occaecati excepturi optio reprehenderit"),
                 bodyContainsIgnoringCase("SUNT AUT FACERE REPELLAT PROVIDENT"),
                 bodyIsJson(),
@@ -96,7 +96,7 @@ public class RestExample {
     @Test
     public void testCookies() {
         Response response = RestAssured.given().get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 cookieExists("sessionId"),
                 cookieEquals("sessionId", "abc123"),
                 cookieStartsWith("sessionId", "abc"),
@@ -112,7 +112,7 @@ public class RestExample {
     @Test
     public void testResponseTime() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 responseTimeLessThan(Duration.ofSeconds(2)),
                 responseTimeGreaterThan(Duration.ofMillis(100)),
                 responseTimeBetween(Duration.ofMillis(100), Duration.ofSeconds(2)),
@@ -137,7 +137,7 @@ public class RestExample {
                 statusIsClientError4xx(),
                 statusIsServerError5xx()
         );
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 allConditions,
                 not(anyCondition)
         );
@@ -151,7 +151,7 @@ public class RestExample {
     public void testJsonSchema() {
         Response response = RestAssured.get("/posts/1");
         File schemaFile = new File("src/test/resources/post-schema.json");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyMatchesJsonSchema(schemaFile)
         );
     }
@@ -163,7 +163,7 @@ public class RestExample {
     @Test
     public void testUniqueValuesInArray() {
         Response response = RestAssured.get("/posts");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyJsonPathListIsUniqueAndSize("[*].id", 100)
         );
     }
@@ -175,7 +175,7 @@ public class RestExample {
     @Test
     public void testValidUrlInBody() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyContainsValidUrl("url")
         );
     }
@@ -187,7 +187,7 @@ public class RestExample {
     @Test
     public void testValidDateInBody() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyContainsValidDate("date", "yyyy-MM-dd")
         );
     }
@@ -199,7 +199,7 @@ public class RestExample {
     @Test
     public void testValidEmailInBody() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyContainsValidEmail("email")
         );
     }
@@ -210,7 +210,7 @@ public class RestExample {
     @Test
     public void testJsonPathHasKeys() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyJsonPathObjectHasKeys("", Arrays.asList("userId", "id", "title", "body"))
         );
     }
@@ -226,7 +226,7 @@ public class RestExample {
         fieldValues.put("userId", 1);
         fieldValues.put("id", 1);
 
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyContainsFieldsWithValues(fieldValues)
         );
     }
@@ -238,7 +238,7 @@ public class RestExample {
     @Test
     public void testValidBase64InBody() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyContainsValidBase64("base64Field")
         );
     }
@@ -250,7 +250,7 @@ public class RestExample {
     @Test
     public void testHtmlTagInBody() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyContainsHtmlTag("htmlContent", "div")
         );
     }
@@ -265,7 +265,7 @@ public class RestExample {
                 .header("Accept", "application/json")
                 .header("Accept", "text/plain")
                 .get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 headerValueCountEquals("Accept", 2),
                 headerContainsAll("Accept", Arrays.asList("application/json", "text/plain")),
                 headerContainsAny("Accept", Arrays.asList("application/xml", "text/plain"))
@@ -278,7 +278,7 @@ public class RestExample {
     @Test
     public void testAbsentHeader() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 headerAbsent("X-Non-Existent-Header")
         );
     }
@@ -290,7 +290,7 @@ public class RestExample {
     @Test
     public void testCookieAttributes() {
         Response response = RestAssured.given().get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 cookieDomainEquals("sessionId", "example.com"),
                 cookiePathEquals("sessionId", "/"),
                 cookieDoesNotHaveAttribute("sessionId", "HttpOnly")
@@ -303,7 +303,7 @@ public class RestExample {
     @Test
     public void testBodySize() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodySize(Matchers.greaterThan(50)),
                 bodySizeEqualTo(292),
                 bodySizeGreaterThan(100),
@@ -317,7 +317,7 @@ public class RestExample {
     @Test
     public void testHeaderValueLength() {
         Response response = RestAssured.get("/posts/1");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 headerValueLengthMatches("Content-Type", Matchers.greaterThan(10))
         );
     }
@@ -328,7 +328,7 @@ public class RestExample {
     @Test
     public void testJsonPathListSize() {
         Response response = RestAssured.get("/posts");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyJsonPathListSize("[*].id", 100),
                 bodyJsonPathListSizeGreaterThan("[*].id", 50),
                 bodyJsonPathListSizeLessThan("[*].id", 150)
@@ -341,7 +341,7 @@ public class RestExample {
     @Test
     public void testUniqueAndSizeList() {
         Response response = RestAssured.get("/posts");
-        new RestValidator(response).shouldHave(
+        RestValidator.forResponse(response).shouldHave(
                 bodyJsonPathListIsUniqueAndSize("[*].id", 100)
         );
     }

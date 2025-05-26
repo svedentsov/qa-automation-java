@@ -36,7 +36,7 @@ public class DbExample {
      * @param entities список сущностей
      */
     public void validateEntities(List<MyEntity> entities) {
-        new DbValidator<>(entities).shouldHaveList(
+        DbValidator.forRecords(entities).shouldHaveList(
                 allMatch(value(MyEntity::getType, equalToStr("STANDARD"))), // все STANDARD
                 anyMatch(value(MyEntity::getStatus, equalToStr("ACTIVE"))), // хотя бы один ACTIVE
                 noneMatch(value(MyEntity::getStatus, equalToStr("DELETED"))), // ни одного DELETED
@@ -72,7 +72,7 @@ public class DbExample {
 
     // Пример использования валидатора для отдельной сущности
     public void validateEntity(MyEntity entity) {
-        new DbValidator<>(entity).shouldHave(
+        DbValidator.forRecords(entity).shouldHave(
                 // StringAssertions
                 value(MyEntity::getName, contains("Test")), // имя содержит "Test"
                 value(MyEntity::getEmail, matchesRegex("^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$")), // проверка корректного формата email
@@ -138,7 +138,7 @@ public class DbExample {
 
     // Пример использования валидатора для составных проверок
     public void validateCompositeMatchers(MyEntity entity) {
-        new DbValidator<>(entity).shouldHave(
+        DbValidator.forRecords(entity).shouldHave(
                 and( // выполняются одновременно две проверки: статус равен "ACTIVE" и имя содержит "Test"
                         value(MyEntity::getStatus, equalToStr("ACTIVE")), // статус равен "ACTIVE"
                         value(MyEntity::getName, contains("Test")) // имя содержит "Test"

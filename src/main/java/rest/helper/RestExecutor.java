@@ -578,7 +578,7 @@ public class RestExecutor {
      * @return текущий экземпляр RestExecutor
      */
     public RestExecutor shouldHave(Condition... conditions) {
-        new RestValidator(response).shouldHave(conditions);
+        RestValidator.forResponse(response).shouldHave(conditions);
         return this;
     }
 

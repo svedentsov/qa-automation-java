@@ -9,8 +9,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import rest.enums.OrderStatus;
-import rest.utils.LocalDateTimeDeserializer;
-import rest.utils.LocalDateTimeSerializer;
+import core.utils.LocalDateTimeDeserializer;
+import core.utils.LocalDateTimeSerializer;
 
 import java.time.LocalDateTime;
 

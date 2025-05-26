@@ -1,10 +1,13 @@
 package kafka.matcher;
 
+import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
+import com.jayway.jsonpath.Option;
 import core.matcher.Condition;
 import core.matcher.assertions.BooleanAssertions.BooleanCondition;
 import core.matcher.assertions.InstantAssertions.InstantCondition;
 import core.matcher.assertions.NumberAssertions.NumberCondition;
+import core.matcher.assertions.PropertyAssertions.PropertyCondition;
 import core.matcher.assertions.StringAssertions.StringCondition;
 import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -30,6 +33,12 @@ public class KafkaMatcher {
     public static Condition<ConsumerRecord<String, String>> value(
             StringCondition sc) {
         return value(ConsumerRecord::value, sc);
+    }
+
+    public static Condition<ConsumerRecord<String, String>> value(
+            String jsonPath,
+            PropertyCondition pc) {
+        return value(record -> getJsonValue(record.value(), jsonPath, Object.class), pc);
     }
 
     /**
@@ -140,8 +149,7 @@ public class KafkaMatcher {
      */
     public static <R> Condition<ConsumerRecord<String, String>> value(
             Function<? super ConsumerRecord<String, String>, ? extends R> getter,
-            Condition<? super R> cond
-    ) {
+            Condition<? super R> cond) {
         Objects.requireNonNull(getter, "getter не может быть null");
         Objects.requireNonNull(cond, "condition не может быть null");
         return record -> cond.check(getter.apply(record));
@@ -162,10 +170,14 @@ public class KafkaMatcher {
         Objects.requireNonNull(json, "JSON строка не может быть null");
         Objects.requireNonNull(jsonPath, "JSONPath не может быть null");
         Objects.requireNonNull(expectedType, "Ожидаемый тип не может быть null");
-
-        Object val = JsonPath.parse(json).read(jsonPath);
+        Configuration conf = Configuration.defaultConfiguration()
+                .addOptions(Option.DEFAULT_PATH_LEAF_TO_NULL);
+        Object val = JsonPath.using(conf).parse(json).read(jsonPath);
+        if (val == null) {
+            return null;
+        }
         if (!expectedType.isInstance(val)) {
-            String actualType = val != null ? val.getClass().getSimpleName() : "null";
+            String actualType = val.getClass().getSimpleName();
             throw new AssertionError(String.format("Ожидалось, что значение по пути '%s' будет типа %s, но было: %s (%s)",
                     jsonPath, expectedType.getSimpleName(), val, actualType));
         }

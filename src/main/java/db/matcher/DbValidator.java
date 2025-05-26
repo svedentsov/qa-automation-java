@@ -2,7 +2,9 @@ package db.matcher;
 
 import core.matcher.Condition;
 import core.matcher.assertions.CompositeAssertions;
+import lombok.AccessLevel;
 import lombok.NonNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Collections;
@@ -15,6 +17,7 @@ import java.util.List;
  * @param <T> тип записи для валидации
  */
 @Slf4j
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public final class DbValidator<T> {
 
     /**
@@ -23,21 +26,29 @@ public final class DbValidator<T> {
     private final List<T> records;
 
     /**
-     * Конструктор для валидации единственной записи.
+     * Создаёт валидатор для одной записи.
      *
-     * @param record запись для валидации
+     * @param record запись для валидации, не должна быть null
+     * @param <T>    тип записи
+     * @return экземпляр {@link DbValidator}
+     * @throws NullPointerException     если {@code record} == null
+     * @throws IllegalArgumentException если запись невалидна
      */
-    public DbValidator(@NonNull T record) {
-        this(Collections.singletonList(record));
+    public static <T> DbValidator<T> forRecords(@NonNull T record) {
+        return new DbValidator<>(Collections.singletonList(record));
     }
 
     /**
-     * Конструктор для валидации списка записей.
+     * Создаёт валидатор для списка записей.
      *
-     * @param records список записей для валидации
+     * @param records список записей для валидации, не должен быть null или пуст
+     * @param <T>     тип записей
+     * @return экземпляр {@link DbValidator}
+     * @throws NullPointerException     если {@code records} == null
+     * @throws IllegalArgumentException если список пуст или содержит null-элементы
      */
-    public DbValidator(@NonNull List<T> records) {
-        this.records = records;
+    public static <T> DbValidator<T> forRecords(@NonNull List<T> records) {
+         return new DbValidator<>(records);
     }
 
     /**

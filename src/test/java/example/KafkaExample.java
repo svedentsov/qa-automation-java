@@ -7,56 +7,65 @@ import java.time.Instant;
 import java.util.List;
 
 import static core.matcher.assertions.BooleanAssertions.isTrue;
-import static core.matcher.assertions.CompositeAssertions.and;
+import static core.matcher.assertions.CompositeAssertions.*;
 import static core.matcher.assertions.InstantAssertions.before;
+import static core.matcher.assertions.ListAssertions.*;
+import static core.matcher.assertions.NumberAssertions.equalTo;
 import static core.matcher.assertions.NumberAssertions.greaterThan;
-import static core.matcher.assertions.NumberAssertions.lessOrEqualTo;
 import static core.matcher.assertions.StringAssertions.*;
 import static kafka.matcher.KafkaMatcher.*;
 
 /**
- * Пример использования DSL для проверки записей Apache Kafka.
- * Демонстрируются различные проверки полей записей, включая проверки JSON-полей, временных меток,
- * партиций, смещений и составных условий.
+ * Пример класса, демонстрирующего использование валидатора и всех доступных матчеров для Apache Kafka.
  */
 public class KafkaExample {
 
-    public static void main(String[] args) {
-        ConsumerRecord<String, String> record1 = new ConsumerRecord<>(
-                "topic", 0, 0L, "key1", "{\"name\":\"John\",\"age\":30,\"active\":true,\"items\":[1,2,3]}");
-        ConsumerRecord<String, String> record2 = new ConsumerRecord<>(
-                "topic", 1, 1L, "key2", "{\"name\":\"Jane\",\"age\":25,\"active\":false,\"items\":[4,5,6]}");
+    // Валидация списка записей Kafka с применением различных проверок списка.
+    public void validateRecords(List<ConsumerRecord<String, String>> records) {
+        KafkaValidator.forRecords(records).shouldHaveList(
+                isNotEmpty(), // список не пуст
+                countGreaterThan(1), // больше одной записи
+                countLessThan(100), // меньше 100 записей
+                hasSizeBetween(1, 10)); // размер списка от 1 до 10 включительно
+    }
 
-        record1.headers().add("headerKey", "headerValue".getBytes());
-        record2.headers().add("headerKey", "headerValue2".getBytes());
+    // Валидация отдельной записи Kafka с применением проверок ключа, значения, партиции, смещения, заголовков и временной метки.
+    public void validateRecord(ConsumerRecord<String, String> record) {
+        KafkaValidator.forRecords(record).shouldHave(
+                key(startsWith("key")),// ключ начинается с "key"
+                key(isNotBlank()), // ключ не пуст и не только пробелы
+                topic(equalToStr("topic")), // название топика == "topic"
+                partition(equalTo(0)),// партиция == 0
+                offset(greaterThan(0L)), // смещение > 0
+                timestamp(before(Instant.now().plusSeconds(60))), // временная метка не позже, чем через 60 секунд
+                value(contains("\"name\":\"John\""))); // value содержит JSON-поле "name":"John"
+    }
 
-        List<ConsumerRecord<String, String>> records = List.of(record1, record2);
+    // Пример составных проверок (AND, OR, NOT, nOf) для одной записи Kafka.
+    public void validateCompositeConditions(ConsumerRecord<String, String> record) {
+        KafkaValidator.forRecords(record).shouldHave(
+                and( // все условия должны быть верны
+                        topic(equalToStr("topic")), // — топик == "topic"
+                        key(contains("key1")) // — ключ содержит "key1"
+                ),
+                or( // одно из условий должно быть верно
+                        partition(equalTo(0)), // — партиция == 0
+                        partition(equalTo(1)) // — или партиция == 1
+                ),
+                not( // ни одно из условий не должно сработать
+                        value(contains("error")) // — значение не должно содержать "error"
+                ),
+                nOf(2, // из трёх условий должны выполниться любые два
+                        key(isNotBlank()), // ключ не пуст и не только пробелы
+                        value(contains("John")), // значение содержит "John"
+                        timestamp(before(Instant.now().plusSeconds(120))))); // временная метка не позже, чем через 120 секунд
+    }
 
-        KafkaValidator<ConsumerRecord<String, String>> validateRecord = new KafkaValidator<>(record1);
-        KafkaValidator<ConsumerRecord<String, String>> validateRecords = new KafkaValidator<>(records);
-
-        validateRecords.shouldHave(
-                key(contains("key")));
-
-        // Проверки ключа записи
-        validateRecord.shouldHave(
-                key(contains("key")),
-                key(isNotBlank()),
-                key(isNotNull()));
-
-        // Пример составных условий можно оставить без изменений, если они применяются к отдельной записи
-        validateRecord.shouldHave(and(
-                value(contains("John")),
-                value(contains("30"))));
-
-        // Примеры условий по JSONPath и времени остаются без изменений
-        validateRecord.shouldHave(
-                timestamp(before(Instant.now().plusSeconds(60))),
-                value("$.name", isString()),
-                value("$.name", equalToStr("John")),
-                value("$.active", isBoolean()),
-                value("$.active", isTrue()),
-                value("$.age", greaterThan(18), Integer.class),
-                value("$.age", lessOrEqualTo(30), Integer.class));
+    public void validateJsonStringField(ConsumerRecord<String, String> record) {
+        KafkaValidator.forRecords(record).shouldHave(
+                value("$.user.name", equalToStr("Alice")), // из JSON-path "$.user.name" извлечена строка "Alice"
+                value("$.metrics.count", greaterThan(100), Integer.class), // извлечено число по "$.metrics.count" и проверено > 100
+                value("$.flags.active", isTrue()), // извлечено булево по "$.flags.active" и проверка true
+                value("$.users[*].id", equalTo(1), Integer.class)); // пример одного элемента; для всей коллекции нужны ListAssertions
     }
 }

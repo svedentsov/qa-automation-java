@@ -7,8 +7,8 @@ import kafka.matcher.KafkaValidator;
 import kafka.model.Record;
 import kafka.service.KafkaConsumerService;
 import kafka.service.KafkaProducerService;
-import kafka.utils.JsonUtils;
-import kafka.utils.RecordLoader;
+import core.utils.JsonUtils;
+import core.utils.RecordLoader;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -338,7 +338,7 @@ public class KafkaExecutor {
     public KafkaExecutor shouldHave(Condition... condition) {
         validateConsumer();
         List<ConsumerRecord<String, String>> records = consumer.getAllRecords(record.getTopic());
-        new KafkaValidator<>(records).shouldHave(condition);
+        KafkaValidator.forRecords(records).shouldHave(condition);
         return this;
     }
 
