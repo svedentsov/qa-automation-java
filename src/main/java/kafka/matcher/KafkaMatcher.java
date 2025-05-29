@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Утилитный класс, предоставляющий DSL для создания проверок (Condition)
+ * Утилитный класс, предоставляющий DSL для создания условий (Condition)
  * для Kafka-записей. Все специфичные проверки сводятся к одному универсальному
  * методу {@link #value(Function, Condition)}, что упрощает поддержку и расширение.
  */
@@ -28,17 +28,11 @@ public class KafkaMatcher {
      * Проверка строкового значения всего тела записи.
      *
      * @param sc строковое условие для проверки
-     * @return условие для проверки {@link ConsumerRecord#value()}
+     * @return {@link Condition} для проверки {@link ConsumerRecord#value()}
      */
     public static Condition<ConsumerRecord<String, String>> value(
             StringCondition sc) {
         return value(ConsumerRecord::value, sc);
-    }
-
-    public static Condition<ConsumerRecord<String, String>> value(
-            String jsonPath,
-            PropertyCondition pc) {
-        return value(record -> getJsonValue(record.value(), jsonPath, Object.class), pc);
     }
 
     /**
@@ -46,7 +40,7 @@ public class KafkaMatcher {
      *
      * @param jsonPath путь JSONPath
      * @param sc       строковое условие для проверки
-     * @return условие для проверки
+     * @return {@link Condition} для проверки значения из JSON
      */
     public static Condition<ConsumerRecord<String, String>> value(
             String jsonPath,
@@ -59,7 +53,7 @@ public class KafkaMatcher {
      *
      * @param jsonPath путь JSONPath
      * @param bc       булевое условие для проверки
-     * @return условие для проверки
+     * @return {@link Condition} для проверки значения из JSON
      */
     public static Condition<ConsumerRecord<String, String>> value(
             String jsonPath,
@@ -74,7 +68,7 @@ public class KafkaMatcher {
      * @param nc       числовое условие для проверки
      * @param type     класс ожидаемого числового типа
      * @param <T>      тип числа (Number & Comparable)
-     * @return условие для проверки
+     * @return {@link Condition} для проверки значения из JSON
      */
     public static <T extends Number & Comparable<T>> Condition<ConsumerRecord<String, String>> value(
             String jsonPath,
@@ -84,10 +78,23 @@ public class KafkaMatcher {
     }
 
     /**
+     * Проверка произвольного свойства из JSON по JSONPath.
+     *
+     * @param jsonPath путь JSONPath
+     * @param pc       условие для проверки свойства
+     * @return {@link Condition} для проверки значения из JSON
+     */
+    public static Condition<ConsumerRecord<String, String>> value(
+            String jsonPath,
+            PropertyCondition pc) {
+        return value(record -> getJsonValue(record.value(), jsonPath, Object.class), pc);
+    }
+
+    /**
      * Проверка ключа записи.
      *
      * @param sc строковое условие для ключа
-     * @return условие для проверки {@link ConsumerRecord#key()}
+     * @return {@link Condition} для проверки {@link ConsumerRecord#key()}
      */
     public static Condition<ConsumerRecord<String, String>> key(
             StringCondition sc) {
@@ -98,7 +105,7 @@ public class KafkaMatcher {
      * Проверка имени топика записи.
      *
      * @param sc строковое условие для топика
-     * @return условие для проверки {@link ConsumerRecord#topic()}
+     * @return {@link Condition} для проверки {@link ConsumerRecord#topic()}
      */
     public static Condition<ConsumerRecord<String, String>> topic(
             StringCondition sc) {
@@ -109,7 +116,7 @@ public class KafkaMatcher {
      * Проверка номера партиции записи.
      *
      * @param nc числовое условие для проверки партиции
-     * @return условие для проверки {@link ConsumerRecord#partition()}
+     * @return {@link Condition} для проверки {@link ConsumerRecord#partition()}
      */
     public static Condition<ConsumerRecord<String, String>> partition(
             NumberCondition<Integer> nc) {
@@ -120,7 +127,7 @@ public class KafkaMatcher {
      * Проверка смещения записи.
      *
      * @param nc числовое условие для проверки смещения
-     * @return условие для проверки {@link ConsumerRecord#offset()}
+     * @return {@link Condition} для проверки {@link ConsumerRecord#offset()}
      */
     public static Condition<ConsumerRecord<String, String>> offset(
             NumberCondition<Long> nc) {
@@ -131,7 +138,7 @@ public class KafkaMatcher {
      * Проверка временной метки записи.
      *
      * @param ic условие для проверки {@link Instant}
-     * @return условие для проверки {@code Instant.ofEpochMilli(record.timestamp())}
+     * @return {@link Condition} для проверки времени записи
      */
     public static Condition<ConsumerRecord<String, String>> timestamp(
             InstantCondition ic) {
@@ -139,13 +146,13 @@ public class KafkaMatcher {
     }
 
     /**
-     * Универсальный метод для создания условия на основе функции-геттера и другого условия для проверяемого значения.
+     * Универсальный метод для создания условия на основе функции-геттера и другого условия.
      *
-     * @param getter функция для извлечения свойства из записи
+     * @param getter функция для извлечения значения из {@link ConsumerRecord}
      * @param cond   условие для проверки извлечённого значения
      * @param <R>    тип проверяемого свойства
-     * @return условие, которое применяет переданное {@code cond} к результату {@code getter}
-     * @throws NullPointerException если {@code getter} или {@code cond} равны null
+     * @return {@link Condition}, применяющее {@code cond} к результату {@code getter}
+     * @throws NullPointerException если getter или cond равны null
      */
     public static <R> Condition<ConsumerRecord<String, String>> value(
             Function<? super ConsumerRecord<String, String>, ? extends R> getter,
@@ -156,30 +163,30 @@ public class KafkaMatcher {
     }
 
     /**
-     * Извлекает значение из JSON строки по JSONPath и проверяет его тип.
+     * Извлекает значение из JSON-строки по JSONPath и проверяет его тип.
      *
      * @param json         исходная JSON-строка
-     * @param jsonPath     путь JSONPath для извлечения
+     * @param jsonPath     путь JSONPath
      * @param expectedType ожидаемый класс значения
      * @param <T>          тип значения
-     * @return извлечённое и приведённое к {@code expectedType} значение
-     * @throws AssertionError       если значение не совпало по типу
+     * @return извлечённое и приведённое к {@code expectedType} значение или null
+     * @throws AssertionError       если значение не соответствует expectedType
      * @throws NullPointerException если любой из аргументов null
      */
     private static <T> T getJsonValue(String json, String jsonPath, Class<T> expectedType) {
-        Objects.requireNonNull(json, "JSON строка не может быть null");
+        Objects.requireNonNull(json, "JSON-строка не может быть null");
         Objects.requireNonNull(jsonPath, "JSONPath не может быть null");
         Objects.requireNonNull(expectedType, "Ожидаемый тип не может быть null");
-        Configuration conf = Configuration.defaultConfiguration()
-                .addOptions(Option.DEFAULT_PATH_LEAF_TO_NULL);
+        Configuration conf = Configuration.defaultConfiguration().addOptions(Option.DEFAULT_PATH_LEAF_TO_NULL);
         Object val = JsonPath.using(conf).parse(json).read(jsonPath);
         if (val == null) {
             return null;
         }
         if (!expectedType.isInstance(val)) {
-            String actualType = val.getClass().getSimpleName();
-            throw new AssertionError(String.format("Ожидалось, что значение по пути '%s' будет типа %s, но было: %s (%s)",
-                    jsonPath, expectedType.getSimpleName(), val, actualType));
+            String actual = val.getClass().getSimpleName();
+            throw new AssertionError(String.format(
+                    "Ожидалось, что значение по пути '%s' будет типа %s, но было: %s (%s)",
+                    jsonPath, expectedType.getSimpleName(), val, actual));
         }
         return expectedType.cast(val);
     }

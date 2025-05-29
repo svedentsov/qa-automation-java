@@ -1,10 +1,11 @@
 package rest.matcher.assertions;
 
+import core.matcher.Condition;
+import io.restassured.response.Response;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
-import rest.matcher.Condition;
 
 import java.util.Arrays;
 import java.util.List;
@@ -20,7 +21,7 @@ public class StatusAssertions {
      * Функциональный интерфейс для условий проверки кода состояния ответа.
      */
     @FunctionalInterface
-    public interface StatusCondition extends Condition {
+    public interface StatusCondition extends Condition<Response> {
     }
 
     /**

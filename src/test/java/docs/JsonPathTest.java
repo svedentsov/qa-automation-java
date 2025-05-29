@@ -187,7 +187,7 @@ public class JsonPathTest {
     }
 
     @Test
-    @DisplayName("Работа с JSON-массивами верхнего уровня: Извлечение данных, когда корневой элемент — массив")
+    @DisplayName("Работа с JSON-массивами верхнего уровня: Извлечение данных, когда корневой элемент - массив")
     public void topLevelArrayExample() {
         String jsonArray = "[{\"name\":\"John\"}, {\"name\":\"Jane\"}]";
         List<String> names = JsonPath.read(jsonArray, "$[*].name");

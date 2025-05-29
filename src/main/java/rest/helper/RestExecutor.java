@@ -1,5 +1,6 @@
 package rest.helper;
 
+import core.matcher.Condition;
 import io.qameta.allure.Step;
 import io.restassured.RestAssured;
 import io.restassured.authentication.AuthenticationScheme;
@@ -19,7 +20,6 @@ import io.restassured.response.Response;
 import io.restassured.specification.ProxySpecification;
 import io.restassured.specification.RequestSpecification;
 import lombok.extern.slf4j.Slf4j;
-import rest.matcher.Condition;
 import rest.matcher.RestValidator;
 
 import java.util.List;

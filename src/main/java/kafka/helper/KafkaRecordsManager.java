@@ -15,7 +15,7 @@ public class KafkaRecordsManager {
     /**
      * Структура для хранения уникальных записей по топикам.
      * Ключ: название топика
-     * Значение: Map, где ключ — уникальная пара (partition, offset), значение — ConsumerRecord.
+     * Значение: Map, где ключ - уникальная пара (partition, offset), значение - ConsumerRecord.
      * Это гарантирует, что в рамках одного топика не будет дубликатов по сочетанию partition и offset.
      */
     private static final Map<String, Map<PartitionOffset, ConsumerRecord<?, ?>>> RECORDS = new ConcurrentHashMap<>();

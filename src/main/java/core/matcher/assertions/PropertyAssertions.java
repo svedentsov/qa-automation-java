@@ -3,10 +3,13 @@ package core.matcher.assertions;
 import core.matcher.Condition;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
+import org.assertj.core.api.HamcrestCondition;
+import org.hamcrest.Matcher;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -754,5 +757,35 @@ public class PropertyAssertions {
         return collection -> Assertions.assertThat(collection)
                 .as("Коллекция должна содержать только уникальные элементы")
                 .doesNotHaveDuplicates();
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что значение свойства соответствует заданному Hamcrest Matcher.
+     *
+     * @param matcher Matcher для проверки значения
+     * @param <T>     тип проверяемого свойства
+     * @return условие проверки через HamcrestCondition
+     * @throws IllegalArgumentException если matcher == null
+     */
+    public static <T> PropertyCondition<T> propertyMatches(Matcher<? super T> matcher) {
+        Objects.requireNonNull(matcher, "matcher не может быть null");
+        return value -> Assertions.assertThat(value)
+                .as("Значение должно соответствовать условию %s", matcher)
+                .is(new HamcrestCondition<>(matcher));
+    }
+
+    /**
+     * Возвращает условие, проверяющее, что значение свойства НЕ соответствует заданному Hamcrest Matcher.
+     *
+     * @param matcher Matcher для проверки значения
+     * @param <T>     тип проверяемого свойства
+     * @return условие проверки через HamcrestCondition (отрицание)
+     * @throws IllegalArgumentException если matcher == null
+     */
+    public static <T> PropertyCondition<T> propertyDoesNotMatch(Matcher<? super T> matcher) {
+        Objects.requireNonNull(matcher, "matcher не может быть null");
+        return value -> Assertions.assertThat(value)
+                .as("Значение не должно соответствовать условию %s", matcher)
+                .isNot(new HamcrestCondition<>(matcher));
     }
 }

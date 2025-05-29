@@ -123,7 +123,7 @@ public class DbExample {
                 value(MyEntity::getCreationDate, hasHour(12)), // час даты создания равен 12
                 value(MyEntity::getCreationDate, isOnSameDayAs(LocalDateTime.now())), // дата создания совпадает с сегодняшней датой
                 value(MyEntity::getCreationDate, isWeekend()), // дата создания приходится на выходной день
-                value(MyEntity::getCreationDate, hasDayOfWeek(DayOfWeek.MONDAY)), // день недели даты создания — понедельник
+                value(MyEntity::getCreationDate, hasDayOfWeek(DayOfWeek.MONDAY)), // день недели даты создания - понедельник
                 value(MyEntity::getCreationDate, isInSameYearAs(LocalDateTime.now())), // дата создания в том же году, что и сейчас
                 value(MyEntity::getCreationDate, isAtStartOfDay()), // время даты создания соответствует началу дня
                 // PropertyAssertions

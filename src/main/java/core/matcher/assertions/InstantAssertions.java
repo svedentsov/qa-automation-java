@@ -285,7 +285,7 @@ public class InstantAssertions {
             DayOfWeek actualDOW = actual.atZone(ZoneId.systemDefault()).getDayOfWeek();
             boolean weekend = (actualDOW == DayOfWeek.SATURDAY || actualDOW == DayOfWeek.SUNDAY);
             Assertions.assertThat(weekend)
-                    .as("Ожидалось, что день недели %s — выходной (суббота или воскресенье)", actualDOW)
+                    .as("Ожидалось, что день недели %s - выходной (суббота или воскресенье)", actualDOW)
                     .isTrue();
         };
     }
@@ -298,7 +298,7 @@ public class InstantAssertions {
             DayOfWeek actualDOW = actual.atZone(ZoneId.systemDefault()).getDayOfWeek();
             boolean weekday = (actualDOW != DayOfWeek.SATURDAY && actualDOW != DayOfWeek.SUNDAY);
             Assertions.assertThat(weekday)
-                    .as("Ожидалось, что день недели %s — рабочий (не суббота или воскресенье)", actualDOW)
+                    .as("Ожидалось, что день недели %s - рабочий (не суббота или воскресенье)", actualDOW)
                     .isTrue();
         };
     }
@@ -312,7 +312,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isStart = ldt.getHour() == 0 && ldt.getMinute() == 0 && ldt.getSecond() == 0 && ldt.getNano() == 0;
             Assertions.assertThat(isStart)
-                    .as("Ожидалось, что временная метка %s — начало суток (00:00:00)", ldt)
+                    .as("Ожидалось, что временная метка %s - начало суток (00:00:00)", ldt)
                     .isTrue();
         };
     }
@@ -332,7 +332,7 @@ public class InstantAssertions {
                     && ldt.getSecond() == 59
                     && ldt.getNano() == 999999999);
             Assertions.assertThat(isEnd)
-                    .as("Ожидалось, что временная метка %s — конец суток (23:59:59.999999999)", ldt)
+                    .as("Ожидалось, что временная метка %s - конец суток (23:59:59.999999999)", ldt)
                     .isTrue();
         };
     }
@@ -345,7 +345,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isStart = ldt.getMinute() == 0 && ldt.getSecond() == 0 && ldt.getNano() == 0;
             Assertions.assertThat(isStart)
-                    .as("Ожидалось, что временная метка %s — начало часа (минуты, секунды и наносекунды равны нулю)", ldt)
+                    .as("Ожидалось, что временная метка %s - начало часа (минуты, секунды и наносекунды равны нулю)", ldt)
                     .isTrue();
         };
     }
@@ -358,7 +358,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isEnd = ldt.getMinute() == 59 && ldt.getSecond() == 59 && ldt.getNano() == 999999999;
             Assertions.assertThat(isEnd)
-                    .as("Ожидалось, что временная метка %s — конец часа (минуты и секунды равны 59, наносекунды 999999999)", ldt)
+                    .as("Ожидалось, что временная метка %s - конец часа (минуты и секунды равны 59, наносекунды 999999999)", ldt)
                     .isTrue();
         };
     }
@@ -371,7 +371,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isStart = ldt.getSecond() == 0 && ldt.getNano() == 0;
             Assertions.assertThat(isStart)
-                    .as("Ожидалось, что временная метка %s — начало минуты (секунды и наносекунды равны нулю)", ldt)
+                    .as("Ожидалось, что временная метка %s - начало минуты (секунды и наносекунды равны нулю)", ldt)
                     .isTrue();
         };
     }
@@ -384,7 +384,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isEnd = ldt.getSecond() == 59 && ldt.getNano() == 999999999;
             Assertions.assertThat(isEnd)
-                    .as("Ожидалось, что временная метка %s — конец минуты (секунда равна 59, наносекунды 999999999)", ldt)
+                    .as("Ожидалось, что временная метка %s - конец минуты (секунда равна 59, наносекунды 999999999)", ldt)
                     .isTrue();
         };
     }
@@ -397,7 +397,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isStart = ldt.getNano() == 0;
             Assertions.assertThat(isStart)
-                    .as("Ожидалось, что временная метка %s — начало секунды (наносекунды равны нулю)", ldt)
+                    .as("Ожидалось, что временная метка %s - начало секунды (наносекунды равны нулю)", ldt)
                     .isTrue();
         };
     }
@@ -410,7 +410,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isEnd = ldt.getNano() == 999999999;
             Assertions.assertThat(isEnd)
-                    .as("Ожидалось, что временная метка %s — конец секунды (наносекунды равны 999999999)", ldt)
+                    .as("Ожидалось, что временная метка %s - конец секунды (наносекунды равны 999999999)", ldt)
                     .isTrue();
         };
     }
@@ -900,7 +900,7 @@ public class InstantAssertions {
             DayOfWeek firstDayOfWeek = DayOfWeek.MONDAY; // Default to Monday, consider using Locale for more flexibility
             boolean isStart = zdt.getDayOfWeek() == firstDayOfWeek && zdt.toLocalTime().equals(LocalTime.MIN);
             Assertions.assertThat(isStart)
-                    .as("Ожидалось, что временная метка %s — начало недели (%s 00:00)", zdt.toLocalDate(), firstDayOfWeek)
+                    .as("Ожидалось, что временная метка %s - начало недели (%s 00:00)", zdt.toLocalDate(), firstDayOfWeek)
                     .isTrue();
         };
     }
@@ -915,7 +915,7 @@ public class InstantAssertions {
             DayOfWeek lastDayOfWeek = DayOfWeek.SUNDAY; // Default to Sunday, consider using Locale for more flexibility
             boolean isEnd = zdt.getDayOfWeek() == lastDayOfWeek && zdt.toLocalTime().equals(LocalTime.MAX.truncatedTo(ChronoUnit.NANOS));
             Assertions.assertThat(isEnd)
-                    .as("Ожидалось, что временная метка %s — конец недели (%s 23:59:59.999999999)", zdt.toLocalDate(), lastDayOfWeek)
+                    .as("Ожидалось, что временная метка %s - конец недели (%s 23:59:59.999999999)", zdt.toLocalDate(), lastDayOfWeek)
                     .isTrue();
         };
     }
@@ -928,7 +928,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isStart = ldt.getDayOfMonth() == 1 && ldt.toLocalTime().equals(LocalTime.MIN);
             Assertions.assertThat(isStart)
-                    .as("Ожидалось, что временная метка %s — начало месяца (первый день, 00:00)", ldt.toLocalDate())
+                    .as("Ожидалось, что временная метка %s - начало месяца (первый день, 00:00)", ldt.toLocalDate())
                     .isTrue();
         };
     }
@@ -942,7 +942,7 @@ public class InstantAssertions {
             LocalDate lastDayOfMonth = ldt.toLocalDate().with(java.time.temporal.TemporalAdjusters.lastDayOfMonth());
             boolean isEnd = ldt.toLocalDate().equals(lastDayOfMonth) && ldt.toLocalTime().equals(LocalTime.MAX.truncatedTo(ChronoUnit.NANOS));
             Assertions.assertThat(isEnd)
-                    .as("Ожидалось, что временная метка %s — конец месяца (последний день, 23:59:59.999999999)", lastDayOfMonth)
+                    .as("Ожидалось, что временная метка %s - конец месяца (последний день, 23:59:59.999999999)", lastDayOfMonth)
                     .isTrue();
         };
     }
@@ -955,7 +955,7 @@ public class InstantAssertions {
             LocalDateTime ldt = LocalDateTime.ofInstant(actual, ZoneId.systemDefault());
             boolean isStart = ldt.getDayOfYear() == 1 && ldt.toLocalTime().equals(LocalTime.MIN);
             Assertions.assertThat(isStart)
-                    .as("Ожидалось, что временная метка %s — начало года (1 января, 00:00)", ldt.toLocalDate())
+                    .as("Ожидалось, что временная метка %s - начало года (1 января, 00:00)", ldt.toLocalDate())
                     .isTrue();
         };
     }
@@ -969,7 +969,7 @@ public class InstantAssertions {
             LocalDate lastDayOfYear = ldt.toLocalDate().with(java.time.temporal.TemporalAdjusters.lastDayOfYear());
             boolean isEnd = ldt.toLocalDate().equals(lastDayOfYear) && ldt.toLocalTime().equals(LocalTime.MAX.truncatedTo(ChronoUnit.NANOS));
             Assertions.assertThat(isEnd)
-                    .as("Ожидалось, что временная метка %s — конец года (31 декабря, 23:59:59.999999999)", lastDayOfYear)
+                    .as("Ожидалось, что временная метка %s - конец года (31 декабря, 23:59:59.999999999)", lastDayOfYear)
                     .isTrue();
         };
     }

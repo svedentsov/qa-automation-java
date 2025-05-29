@@ -1,11 +1,12 @@
 package rest.matcher.assertions;
 
+import core.matcher.Condition;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
-import rest.matcher.Condition;
 
 import java.util.List;
 import java.util.Objects;
@@ -21,7 +22,7 @@ public class HeaderAssertions {
      * Функциональный интерфейс для условий проверки заголовков ответа.
      */
     @FunctionalInterface
-    public interface HeaderCondition extends Condition {
+    public interface HeaderCondition extends Condition<Response> {
     }
 
     /**

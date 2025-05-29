@@ -45,15 +45,15 @@ public class KafkaExample {
     public void validateCompositeConditions(ConsumerRecord<String, String> record) {
         KafkaValidator.forRecords(record).shouldHave(
                 and( // все условия должны быть верны
-                        topic(equalToStr("topic")), // — топик == "topic"
-                        key(contains("key1")) // — ключ содержит "key1"
+                        topic(equalToStr("topic")), // топик == "topic"
+                        key(contains("key1")) // ключ содержит "key1"
                 ),
                 or( // одно из условий должно быть верно
-                        partition(equalTo(0)), // — партиция == 0
-                        partition(equalTo(1)) // — или партиция == 1
+                        partition(equalTo(0)), // партиция == 0
+                        partition(equalTo(1)) // или партиция == 1
                 ),
                 not( // ни одно из условий не должно сработать
-                        value(contains("error")) // — значение не должно содержать "error"
+                        value(contains("error")) // значение не должно содержать "error"
                 ),
                 nOf(2, // из трёх условий должны выполниться любые два
                         key(isNotBlank()), // ключ не пуст и не только пробелы

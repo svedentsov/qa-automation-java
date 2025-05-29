@@ -1,10 +1,11 @@
 package rest.matcher.assertions;
 
+import core.matcher.Condition;
+import io.restassured.response.Response;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
-import rest.matcher.Condition;
 
 import java.time.Duration;
 import java.util.Objects;
@@ -19,7 +20,7 @@ public class TimeAssertions {
      * Функциональный интерфейс для условий проверки времени ответа.
      */
     @FunctionalInterface
-    public interface TimeCondition extends Condition {
+    public interface TimeCondition extends Condition<Response> {
     }
 
     /**

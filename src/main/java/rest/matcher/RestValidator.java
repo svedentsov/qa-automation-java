@@ -1,5 +1,6 @@
 package rest.matcher;
 
+import core.matcher.Condition;
 import io.restassured.response.Response;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;

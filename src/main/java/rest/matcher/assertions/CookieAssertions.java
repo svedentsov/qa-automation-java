@@ -1,10 +1,12 @@
 package rest.matcher.assertions;
 
+import core.matcher.Condition;
+import io.restassured.http.Cookie;
+import io.restassured.response.Response;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
-import rest.matcher.Condition;
 
 import java.util.Date;
 import java.util.Objects;
@@ -20,7 +22,7 @@ public class CookieAssertions {
      * Функциональный интерфейс для условий проверки куки в ответе.
      */
     @FunctionalInterface
-    public interface CookieCondition extends Condition {
+    public interface CookieCondition extends Condition<Response> {
     }
 
     /**
@@ -128,7 +130,7 @@ public class CookieAssertions {
         Objects.requireNonNull(cookieName, "cookieName не может быть null");
         Objects.requireNonNull(domain, "domain не может быть null");
         return response -> {
-            io.restassured.http.Cookie detailedCookie = response.getDetailedCookie(cookieName);
+            Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
                 throw new AssertionError(String.format("Ожидалось, что кука '%s' существует", cookieName));
             }
@@ -151,7 +153,7 @@ public class CookieAssertions {
         Objects.requireNonNull(cookieName, "cookieName не может быть null");
         Objects.requireNonNull(path, "path не может быть null");
         return response -> {
-            io.restassured.http.Cookie detailedCookie = response.getDetailedCookie(cookieName);
+            Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
                 throw new AssertionError(String.format("Ожидалось, что кука '%s' существует", cookieName));
             }
@@ -212,7 +214,7 @@ public class CookieAssertions {
         Objects.requireNonNull(domain, "domain не может быть null");
         Objects.requireNonNull(path, "path не может быть null");
         return response -> {
-            io.restassured.http.Cookie detailedCookie = response.getDetailedCookie(cookieName);
+            Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
                 throw new AssertionError(String.format("Ожидалось, что кука '%s' существует", cookieName));
             }
@@ -239,7 +241,7 @@ public class CookieAssertions {
         Objects.requireNonNull(cookieName, "cookieName не может быть null");
         Objects.requireNonNull(expirationDate, "expirationDate не может быть null");
         return response -> {
-            io.restassured.http.Cookie detailedCookie = response.getDetailedCookie(cookieName);
+            Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
                 throw new AssertionError(String.format("Ожидалось, что кука '%s' существует", cookieName));
             }
@@ -263,7 +265,7 @@ public class CookieAssertions {
         Objects.requireNonNull(attributeName, "attributeName не может быть null");
         String attrNameLower = attributeName.toLowerCase();
         return response -> {
-            io.restassured.http.Cookie detailedCookie = response.getDetailedCookie(cookieName);
+            Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
                 throw new AssertionError(String.format("Ожидалось, что кука '%s' существует", cookieName));
             }
@@ -296,7 +298,7 @@ public class CookieAssertions {
         Objects.requireNonNull(cookieName, "cookieName не может быть null");
         Objects.requireNonNull(expectedName, "expectedName не может быть null");
         return response -> {
-            io.restassured.http.Cookie detailedCookie = response.getDetailedCookie(cookieName);
+            Cookie detailedCookie = response.getDetailedCookie(cookieName);
             Assertions.assertThat(detailedCookie)
                     .as("Ожидалось, что кука '%s' существует", cookieName)
                     .isNotNull();

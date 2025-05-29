@@ -4,11 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.fge.jackson.JsonLoader;
 import com.github.fge.jsonschema.main.JsonSchema;
 import com.github.fge.jsonschema.main.JsonSchemaFactory;
+import core.matcher.Condition;
+import io.restassured.response.Response;
 import lombok.experimental.UtilityClass;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
-import rest.matcher.Condition;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.File;
@@ -31,7 +32,7 @@ public class BodyAssertions {
      * Функциональный интерфейс для условий проверки тела ответа.
      */
     @FunctionalInterface
-    public interface BodyCondition extends Condition {
+    public interface BodyCondition extends Condition<Response> {
     }
 
     /**

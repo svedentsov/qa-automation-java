@@ -7,7 +7,6 @@ package core.matcher;
  */
 @FunctionalInterface
 public interface Condition<T> {
-
     /**
      * Проверяет одну сущность.
      *
