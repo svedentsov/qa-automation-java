@@ -1,10 +1,10 @@
 package core;
 
-import core.allure.AttachmentHelper;
+import com.svedentsov.core.allure.AttachmentHelper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import ui.helper.SelenideProvider;
+import com.svedentsov.ui.helper.SelenideProvider;
 
 import static com.codeborne.selenide.WebDriverRunner.closeWebDriver;
 

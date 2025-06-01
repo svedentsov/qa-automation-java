@@ -1,19 +1,18 @@
 package core;
 
-import rest.AppPetStore;
-import ui.AppTheInternet;
+import com.svedentsov.steps.PetStoreSteps;
+import com.svedentsov.steps.TheInternetSteps;
 
 /**
  * Базовый класс для всех тестов, содержащий общие объекты для работы с приложениями PetStore и TheInternet.
  */
 public abstract class BaseTest {
-
     /**
      * Экземпляр приложения PetStore для работы с API магазина питомцев.
      */
-    protected AppPetStore petStore = AppPetStore.getPetStore();
+    protected PetStoreSteps petStore = PetStoreSteps.getPetStore();
     /**
      * Экземпляр приложения TheInternet для работы с UI тестами.
      */
-    protected AppTheInternet theInternet = AppTheInternet.getTheInternet();
+    protected TheInternetSteps theInternet = TheInternetSteps.getTheInternet();
 }

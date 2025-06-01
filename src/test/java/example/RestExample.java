@@ -1,9 +1,9 @@
 package example;
 
+import com.svedentsov.app.petstore.model.Pet;
+import com.svedentsov.rest.helper.RestValidator;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
-import rest.matcher.RestValidator;
-import rest.model.Pet;
 
 import java.io.File;
 import java.time.Duration;
@@ -11,18 +11,18 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import static core.matcher.assertions.BooleanAssertions.isTrue;
-import static core.matcher.assertions.NumberAssertions.greaterThan;
-import static core.matcher.assertions.PropertyAssertions.propertyDoesNotMatch;
-import static core.matcher.assertions.PropertyAssertions.propertyMatches;
-import static core.matcher.assertions.StringAssertions.equalToStr;
+import static com.svedentsov.matcher.RestMatcher.body;
+import static com.svedentsov.matcher.assertions.BooleanAssertions.isTrue;
+import static com.svedentsov.matcher.assertions.NumberAssertions.numberEqualTo;
+import static com.svedentsov.matcher.assertions.PropertyAssertions.propertyMatches;
+import static com.svedentsov.matcher.assertions.StringAssertions.equalTo;
+import static com.svedentsov.matcher.assertions.rest.BodyAssertions.*;
+import static com.svedentsov.matcher.assertions.rest.CookieAssertions.*;
+import static com.svedentsov.matcher.assertions.rest.HeaderAssertions.*;
+import static com.svedentsov.matcher.assertions.rest.StatusAssertions.*;
+import static com.svedentsov.matcher.assertions.rest.TimeAssertions.*;
 import static io.restassured.http.ContentType.JSON;
-import static rest.matcher.RestMatcher.body;
-import static rest.matcher.assertions.BodyAssertions.*;
-import static rest.matcher.assertions.CookieAssertions.*;
-import static rest.matcher.assertions.HeaderAssertions.*;
-import static rest.matcher.assertions.StatusAssertions.*;
-import static rest.matcher.assertions.TimeAssertions.*;
+import static com.svedentsov.matcher.RestMatcher.body;
 
 /**
  * Пример использования RestValidator для тестирования HTTP-ответов
@@ -117,14 +117,9 @@ public class RestExample {
     // Примеры использования методов RestMatcher для работы с JSON-ответом по JSONPath.
     public void validateJsonPathExamples(Response response) {
         RestValidator.forResponse(response).shouldHave(
-                // извлечение строкового поля "name" и проверка, что оно равно "Rex"
-                body("$.name", equalToStr("Rex")),
-                // извлечение булевого поля "available" и проверка true/false
-                body("$.available", isTrue()),
-                // извлечение числового поля "id" и проверка > 0
-                body("$.id", greaterThan(0), Integer.class),
-                // извлечение вложенного свойства "category.name" и проверка через Hamcrest
-                body("$.category.name", propertyMatches(Matchers.containsString("dog"))),
-                body("$.category.name", propertyDoesNotMatch(Matchers.containsString("dog"))));
+                body("$.name", equalTo("Rex")), // извлечение строкового поля "name" и проверка, что оно равно "Rex"
+                body("$.available", isTrue()), // извлечение булевого поля "available" и проверка true/false
+                body("$.id", numberEqualTo(0), Integer.class), // извлечение числового поля "id" и проверка > 0
+                body("$.category.name", propertyMatches(Matchers.containsString("dog")))); // извлечение вложенного свойства "category.name" и проверка через Hamcrest
     }
 }
