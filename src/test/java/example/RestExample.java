@@ -7,12 +7,16 @@ import org.hamcrest.Matchers;
 
 import java.io.File;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 import static com.svedentsov.matcher.RestMatcher.body;
 import static com.svedentsov.matcher.assertions.BooleanAssertions.isTrue;
+import static com.svedentsov.matcher.assertions.CollectionAssertions.collectionContains;
+import static com.svedentsov.matcher.assertions.InstantAssertions.instantBefore;
+import static com.svedentsov.matcher.assertions.ListAssertions.listCountEqual;
 import static com.svedentsov.matcher.assertions.NumberAssertions.numberEqualTo;
 import static com.svedentsov.matcher.assertions.PropertyAssertions.propertyMatches;
 import static com.svedentsov.matcher.assertions.StringAssertions.equalTo;
@@ -22,7 +26,6 @@ import static com.svedentsov.matcher.assertions.rest.HeaderAssertions.*;
 import static com.svedentsov.matcher.assertions.rest.StatusAssertions.*;
 import static com.svedentsov.matcher.assertions.rest.TimeAssertions.*;
 import static io.restassured.http.ContentType.JSON;
-import static com.svedentsov.matcher.RestMatcher.body;
 
 /**
  * Пример использования RestValidator для тестирования HTTP-ответов
@@ -120,6 +123,9 @@ public class RestExample {
                 body("$.name", equalTo("Rex")), // извлечение строкового поля "name" и проверка, что оно равно "Rex"
                 body("$.available", isTrue()), // извлечение булевого поля "available" и проверка true/false
                 body("$.id", numberEqualTo(0), Integer.class), // извлечение числового поля "id" и проверка > 0
+                body("$.items", listCountEqual(3)), // поле "data.items" - это список длиной 3
+                body("$.createdAt", instantBefore(Instant.now())), // поле "createdAt" (строка ISO-8601) раньше текущего времени
+                body("$.tags", collectionContains("urgent")), // поле "tags" (массив строк) содержит "urgent"
                 body("$.category.name", propertyMatches(Matchers.containsString("dog")))); // извлечение вложенного свойства "category.name" и проверка через Hamcrest
     }
 }

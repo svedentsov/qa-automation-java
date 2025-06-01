@@ -4,6 +4,9 @@ import com.jayway.jsonpath.Configuration;
 import com.jayway.jsonpath.JsonPath;
 import com.jayway.jsonpath.Option;
 import com.svedentsov.matcher.assertions.BooleanAssertions.BooleanCondition;
+import com.svedentsov.matcher.assertions.CollectionAssertions.CollectionCondition;
+import com.svedentsov.matcher.assertions.InstantAssertions.InstantCondition;
+import com.svedentsov.matcher.assertions.ListAssertions.ListCondition;
 import com.svedentsov.matcher.assertions.NumberAssertions.NumberCondition;
 import com.svedentsov.matcher.assertions.PropertyAssertions.PropertyCondition;
 import com.svedentsov.matcher.assertions.StringAssertions.StringCondition;
@@ -16,6 +19,8 @@ import io.restassured.response.Response;
 import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 
+import java.time.Instant;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 
@@ -32,7 +37,7 @@ public class RestMatcher {
      * Создаёт условие для проверки статусного кода ответа.
      *
      * @param sc условие для проверки статусного кода
-     * @return {@link Condition} для проверки статусного кода
+     * @return {@link StatusCondition} для проверки статусного кода
      */
     public static StatusCondition status(StatusCondition sc) {
         return sc;
@@ -89,7 +94,7 @@ public class RestMatcher {
     public static BodyCondition body(
             @NonNull String jsonPath,
             @NonNull StringCondition sc) {
-        return value(resp -> getJsonValue(resp.getBody().asString(), jsonPath, String.class), sc);
+        return value(response -> getJsonValue(response, jsonPath, String.class), sc);
     }
 
     /**
@@ -102,7 +107,7 @@ public class RestMatcher {
     public static BodyCondition body(
             @NonNull String jsonPath,
             @NonNull BooleanCondition bc) {
-        return value(resp -> getJsonValue(resp.getBody().asString(), jsonPath, Boolean.class), bc);
+        return value(response -> getJsonValue(response, jsonPath, Boolean.class), bc);
     }
 
     /**
@@ -118,7 +123,7 @@ public class RestMatcher {
             @NonNull String jsonPath,
             @NonNull NumberCondition<T> nc,
             @NonNull Class<T> type) {
-        return value(resp -> getJsonValue(resp.getBody().asString(), jsonPath, type), nc);
+        return value(response -> getJsonValue(response, jsonPath, type), nc);
     }
 
     /**
@@ -131,7 +136,62 @@ public class RestMatcher {
     public static BodyCondition body(
             @NonNull String jsonPath,
             @NonNull PropertyCondition pc) {
-        return value(resp -> getJsonValue(resp.getBody().asString(), jsonPath, Object.class), pc);
+        return value(response -> getJsonValue(response, jsonPath, Object.class), pc);
+    }
+
+    /**
+     * Создаёт условие для проверки коллекции (или строки, или массива) из JSON-ответа по JSONPath.
+     *
+     * @param jsonPath путь JSONPath к значению
+     * @param cc       условие из CollectionAssertions
+     * @param <T>      ожидаемый тип (Collection, String, массив и т.д.)
+     * @return {@link BodyCondition} для проверки
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> BodyCondition body(
+            @NonNull String jsonPath,
+            @NonNull CollectionCondition<T> cc) {
+        return response -> {
+            Object raw = getJsonValue(response, jsonPath, Object.class);
+            cc.check((T) raw);
+        };
+    }
+
+    /**
+     * Создаёт условие для проверки временной метки (Instant) из JSON-ответа по JSONPath.
+     * Ожидается, что значение по jsonPath - строка в ISO-8601-формате.
+     *
+     * @param jsonPath путь JSONPath к полю с датой
+     * @param ic       условие из InstantAssertions
+     * @return {@link BodyCondition} для проверки
+     */
+    public static BodyCondition body(
+            @NonNull String jsonPath,
+            @NonNull InstantCondition ic) {
+        return response -> {
+            String strVal = getJsonValue(response, jsonPath, String.class);
+            Instant instant = (strVal == null) ? null : Instant.parse(strVal);
+            ic.check(instant);
+        };
+    }
+
+    /**
+     * Создаёт условие для проверки списка сущностей из JSON-ответа по JSONPath
+     * Ожидается, что JSONPath вернёт некий JSON-массив, который десериализуется в List<?>.
+     *
+     * @param jsonPath путь JSONPath к массиву
+     * @param lc       условие из ListAssertions
+     * @param <T>      тип элементов списка (как правило Map или примитивы)
+     * @return {@link BodyCondition} для проверки
+     */
+    @SuppressWarnings("unchecked")
+    public static <T> BodyCondition body(
+            @NonNull String jsonPath,
+            @NonNull ListCondition<T> lc) {
+        return response -> {
+            List<?> rawList = getJsonValue(response, jsonPath, List.class);
+            lc.check((List<T>) rawList);
+        };
     }
 
     /**
@@ -142,7 +202,7 @@ public class RestMatcher {
      * @param cond   условие для проверки извлечённого значения
      * @param <R>    тип проверяемого значения
      * @return {@link BodyCondition} для проверки
-     * @throws NullPointerException если getter или cond null
+     * @throws NullPointerException если getter или cond равен null
      */
     public static <R> BodyCondition value(
             @NonNull Function<? super Response, ? extends R> getter,
@@ -153,20 +213,21 @@ public class RestMatcher {
     }
 
     /**
-     * Извлекает значение из JSON-строки по JSONPath и проверяет его тип.
+     * Извлекает значение из JSON-ответа по JSONPath и проверяет его тип.
      *
-     * @param json         исходная JSON-строка
+     * @param response     HTTP-ответ
      * @param jsonPath     путь JSONPath для извлечения
      * @param expectedType ожидаемый класс значения
      * @param <T>          тип значения
      * @return извлечённое и приведённое к {@code expectedType} значение или null
      * @throws AssertionError       если значение не того типа
-     * @throws NullPointerException если любой из аргументов null
+     * @throws NullPointerException если любой из аргументов равен null
      */
     private static <T> T getJsonValue(
-            @NonNull String json,
+            @NonNull Response response,
             @NonNull String jsonPath,
             @NonNull Class<T> expectedType) {
+        String json = response.getBody().asString();
         Configuration conf = Configuration.defaultConfiguration().addOptions(Option.DEFAULT_PATH_LEAF_TO_NULL);
         Object val = JsonPath.using(conf).parse(json).read(jsonPath);
         if (val == null) {
