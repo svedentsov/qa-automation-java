@@ -144,7 +144,7 @@ public class DbExample {
                         value(MyEntity::getName, endsWith("User")) // имя заканчивается на "User"
                 ),
                 not( // ни одна из проверок (имя пустое или имя состоит только из цифр) не проходит
-                        value(MyEntity::getName, isEmptyStr()), // имя не пустое
+                        value(MyEntity::getName, isEmpty()), // имя не пустое
                         value(MyEntity::getName, isDigitsOnly()) // имя не состоит только из цифр
                 ),
                 nOf(2, // из трёх проверок хотя бы две проходят

@@ -74,6 +74,15 @@ public class RestMatcher {
     }
 
     /**
+     * Создаёт условие для проверки тела ответа.
+     * @param bc условие для проверки тела ответа
+     * @return {@link BodyCondition} для проверки тела ответа
+     */
+    public static BodyCondition body(BodyCondition bc) {
+        return bc;
+    }
+
+    /**
      * Создаёт условие для проверки всего тела ответа как строки.
      *
      * @param sc строковое условие для проверки текста тела

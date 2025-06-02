@@ -111,7 +111,7 @@ public class KafkaSteps {
 
     @Step("Проверить в топике '{topic}', что все записи содержат текста '{texts}'")
     public KafkaSteps checkRecordsContainTexts(String topic, String... texts) {
-        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(containsAllStr(texts)));
+        kafkaExecutor.setTopic(topic).receiveRecords().shouldHave(value(containsAll(texts)));
         return this;
     }
 

@@ -1,5 +1,6 @@
 package com.svedentsov.matcher.assertions;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.svedentsov.matcher.Condition;
 import org.assertj.core.api.Assertions;
 import org.w3c.dom.Document;
@@ -11,13 +12,11 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Locale;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Pattern;
 
 public class StringAssertions {
@@ -118,7 +117,7 @@ public class StringAssertions {
      *
      * @return условие проверки пустоты строки
      */
-    public static StringCondition isEmptyStr() {
+    public static StringCondition isEmpty() {
         return value -> Assertions.assertThat(value)
                 .as("Строка должна быть пустой")
                 .isEmpty();
@@ -129,7 +128,7 @@ public class StringAssertions {
      *
      * @return условие проверки, что строка не пустая
      */
-    public static StringCondition isNotEmptyStr() {
+    public static StringCondition isNotEmpty() {
         return value -> Assertions.assertThat(value)
                 .as("Строка не должна быть пустой")
                 .isNotEmpty();
@@ -535,6 +534,16 @@ public class StringAssertions {
     }
 
     /**
+     * Проверяет, что строка является валидным UUID.
+     */
+    public static StringCondition isValidUUID() {
+        Pattern UUID_REGEX = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$");
+        return value -> Assertions.assertThat(UUID_REGEX.matcher(value).matches())
+                .as("Строка %s должна быть валидным UUID", value)
+                .isTrue();
+    }
+
+    /**
      * Проверяет, является ли строка корректным UUID.
      *
      * @return условие проверки на UUID
@@ -548,6 +557,24 @@ public class StringAssertions {
                         .isTrue();
             } catch (IllegalArgumentException e) {
                 Assertions.fail("Строка %s не является корректным UUID: %s", value, e.getMessage());
+            }
+        };
+    }
+
+    /**
+     * Проверяет, что строка является корректным UUID без дефисов.
+     *
+     * @return условие проверки на UUID без дефисов
+     */
+    public static StringCondition isValidUuidWithoutHyphens() {
+        return value -> {
+            try {
+                UUID.fromString(value.replaceFirst("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})", "$1-$2-$3-$4-$5"));
+                Assertions.assertThat(true)
+                        .as("Строка %s должна быть корректным UUID без дефисов", value)
+                        .isTrue();
+            } catch (IllegalArgumentException e) {
+                Assertions.fail("Строка %s не является корректным UUID без дефисов: %s", value, e.getMessage());
             }
         };
     }
@@ -842,24 +869,6 @@ public class StringAssertions {
     }
 
     /**
-     * Проверяет, что строка является корректным UUID без дефисов.
-     *
-     * @return условие проверки на UUID без дефисов
-     */
-    public static StringCondition isValidUuidWithoutHyphens() {
-        return value -> {
-            try {
-                UUID.fromString(value.replaceFirst("(\\p{XDigit}{8})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{4})(\\p{XDigit}{12})", "$1-$2-$3-$4-$5"));
-                Assertions.assertThat(true)
-                        .as("Строка %s должна быть корректным UUID без дефисов", value)
-                        .isTrue();
-            } catch (IllegalArgumentException e) {
-                Assertions.fail("Строка %s не является корректным UUID без дефисов: %s", value, e.getMessage());
-            }
-        };
-    }
-
-    /**
      * Проверяет, что строка содержит только уникальные символы.
      *
      * @return условие проверки на уникальность символов
@@ -939,12 +948,9 @@ public class StringAssertions {
      * @param max максимальная длина
      */
     public static StringCondition lengthBetweenStr(int min, int max) {
-        return value -> {
-            int actualLength = value.length();
-            Assertions.assertThat(actualLength)
-                    .as("Длина строки должна быть в диапазоне [%d, %d]", min, max)
-                    .isBetween(min, max);
-        };
+        return value -> Assertions.assertThat(value.length())
+                .as("Длина строки должна быть в диапазоне [%d, %d]", min, max)
+                .isBetween(min, max);
     }
 
     /**
@@ -1024,7 +1030,7 @@ public class StringAssertions {
      *
      * @param texts подстроки для поиска
      */
-    public static StringCondition containsAllStr(String... texts) {
+    public static StringCondition containsAll(String... texts) {
         return value -> Arrays.stream(texts).forEach(
                 text -> Assertions.assertThat(value)
                         .as("Строка должна содержать %s", text)
@@ -1083,7 +1089,7 @@ public class StringAssertions {
     public static StringCondition wordsReverseOrder(String... words) {
         return value -> {
             String[] reversedWords = Arrays.copyOf(words, words.length);
-            java.util.Collections.reverse(Arrays.asList(reversedWords));
+            Collections.reverse(Arrays.asList(reversedWords));
             String patternString = String.join(".*?", reversedWords);
             Pattern pattern = Pattern.compile(patternString, Pattern.DOTALL);
             Assertions.assertThat(pattern.matcher(value).find())
@@ -1255,7 +1261,7 @@ public class StringAssertions {
     /**
      * Проверяет, что строка представляет собой валидное число (Integer).
      */
-    public static StringCondition isIntegerStr() {
+    public static StringCondition isInteger() {
         return value -> {
             try {
                 Integer.parseInt(value);
@@ -1284,7 +1290,7 @@ public class StringAssertions {
     public static StringCondition isBase64Encoded() {
         return value -> {
             try {
-                java.util.Base64.getDecoder().decode(value);
+                Base64.getDecoder().decode(value);
                 Assertions.assertThat(true)
                         .as("Строка %s должна быть закодированной Base64", value)
                         .isTrue();
@@ -1494,8 +1500,8 @@ public class StringAssertions {
     public static StringCondition matchesDateFormat(String pattern) {
         return value -> {
             try {
-                java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern(pattern);
-                java.time.LocalDate.parse(value, formatter);
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern(pattern);
+                LocalDate.parse(value, formatter);
                 Assertions.assertThat(true)
                         .as("Строка должна соответствовать формату даты %s", pattern)
                         .isTrue();
@@ -1583,22 +1589,12 @@ public class StringAssertions {
     }
 
     /**
-     * Проверяет, что строка является валидным UUID.
-     */
-    public static StringCondition isValidUUID() {
-        Pattern UUID_REGEX = Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$");
-        return value -> Assertions.assertThat(UUID_REGEX.matcher(value).matches())
-                .as("Строка %s должна быть валидным UUID", value)
-                .isTrue();
-    }
-
-    /**
      * Проверяет, что строка является валидным JSON.
      */
     public static StringCondition isValidJson() {
         return value -> {
             try {
-                new com.fasterxml.jackson.databind.ObjectMapper().readTree(value);
+                new ObjectMapper().readTree(value);
                 Assertions.assertThat(true)
                         .as("Строка %s должна быть валидным JSON", value)
                         .isTrue();
@@ -1614,9 +1610,9 @@ public class StringAssertions {
     public static StringCondition isValidXml() {
         return value -> {
             try {
-                javax.xml.parsers.DocumentBuilderFactory.newInstance()
+                DocumentBuilderFactory.newInstance()
                         .newDocumentBuilder()
-                        .parse(new org.xml.sax.InputSource(new java.io.StringReader(value)));
+                        .parse(new InputSource(new StringReader(value)));
                 Assertions.assertThat(true)
                         .as("Строка %s должна быть валидным XML", value)
                         .isTrue();
@@ -1703,9 +1699,8 @@ public class StringAssertions {
         return value -> {
             for (int i = 1; i < value.length(); i++) {
                 if (value.charAt(i) == value.charAt(i - 1)) {
-                    Assertions.fail(
-                            String.format("Строка %s содержит подряд идущие одинаковые символы: '%c'",
-                                    value, value.charAt(i))
+                    Assertions.fail(String.format("Строка %s содержит подряд идущие одинаковые символы: '%c'",
+                            value, value.charAt(i))
                     );
                 }
             }
@@ -1722,9 +1717,8 @@ public class StringAssertions {
                 char previous = value.charAt(i - 1);
                 if (Character.isLetter(current) && Character.isDigit(previous) ||
                         Character.isDigit(current) && Character.isLetter(previous)) {
-                    Assertions.fail(
-                            String.format("Строка %s содержит подряд идущие буквы и цифры: '%c%c'",
-                                    value, previous, current)
+                    Assertions.fail(String.format("Строка %s содержит подряд идущие буквы и цифры: '%c%c'",
+                            value, previous, current)
                     );
                 }
             }
@@ -1754,8 +1748,7 @@ public class StringAssertions {
     public static StringCondition doesNotContainSubstringsStartingAndEndingWith(char startSymbol, char endSymbol) {
         return value -> {
             Pattern pattern = Pattern.compile(
-                    Pattern.quote(String.valueOf(startSymbol)) + ".*?" + Pattern.quote(String.valueOf(endSymbol))
-            );
+                    Pattern.quote(String.valueOf(startSymbol)) + ".*?" + Pattern.quote(String.valueOf(endSymbol)));
             boolean found = pattern.matcher(value).find();
             Assertions.assertThat(found)
                     .as("Строка %s не должна содержать подстрок, начинающихся с '%c' и заканчивающихся на '%c'",

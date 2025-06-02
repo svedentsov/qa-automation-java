@@ -25,7 +25,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список пуст.
+     * Список пуст.
      *
      * @param <T> тип сущности
      * @return условие проверки пустоты списка
@@ -40,7 +40,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список не пуст.
+     * Список не пуст.
      *
      * @param <T> тип сущности
      * @return условие проверки непустоты списка
@@ -55,7 +55,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что размер списка равен exact.
+     * Размер списка равен exact.
      *
      * @param expected ожидаемый размер (>= 0)
      * @param <T>      тип сущности
@@ -75,7 +75,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что размер списка меньше upperExclusive.
+     * Размер списка меньше upperExclusive.
      *
      * @param upperExclusive верхняя граница (исключая, > 0)
      * @param <T>            тип сущности
@@ -95,7 +95,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что размер списка больше lowerExclusive.
+     * Размер списка больше lowerExclusive.
      *
      * @param lowerExclusive нижняя граница (исключая, >= 0)
      * @param <T>            тип сущности
@@ -115,7 +115,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что размер списка находится между minInclusive и maxInclusive включительно.
+     * Размер списка находится между minInclusive и maxInclusive включительно.
      *
      * @param minInclusive минимальный размер (>= 0)
      * @param maxInclusive максимальный размер (>= minInclusive)
@@ -138,7 +138,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что каждый элемент списка удовлетворяет всем переданным условиям.
+     * Каждый элемент списка удовлетворяет всем переданным условиям.
      *
      * @param conds набор условий (не null, length > 0)
      * @param <T>   тип сущности
@@ -159,7 +159,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что существует хотя бы один элемент списка, удовлетворяющий всем переданным условиям одновременно.
+     * Существует хотя бы один элемент списка, удовлетворяющий всем переданным условиям одновременно.
      *
      * @param conds набор условий (не null, length > 0)
      * @param <T>   тип сущности
@@ -190,7 +190,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что ни один элемент списка не удовлетворяет всем переданным условиям одновременно.
+     * Ни один элемент списка не удовлетворяет всем переданным условиям одновременно.
      *
      * @param conds набор условий (не null, length > 0)
      * @param <T>   тип сущности
@@ -221,7 +221,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что ровно times элементов списка удовлетворяют условию cond.
+     * Ровно times элементов списка удовлетворяют условию cond.
      *
      * @param cond  условие для одного элемента (не null)
      * @param times ожидаемое число совпадений (>= 0)
@@ -235,15 +235,15 @@ public class ListAssertions {
         }
         return list -> {
             requireList(list);
-            long cnt = countMatches(list, cond);
-            Assertions.assertThat(cnt)
-                    .as(fmt("Ожидалось ровно %d вхождений, но найдено %d", times, cnt))
+            long count = countMatches(list, cond);
+            Assertions.assertThat(count)
+                    .as(fmt("Ожидалось ровно %d вхождений, но найдено %d", times, count))
                     .isEqualTo(times);
         };
     }
 
     /**
-     * Проверяет, что не менее min элементов списка удовлетворяют условию cond.
+     * Не менее min элементов списка удовлетворяют условию cond.
      *
      * @param cond условие для одного элемента (не null)
      * @param min  минимальное число совпадений (>= 0)
@@ -257,15 +257,15 @@ public class ListAssertions {
         }
         return list -> {
             requireList(list);
-            long cnt = countMatches(list, cond);
-            Assertions.assertThat(cnt)
-                    .as(fmt("Ожидалось минимум %d вхождений, но найдено %d", min, cnt))
+            long count = countMatches(list, cond);
+            Assertions.assertThat(count)
+                    .as(fmt("Ожидалось минимум %d вхождений, но найдено %d", min, count))
                     .isGreaterThanOrEqualTo(min);
         };
     }
 
     /**
-     * Проверяет, что не более max элементов списка удовлетворяют условию cond.
+     * Не более max элементов списка удовлетворяют условию cond.
      *
      * @param cond условие для одного элемента (не null)
      * @param max  максимальное число совпадений (>= 0)
@@ -279,15 +279,15 @@ public class ListAssertions {
         }
         return list -> {
             requireList(list);
-            long cnt = countMatches(list, cond);
-            Assertions.assertThat(cnt)
-                    .as(fmt("Ожидалось не более %d вхождений, но найдено %d", max, cnt))
+            long count = countMatches(list, cond);
+            Assertions.assertThat(count)
+                    .as(fmt("Ожидалось не более %d вхождений, но найдено %d", max, count))
                     .isLessThanOrEqualTo(max);
         };
     }
 
     /**
-     * Проверяет, что список отсортирован по компаратору comp в порядке возрастания.
+     * Список отсортирован по компаратору comp в порядке возрастания.
      *
      * @param comp компаратор (не null)
      * @param <T>  тип сущности
@@ -306,7 +306,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список отсортирован по компаратору comp в порядке убывания.
+     * Список отсортирован по компаратору comp в порядке убывания.
      *
      * @param comp компаратор (не null)
      * @param <T>  тип сущности
@@ -325,7 +325,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список содержит элемент el.
+     * Список содержит элемент el.
      *
      * @param el  ожидаемый элемент
      * @param <T> тип сущности
@@ -341,7 +341,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список содержит все переданные элементы.
+     * Список содержит все переданные элементы.
      *
      * @param elements ожидаемые элементы (не null, length > 0)
      * @param <T>      тип сущности
@@ -362,7 +362,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список содержит только указанные элементы (в любом порядке).
+     * Список содержит только указанные элементы (в любом порядке).
      *
      * @param elements ожидаемые элементы (не null, length > 0)
      * @param <T>      тип сущности
@@ -383,7 +383,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список содержит ровно указанные элементы в заданном порядке.
+     * Список содержит ровно указанные элементы в заданном порядке.
      *
      * @param expected ожидаемый список (не null)
      * @param <T>      тип сущности
@@ -399,7 +399,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список содержит ровно указанные элементы в любом порядке.
+     * Список содержит ровно указанные элементы в любом порядке.
      *
      * @param expected ожидаемый список (не null)
      * @param <T>      тип сущности
@@ -415,7 +415,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что все элементы списка уникальны.
+     * Все элементы списка уникальны.
      *
      * @param <T> тип сущности
      * @return условие проверки уникальности
@@ -431,7 +431,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что в списке есть дубликаты.
+     * В списке есть дубликаты.
      *
      * @param <T> тип сущности
      * @return условие проверки наличия дубликатов
@@ -447,7 +447,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что значения свойства getter уникальны среди всех элементов.
+     * Значения свойства getter уникальны среди всех элементов.
      *
      * @param getter функция получения ключа (не null)
      * @param <T>    тип сущности
@@ -465,7 +465,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет сумму значений getter по всем элементам.
+     * Сумма значений getter по всем элементам.
      *
      * @param getter   функция получения числового свойства (не null)
      * @param expected ожидаемая сумма
@@ -488,7 +488,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет среднее значение getter по всем элементам.
+     * Среднее значение getter по всем элементам.
      *
      * @param getter   функция получения числового свойства (не null)
      * @param expected ожидаемое среднее
@@ -498,8 +498,7 @@ public class ListAssertions {
      */
     public static <T> ListCondition<T> listAverageEqual(
             @NonNull Function<T, ? extends Number> getter,
-            double expected
-    ) {
+            double expected) {
         return list -> {
             requireList(list);
             double avg = list.stream()
@@ -513,7 +512,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что значение свойства getter каждого элемента равно expected.
+     * Значение свойства getter каждого элемента равно expected.
      *
      * @param getter   функция получения свойства (не null)
      * @param expected ожидаемое значение
@@ -522,8 +521,7 @@ public class ListAssertions {
      */
     public static <T> ListCondition<T> listValuesEqual(
             @NonNull Function<T, ?> getter,
-            Object expected
-    ) {
+            Object expected) {
         return list -> {
             requireList(list);
             list.forEach(item -> {
@@ -536,7 +534,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что свойства getter всех элементов уникальны.
+     * Свойства getter всех элементов уникальны.
      *
      * @param getter функция получения свойства (не null)
      * @param <T>    тип сущности
@@ -553,7 +551,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список не содержит null-значений.
+     * Список не содержит null-значений.
      *
      * @param <T> тип сущности
      * @return условие проверки отсутствия null
@@ -568,7 +566,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет размеры групп, полученных по ключу getter.
+     * Размеры групп, полученных по ключу getter.
      *
      * @param getter        функция получения ключа группы (не null)
      * @param expectedSizes ожидания по размеру каждой группы (не null)
@@ -594,7 +592,7 @@ public class ListAssertions {
     }
 
     /**
-     * Проверяет, что список не равен null.
+     * Список не равен null.
      *
      * @param list проверяемый список
      * @throws NullPointerException если список равен null

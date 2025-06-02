@@ -18,7 +18,7 @@ public class BooleanAssertions {
     }
 
     /**
-     * Проверяет, что значение является булевым.
+     * Значение является булевым.
      */
     public static BooleanCondition isBoolean() {
         return value -> Assertions.assertThat(value)
@@ -27,7 +27,7 @@ public class BooleanAssertions {
     }
 
     /**
-     * Проверяет, что булево значение равно true.
+     * Булево значение равно true.
      *
      * @return условие, которое проходит если значение true
      */
@@ -38,7 +38,7 @@ public class BooleanAssertions {
     }
 
     /**
-     * Проверяет, что булево значение равно false.
+     * Булево значение равно false.
      *
      * @return условие, которое проходит если значение false
      */
@@ -49,7 +49,7 @@ public class BooleanAssertions {
     }
 
     /**
-     * Проверяет, что булево значение является null.
+     * Булево значение является null.
      *
      * @return условие, которое проходит если значение null
      */
@@ -60,7 +60,7 @@ public class BooleanAssertions {
     }
 
     /**
-     * Проверяет, что булево значение не является null.
+     * Булево значение не является null.
      *
      * @return условие, которое проходит если значение не null
      */
