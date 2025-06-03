@@ -581,6 +581,21 @@ public class RestExecutor {
         return this;
     }
 
+    /**
+     * Десериализует тело HTTP-ответа в объект указанного класса и выполняет валидацию через ObjectValidator.
+     *
+     * @param clazz      класс, в который будет десериализовано тело ответа
+     * @param conditions varargs любых Condition<T> для проверки десериализованного объекта
+     * @param <T>        тип целевого объекта
+     * @return текущий экземпляр RestExecutor
+     */
+    @SafeVarargs
+    public final <T> RestExecutor shouldHaveObject(Class<T> clazz, Condition<? super T>... conditions) {
+        T obj = response.as(clazz);
+        ObjectValidator.forObject(obj).shouldHave(conditions);
+        return this;
+    }
+
     // ========================== RESPONSE METHODS =============================
 
     /**

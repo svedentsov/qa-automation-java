@@ -27,8 +27,7 @@ import java.util.function.Function;
 /**
  * Утилитный класс для создания условий проверки HTTP-ответов.
  * Предоставляет методы для создания различных условий проверки:
- * статусного кода, заголовков, куки, тела ответа, времени ответа
- * и значений внутри JSON-ответа по JSONPath.
+ * статусного кода, заголовков, куки, тела ответа, времени ответа и значений внутри JSON-ответа по JSONPath.
  */
 @UtilityClass
 public class RestMatcher {
@@ -39,7 +38,8 @@ public class RestMatcher {
      * @param sc условие для проверки статусного кода
      * @return {@link StatusCondition} для проверки статусного кода
      */
-    public static StatusCondition status(StatusCondition sc) {
+    public static StatusCondition status(
+            @NonNull StatusCondition sc) {
         return sc;
     }
 
@@ -49,7 +49,8 @@ public class RestMatcher {
      * @param hc условие для проверки заголовков
      * @return {@link HeaderCondition} для проверки заголовков
      */
-    public static HeaderCondition header(HeaderCondition hc) {
+    public static HeaderCondition header(
+            @NonNull HeaderCondition hc) {
         return hc;
     }
 
@@ -59,7 +60,8 @@ public class RestMatcher {
      * @param cc условие для проверки куки
      * @return {@link CookieCondition} для проверки куки
      */
-    public static CookieCondition cookie(CookieCondition cc) {
+    public static CookieCondition cookie(
+            @NonNull CookieCondition cc) {
         return cc;
     }
 
@@ -69,7 +71,8 @@ public class RestMatcher {
      * @param tc условие для проверки времени ответа
      * @return {@link TimeCondition} для проверки времени ответа
      */
-    public static TimeCondition time(TimeCondition tc) {
+    public static TimeCondition time(
+            @NonNull TimeCondition tc) {
         return tc;
     }
 
@@ -78,7 +81,8 @@ public class RestMatcher {
      * @param bc условие для проверки тела ответа
      * @return {@link BodyCondition} для проверки тела ответа
      */
-    public static BodyCondition body(BodyCondition bc) {
+    public static BodyCondition body(
+            @NonNull BodyCondition bc) {
         return bc;
     }
 
@@ -236,6 +240,10 @@ public class RestMatcher {
             @NonNull Response response,
             @NonNull String jsonPath,
             @NonNull Class<T> expectedType) {
+        Objects.requireNonNull(response, "response не может быть null");
+        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        Objects.requireNonNull(expectedType, "expectedType не может быть null");
+
         String json = response.getBody().asString();
         Configuration conf = Configuration.defaultConfiguration().addOptions(Option.DEFAULT_PATH_LEAF_TO_NULL);
         Object val = JsonPath.using(conf).parse(json).read(jsonPath);

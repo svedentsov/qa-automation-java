@@ -14,12 +14,9 @@ import java.util.Optional;
 @Data
 @Entity
 @Table(name = "my_entity")
-@NamedQueries({
-        @NamedQuery(
-                name = "MyEntity.findByStatus",
-                query = "FROM MyEntity WHERE status = :status"
-        )
-})
+@NamedQueries({@NamedQuery(
+        name = "MyEntity.findByStatus",
+        query = "FROM MyEntity WHERE status = :status")})
 public class MyEntity {
     /**
      * Идентификатор сущности.
@@ -86,35 +83,4 @@ public class MyEntity {
      */
     @ElementCollection
     private List<Role> roleEntities;
-}
-
-/**
- * Встраиваемый класс для хранения адреса.
- */
-@Data
-@Embeddable
-class Address {
-    /**
-     * Город.
-     */
-    private String city;
-    /**
-     * Улица.
-     */
-    private String street;
-}
-
-/**
- * Класс для представления роли.
- */
-@Data
-class Role {
-    /**
-     * Имя роли.
-     */
-    private String name;
-    /**
-     * Описание роли.
-     */
-    private String description;
 }

@@ -1,6 +1,9 @@
 package example;
 
 import com.svedentsov.app.petstore.model.Pet;
+import com.svedentsov.db.entity.MyEntity;
+import com.svedentsov.matcher.ObjectMatcher;
+import com.svedentsov.rest.helper.ObjectValidator;
 import com.svedentsov.rest.helper.RestValidator;
 import io.restassured.response.Response;
 import org.hamcrest.Matchers;
@@ -10,6 +13,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.svedentsov.matcher.RestMatcher.body;
@@ -19,7 +23,7 @@ import static com.svedentsov.matcher.assertions.InstantAssertions.instantBefore;
 import static com.svedentsov.matcher.assertions.ListAssertions.listCountEqual;
 import static com.svedentsov.matcher.assertions.NumberAssertions.numberEqualTo;
 import static com.svedentsov.matcher.assertions.PropertyAssertions.propertyMatches;
-import static com.svedentsov.matcher.assertions.StringAssertions.equalTo;
+import static com.svedentsov.matcher.assertions.StringAssertions.*;
 import static com.svedentsov.matcher.assertions.rest.BodyAssertions.*;
 import static com.svedentsov.matcher.assertions.rest.CookieAssertions.*;
 import static com.svedentsov.matcher.assertions.rest.HeaderAssertions.*;
@@ -127,5 +131,34 @@ public class RestExample {
                 body("$.createdAt", instantBefore(Instant.now())), // поле "createdAt" (строка ISO-8601) раньше текущего времени
                 body("$.tags", collectionContains("urgent")), // поле "tags" (массив строк) содержит "urgent"
                 body("$.category.name", propertyMatches(Matchers.containsString("dog")))); // извлечение вложенного свойства "category.name" и проверка через Hamcrest
+    }
+
+    // Десериализовать тело ответа в MyEntity и проверить поля через ObjectValidator.
+    public void validateMyEntity(Response response) {
+        RestValidator.forResponse(response).shouldHave(
+                bodyCanDeserializeTo(MyEntity.class) // Тело успешно десериализуется в MyEntity (через RestValidator)
+        );
+        MyEntity entity = response.as(MyEntity.class);
+        ObjectValidator.forObject(entity).shouldHave(
+                ObjectMatcher.value(MyEntity::getName, startsWith("Ent")), // name начинается с "Ent"
+                ObjectMatcher.value(MyEntity::getStatus, isUpperCase()), // status — только заглавные буквы
+                ObjectMatcher.value(MyEntity::getAge, numberEqualTo(30)), // age == 30
+                ObjectMatcher.value(MyEntity::getDescription, contains("Sample")) // description содержит слово "Sample"
+        );
+    }
+
+    // Десериализовать массив объектов MyEntity и проверить список через ObjectValidator.
+    public void validateMyEntityList(Response response) {
+        RestValidator.forResponse(response).shouldHave(
+                bodyIsJson()); // Проверяем, что тело - JSON-массив
+        List<MyEntity> entities = response.jsonPath().getList("$", MyEntity.class);
+        ObjectValidator.forObject(entities).shouldHave(
+                ObjectMatcher.value(List::size, numberEqualTo(3))); // размер списка == 3
+        // У каждого MyEntity поле description не пустое
+        for (MyEntity e : entities) {
+            ObjectValidator.forObject(e).shouldHave(
+                    ObjectMatcher.value(MyEntity::getDescription, hasNonBlankContent())
+            );
+        }
     }
 }

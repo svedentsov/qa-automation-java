@@ -1,6 +1,9 @@
 package example;
 
+import com.svedentsov.db.entity.Address;
 import com.svedentsov.db.entity.MyEntity;
+import com.svedentsov.db.entity.Permission;
+import com.svedentsov.db.entity.Role;
 import com.svedentsov.db.helper.DbValidator;
 
 import java.math.BigDecimal;
@@ -66,7 +69,7 @@ public class DbExample {
         );
     }
 
-    // Пример использования валидатора для отдельной сущности
+    // Использование валидатора для списка сущностей
     public void validateEntity(MyEntity entity) {
         DbValidator.forRecords(entity).shouldHave(
                 // StringAssertions
@@ -132,7 +135,7 @@ public class DbExample {
         );
     }
 
-    // Пример использования валидатора для составных проверок
+    // Использование валидатора для составных проверок
     public void validateCompositeMatchers(MyEntity entity) {
         DbValidator.forRecords(entity).shouldHave(
                 and( // выполняются одновременно две проверки: статус равен "ACTIVE" и имя содержит "Test"
@@ -152,6 +155,51 @@ public class DbExample {
                         value(MyEntity::getName, containsIgnoreCase("test")), // условие 2: имя содержит "test" без учёта регистра
                         value(MyEntity::getEmail, matchesRegex(".*@.*\\..*")) // условие 3: email соответствует базовому шаблону
                 )
+        );
+    }
+
+    public void validateRoleDescriptions(MyEntity entity) {
+        DbValidator.forRecords(entity).shouldHave(
+                // все описания непустые (не только пробелы)
+                value(MyEntity::getRoleEntities,
+                        listAllMatch(value(Role::getDescription, hasNonBlankContent()))),
+                // хотя бы у одной роли описание начинается с "Admin"
+                value(MyEntity::getRoleEntities,
+                        listAnyMatch(value(Role::getDescription, startsWith("Admin")))));
+    }
+
+    // Ровно 2 роли имеют описание длиной меньше 50 символов
+    public void validateTwoShortDescriptions(MyEntity entity) {
+        DbValidator.forRecords(entity).shouldHave(
+                value(MyEntity::getRoleEntities,
+                        listExactlyMatches(value(Role::getDescription, hasMaxLength(50)), 2)));
+    }
+
+    // Ни у одной роли описание не заканчивается на "Deprecated"
+    public void validateNoDeprecatedDescriptions(MyEntity entity) {
+        DbValidator.forRecords(entity).shouldHave(
+                value(MyEntity::getRoleEntities,
+                        listNoneMatch(value(Role::getDescription, endsWith("Deprecated")))));
+    }
+
+    public void validateNestedPermissions(MyEntity entity) {
+        DbValidator.forRecords(entity).shouldHave(
+                // Убедиться, что у каждой Role список permissions не пуст
+                value(MyEntity::getRoleEntities,
+                        listAllMatch(value(Role::getPermissions, listIsNotEmpty()))),
+                // Найти хотя бы одну Role, у которой есть Permission с name = "READ"
+                value(MyEntity::getRoleEntities,
+                        listAnyMatch(value(Role::getPermissions, listAnyMatch(value(Permission::getName, equalTo("READ")))))));
+    }
+
+    public void validateAddressStreet(MyEntity entity) {
+        DbValidator.forRecords(entity).shouldHave(
+                // Адрес не должен быть null и у него поле street не должно быть пустым
+                value(MyEntity::getAddress,
+                        value(Address::getStreet, hasNonBlankContent())),
+                // Поле street должно начинаться с "Main"
+                value(MyEntity::getAddress,
+                        value(Address::getStreet, startsWith("Main")))
         );
     }
 }

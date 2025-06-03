@@ -8,6 +8,7 @@ import com.svedentsov.matcher.assertions.InstantAssertions.InstantCondition;
 import com.svedentsov.matcher.assertions.NumberAssertions.NumberCondition;
 import com.svedentsov.matcher.assertions.PropertyAssertions.PropertyCondition;
 import com.svedentsov.matcher.assertions.StringAssertions.StringCondition;
+import lombok.NonNull;
 import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -23,6 +24,62 @@ import java.util.function.Function;
 @UtilityClass
 public class KafkaMatcher {
 
+
+    /**
+     * Проверка ключа записи.
+     *
+     * @param sc строковое условие для ключа
+     * @return {@link Condition} для проверки {@link ConsumerRecord#key()}
+     */
+    public static Condition<ConsumerRecord<String, String>> key(
+            @NonNull StringCondition sc) {
+        return value(ConsumerRecord::key, sc);
+    }
+
+    /**
+     * Проверка имени топика записи.
+     *
+     * @param sc строковое условие для топика
+     * @return {@link Condition} для проверки {@link ConsumerRecord#topic()}
+     */
+    public static Condition<ConsumerRecord<String, String>> topic(
+            @NonNull StringCondition sc) {
+        return value(ConsumerRecord::topic, sc);
+    }
+
+    /**
+     * Проверка номера партиции записи.
+     *
+     * @param nc числовое условие для проверки партиции
+     * @return {@link Condition} для проверки {@link ConsumerRecord#partition()}
+     */
+    public static Condition<ConsumerRecord<String, String>> partition(
+            @NonNull NumberCondition<Integer> nc) {
+        return value(ConsumerRecord::partition, nc);
+    }
+
+    /**
+     * Проверка смещения записи.
+     *
+     * @param nc числовое условие для проверки смещения
+     * @return {@link Condition} для проверки {@link ConsumerRecord#offset()}
+     */
+    public static Condition<ConsumerRecord<String, String>> offset(
+            @NonNull NumberCondition<Long> nc) {
+        return value(ConsumerRecord::offset, nc);
+    }
+
+    /**
+     * Проверка временной метки записи: преобразует {@code record.timestamp()} в {@link Instant}.
+     *
+     * @param ic условие для проверки {@link Instant}
+     * @return {@link Condition} для проверки времени записи
+     */
+    public static Condition<ConsumerRecord<String, String>> timestamp(
+            @NonNull InstantCondition ic) {
+        return value(record -> Instant.ofEpochMilli(record.timestamp()), ic);
+    }
+
     /**
      * Проверка строкового значения всего тела записи.
      *
@@ -30,21 +87,8 @@ public class KafkaMatcher {
      * @return {@link Condition} для проверки {@link ConsumerRecord#value()}
      */
     public static Condition<ConsumerRecord<String, String>> value(
-            StringCondition sc) {
+            @NonNull StringCondition sc) {
         return value(ConsumerRecord::value, sc);
-    }
-
-    /**
-     * Проверка строкового значения из JSON по JSONPath.
-     *
-     * @param jsonPath путь JSONPath
-     * @param sc       строковое условие для проверки
-     * @return {@link Condition} для проверки значения из JSON
-     */
-    public static Condition<ConsumerRecord<String, String>> value(
-            String jsonPath,
-            StringCondition sc) {
-        return value(record -> getJsonValue(record.value(), jsonPath, String.class), sc);
     }
 
     /**
@@ -55,9 +99,35 @@ public class KafkaMatcher {
      * @return {@link Condition} для проверки значения из JSON
      */
     public static Condition<ConsumerRecord<String, String>> value(
-            String jsonPath,
-            BooleanCondition bc) {
+            @NonNull String jsonPath,
+            @NonNull BooleanCondition bc) {
         return value(record -> getJsonValue(record.value(), jsonPath, Boolean.class), bc);
+    }
+
+    /**
+     * Проверка строкового значения из JSON по JSONPath.
+     *
+     * @param jsonPath путь JSONPath
+     * @param sc       строковое условие для проверки
+     * @return {@link Condition} для проверки значения из JSON
+     */
+    public static Condition<ConsumerRecord<String, String>> value(
+            @NonNull String jsonPath,
+            @NonNull StringCondition sc) {
+        return value(record -> getJsonValue(record.value(), jsonPath, String.class), sc);
+    }
+
+    /**
+     * Проверка произвольного свойства из JSON по JSONPath.
+     *
+     * @param jsonPath путь JSONPath
+     * @param pc       условие для проверки свойства
+     * @return {@link Condition} для проверки значения из JSON
+     */
+    public static Condition<ConsumerRecord<String, String>> value(
+            @NonNull String jsonPath,
+            @NonNull PropertyCondition pc) {
+        return value(record -> getJsonValue(record.value(), jsonPath, Object.class), pc);
     }
 
     /**
@@ -70,78 +140,10 @@ public class KafkaMatcher {
      * @return {@link Condition} для проверки значения из JSON
      */
     public static <T extends Number & Comparable<T>> Condition<ConsumerRecord<String, String>> value(
-            String jsonPath,
-            NumberCondition<T> nc,
-            Class<T> type) {
+            @NonNull String jsonPath,
+            @NonNull NumberCondition<T> nc,
+            @NonNull Class<T> type) {
         return value(record -> getJsonValue(record.value(), jsonPath, type), nc);
-    }
-
-    /**
-     * Проверка произвольного свойства из JSON по JSONPath.
-     *
-     * @param jsonPath путь JSONPath
-     * @param pc       условие для проверки свойства
-     * @return {@link Condition} для проверки значения из JSON
-     */
-    public static Condition<ConsumerRecord<String, String>> value(
-            String jsonPath,
-            PropertyCondition pc) {
-        return value(record -> getJsonValue(record.value(), jsonPath, Object.class), pc);
-    }
-
-    /**
-     * Проверка ключа записи.
-     *
-     * @param sc строковое условие для ключа
-     * @return {@link Condition} для проверки {@link ConsumerRecord#key()}
-     */
-    public static Condition<ConsumerRecord<String, String>> key(
-            StringCondition sc) {
-        return value(ConsumerRecord::key, sc);
-    }
-
-    /**
-     * Проверка имени топика записи.
-     *
-     * @param sc строковое условие для топика
-     * @return {@link Condition} для проверки {@link ConsumerRecord#topic()}
-     */
-    public static Condition<ConsumerRecord<String, String>> topic(
-            StringCondition sc) {
-        return value(ConsumerRecord::topic, sc);
-    }
-
-    /**
-     * Проверка номера партиции записи.
-     *
-     * @param nc числовое условие для проверки партиции
-     * @return {@link Condition} для проверки {@link ConsumerRecord#partition()}
-     */
-    public static Condition<ConsumerRecord<String, String>> partition(
-            NumberCondition<Integer> nc) {
-        return value(ConsumerRecord::partition, nc);
-    }
-
-    /**
-     * Проверка смещения записи.
-     *
-     * @param nc числовое условие для проверки смещения
-     * @return {@link Condition} для проверки {@link ConsumerRecord#offset()}
-     */
-    public static Condition<ConsumerRecord<String, String>> offset(
-            NumberCondition<Long> nc) {
-        return value(ConsumerRecord::offset, nc);
-    }
-
-    /**
-     * Проверка временной метки записи.
-     *
-     * @param ic условие для проверки {@link Instant}
-     * @return {@link Condition} для проверки времени записи
-     */
-    public static Condition<ConsumerRecord<String, String>> timestamp(
-            InstantCondition ic) {
-        return value(record -> Instant.ofEpochMilli(record.timestamp()), ic);
     }
 
     /**
@@ -154,8 +156,8 @@ public class KafkaMatcher {
      * @throws NullPointerException если getter или cond равны null
      */
     public static <R> Condition<ConsumerRecord<String, String>> value(
-            Function<? super ConsumerRecord<String, String>, ? extends R> getter,
-            Condition<? super R> cond) {
+            @NonNull Function<? super ConsumerRecord<String, String>, ? extends R> getter,
+            @NonNull Condition<? super R> cond) {
         Objects.requireNonNull(getter, "getter не может быть null");
         Objects.requireNonNull(cond, "condition не может быть null");
         return record -> cond.check(getter.apply(record));
@@ -172,20 +174,24 @@ public class KafkaMatcher {
      * @throws AssertionError       если значение не соответствует expectedType
      * @throws NullPointerException если любой из аргументов null
      */
-    private static <T> T getJsonValue(String json, String jsonPath, Class<T> expectedType) {
+    private static <T> T getJsonValue(
+            @NonNull String json,
+            @NonNull String jsonPath,
+            @NonNull Class<T> expectedType) {
         Objects.requireNonNull(json, "JSON-строка не может быть null");
         Objects.requireNonNull(jsonPath, "JSONPath не может быть null");
-        Objects.requireNonNull(expectedType, "Ожидаемый тип не может быть null");
+        Objects.requireNonNull(expectedType, "expectedType не может быть null");
+
         Configuration conf = Configuration.defaultConfiguration().addOptions(Option.DEFAULT_PATH_LEAF_TO_NULL);
         Object val = JsonPath.using(conf).parse(json).read(jsonPath);
         if (val == null) {
             return null;
         }
         if (!expectedType.isInstance(val)) {
-            String actual = val.getClass().getSimpleName();
+            String actualType = val.getClass().getSimpleName();
             throw new AssertionError(String.format(
                     "Ожидалось, что значение по пути %s будет типа %s, но было: %s (%s)",
-                    jsonPath, expectedType.getSimpleName(), val, actual));
+                    jsonPath, expectedType.getSimpleName(), val, actualType));
         }
         return expectedType.cast(val);
     }

@@ -21,7 +21,9 @@ public class DbMatcher {
      * @param <R>    тип свойства
      * @return условие для проверки сущности
      */
-    public static <T, R> Condition<T> value(Function<? super T, ? extends R> getter, Condition<? super R> cond) {
+    public static <T, R> Condition<T> value(
+            Function<? super T, ? extends R> getter,
+            Condition<? super R> cond) {
         Objects.requireNonNull(getter, "getter не может быть null");
         Objects.requireNonNull(cond, "condition не может быть null");
         return entity -> cond.check(getter.apply(entity));
