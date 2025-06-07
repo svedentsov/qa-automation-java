@@ -4,7 +4,7 @@ import com.svedentsov.db.entity.Address;
 import com.svedentsov.db.entity.MyEntity;
 import com.svedentsov.db.entity.Permission;
 import com.svedentsov.db.entity.Role;
-import com.svedentsov.db.helper.DbValidator;
+import com.svedentsov.matcher.EntityValidator;
 
 import java.math.BigDecimal;
 import java.time.DayOfWeek;
@@ -15,7 +15,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import static com.svedentsov.matcher.DbMatcher.value;
+import static com.svedentsov.matcher.PropertyMatcher.value;
 import static com.svedentsov.matcher.assertions.CollectionAssertions.*;
 import static com.svedentsov.matcher.assertions.CompositeAssertions.*;
 import static com.svedentsov.matcher.assertions.ListAssertions.*;
@@ -35,7 +35,7 @@ public class DbExample {
      * @param entities список сущностей
      */
     public void validateEntities(List<MyEntity> entities) {
-        DbValidator.forRecords(entities).shouldHaveList(
+        EntityValidator.of(entities).shouldHaveList(
                 listAllMatch(value(MyEntity::getType, equalTo("STANDARD"))), // все STANDARD
                 listAnyMatch(value(MyEntity::getStatus, equalTo("ACTIVE"))), // хотя бы один ACTIVE
                 listNoneMatch(value(MyEntity::getStatus, equalTo("DELETED"))), // ни одного DELETED
@@ -71,7 +71,7 @@ public class DbExample {
 
     // Использование валидатора для списка сущностей
     public void validateEntity(MyEntity entity) {
-        DbValidator.forRecords(entity).shouldHave(
+        EntityValidator.of(entity).shouldHave(
                 // StringAssertions
                 value(MyEntity::getName, contains("Test")), // имя содержит "Test"
                 value(MyEntity::getEmail, matchesRegex("^[\\w.%+-]+@[\\w.-]+\\.[A-Za-z]{2,6}$")), // проверка корректного формата email
@@ -137,7 +137,7 @@ public class DbExample {
 
     // Использование валидатора для составных проверок
     public void validateCompositeMatchers(MyEntity entity) {
-        DbValidator.forRecords(entity).shouldHave(
+        EntityValidator.of(entity).shouldHave(
                 and( // выполняются одновременно две проверки: статус равен "ACTIVE" и имя содержит "Test"
                         value(MyEntity::getStatus, equalTo("ACTIVE")), // статус равен "ACTIVE"
                         value(MyEntity::getName, contains("Test")) // имя содержит "Test"
@@ -159,7 +159,7 @@ public class DbExample {
     }
 
     public void validateRoleDescriptions(MyEntity entity) {
-        DbValidator.forRecords(entity).shouldHave(
+        EntityValidator.of(entity).shouldHave(
                 // все описания непустые (не только пробелы)
                 value(MyEntity::getRoleEntities,
                         listAllMatch(value(Role::getDescription, hasNonBlankContent()))),
@@ -170,20 +170,20 @@ public class DbExample {
 
     // Ровно 2 роли имеют описание длиной меньше 50 символов
     public void validateTwoShortDescriptions(MyEntity entity) {
-        DbValidator.forRecords(entity).shouldHave(
+        EntityValidator.of(entity).shouldHave(
                 value(MyEntity::getRoleEntities,
                         listExactlyMatches(value(Role::getDescription, hasMaxLength(50)), 2)));
     }
 
     // Ни у одной роли описание не заканчивается на "Deprecated"
     public void validateNoDeprecatedDescriptions(MyEntity entity) {
-        DbValidator.forRecords(entity).shouldHave(
+        EntityValidator.of(entity).shouldHave(
                 value(MyEntity::getRoleEntities,
                         listNoneMatch(value(Role::getDescription, endsWith("Deprecated")))));
     }
 
     public void validateNestedPermissions(MyEntity entity) {
-        DbValidator.forRecords(entity).shouldHave(
+        EntityValidator.of(entity).shouldHave(
                 // Убедиться, что у каждой Role список permissions не пуст
                 value(MyEntity::getRoleEntities,
                         listAllMatch(value(Role::getPermissions, listIsNotEmpty()))),
@@ -193,7 +193,7 @@ public class DbExample {
     }
 
     public void validateAddressStreet(MyEntity entity) {
-        DbValidator.forRecords(entity).shouldHave(
+        EntityValidator.of(entity).shouldHave(
                 // Адрес не должен быть null и у него поле street не должно быть пустым
                 value(MyEntity::getAddress,
                         value(Address::getStreet, hasNonBlankContent())),

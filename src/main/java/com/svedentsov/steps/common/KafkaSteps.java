@@ -1,10 +1,10 @@
 package com.svedentsov.steps.common;
 
-import com.svedentsov.matcher.Condition;
-import io.qameta.allure.Step;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.helper.KafkaExecutor;
-import com.svedentsov.kafka.helper.KafkaValidator;
+import com.svedentsov.matcher.Condition;
+import com.svedentsov.matcher.EntityValidator;
+import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -12,8 +12,8 @@ import org.apache.kafka.common.header.Header;
 
 import java.util.List;
 
-import static com.svedentsov.matcher.KafkaMatcher.key;
-import static com.svedentsov.matcher.KafkaMatcher.value;
+import static com.svedentsov.kafka.helper.KafkaMatcher.key;
+import static com.svedentsov.kafka.helper.KafkaMatcher.value;
 import static com.svedentsov.matcher.assertions.StringAssertions.*;
 
 /**
@@ -128,13 +128,13 @@ public class KafkaSteps {
     }
 
     @Step("Проверить запись на соответствие условиям")
-    public KafkaValidator validateRecord(ConsumerRecord<String, String> record) {
-        return KafkaValidator.forRecords(record);
+    public EntityValidator validateRecord(ConsumerRecord<String, String> record) {
+        return EntityValidator.of(record);
     }
 
     @Step("Проверить записи на соответствие условиям")
-    public KafkaValidator validateRecords(List<ConsumerRecord<String, String>> records) {
-        return KafkaValidator.forRecords(records);
+    public EntityValidator validateRecords(List<ConsumerRecord<String, String>> records) {
+        return EntityValidator.of(records);
     }
 
     @Step("Получить из топика '{topic}' запись соответствующую условию")

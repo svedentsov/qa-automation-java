@@ -1,9 +1,9 @@
-package com.svedentsov.kafka.exception;
+package com.svedentsov.core.exception;
 
 /**
- * Исключение, возникающее при ошибках сериализации JSON.
+ * Исключение, возникающее при ошибках десериализации JSON.
  */
-public class JsonSerializationException extends RuntimeException {
+public class JsonDeserializationException extends RuntimeException {
 
     /**
      * Конструктор для создания исключения с сообщением и причиной.
@@ -11,7 +11,7 @@ public class JsonSerializationException extends RuntimeException {
      * @param message сообщение об ошибке
      * @param cause   причина возникновения исключения
      */
-    public JsonSerializationException(String message, Throwable cause) {
+    public JsonDeserializationException(String message, Throwable cause) {
         super(message, cause);
     }
 }

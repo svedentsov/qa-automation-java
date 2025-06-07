@@ -1,5 +1,6 @@
 package com.svedentsov.kafka.helper;
 
+import com.svedentsov.matcher.EntityValidator;
 import com.svedentsov.matcher.Condition;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.factory.KafkaServiceFactory;
@@ -337,7 +338,7 @@ public class KafkaExecutor {
     public KafkaExecutor shouldHave(Condition... condition) {
         validateConsumer();
         List<ConsumerRecord<String, String>> records = consumer.getAllRecords(record.getTopic());
-        KafkaValidator.forRecords(records).shouldHave(condition);
+        EntityValidator.of(records).shouldHave(condition);
         return this;
     }
 

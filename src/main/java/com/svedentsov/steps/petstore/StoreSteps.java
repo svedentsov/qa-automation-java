@@ -1,15 +1,15 @@
 package com.svedentsov.steps.petstore;
 
-import io.qameta.allure.Step;
 import com.svedentsov.app.petstore.model.Order;
 import com.svedentsov.steps.common.BaseSteps;
+import io.qameta.allure.Step;
 
 import java.util.Map;
 
-import static io.restassured.http.ContentType.JSON;
-import static org.junit.jupiter.api.Assertions.*;
 import static com.svedentsov.matcher.assertions.rest.HeaderAssertions.contentType;
 import static com.svedentsov.matcher.assertions.rest.StatusAssertions.statusCode;
+import static io.restassured.http.ContentType.JSON;
+import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Класс для выполнения шагов, связанных с операциями над заказами и инвентарем в магазине.

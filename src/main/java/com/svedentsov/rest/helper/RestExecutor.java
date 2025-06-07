@@ -1,6 +1,7 @@
 package com.svedentsov.rest.helper;
 
 import com.svedentsov.matcher.Condition;
+import com.svedentsov.matcher.EntityValidator;
 import io.qameta.allure.Step;
 import io.restassured.RestAssured;
 import io.restassured.authentication.AuthenticationScheme;
@@ -577,7 +578,7 @@ public class RestExecutor {
      * @return текущий экземпляр RestExecutor
      */
     public RestExecutor shouldHave(Condition... conditions) {
-        RestValidator.forResponse(response).shouldHave(conditions);
+        EntityValidator.of(response).shouldHave(conditions);
         return this;
     }
 
@@ -590,9 +591,9 @@ public class RestExecutor {
      * @return текущий экземпляр RestExecutor
      */
     @SafeVarargs
-    public final <T> RestExecutor shouldHaveObject(Class<T> clazz, Condition<? super T>... conditions) {
+    public final <T> RestExecutor shouldHaveObject(Class<T> clazz, Condition... conditions) {
         T obj = response.as(clazz);
-        ObjectValidator.forObject(obj).shouldHave(conditions);
+        EntityValidator.of(obj).shouldHave(conditions);
         return this;
     }
 

@@ -3,8 +3,8 @@ package com.svedentsov.utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.svedentsov.kafka.exception.JsonDeserializationException;
-import com.svedentsov.kafka.exception.JsonSerializationException;
+import com.svedentsov.core.exception.JsonDeserializationException;
+import com.svedentsov.core.exception.JsonSerializationException;
 import lombok.extern.slf4j.Slf4j;
 
 /**

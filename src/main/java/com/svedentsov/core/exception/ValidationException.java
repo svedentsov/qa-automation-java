@@ -1,4 +1,4 @@
-package com.svedentsov.kafka.exception;
+package com.svedentsov.core.exception;
 
 /**
  * Исключение, выбрасываемое при несоответствии записи условиям валидации.

@@ -1,17 +1,18 @@
 package example;
 
-import com.svedentsov.kafka.helper.KafkaValidator;
+import com.svedentsov.matcher.EntityValidator;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Instant;
 import java.util.List;
 
-import static com.svedentsov.matcher.KafkaMatcher.*;
+import static com.svedentsov.kafka.helper.KafkaMatcher.*;
 import static com.svedentsov.matcher.assertions.BooleanAssertions.isTrue;
 import static com.svedentsov.matcher.assertions.CompositeAssertions.*;
 import static com.svedentsov.matcher.assertions.InstantAssertions.instantBefore;
 import static com.svedentsov.matcher.assertions.ListAssertions.*;
-import static com.svedentsov.matcher.assertions.NumberAssertions.*;
+import static com.svedentsov.matcher.assertions.NumberAssertions.numberEqualTo;
+import static com.svedentsov.matcher.assertions.NumberAssertions.numberGreaterThan;
 import static com.svedentsov.matcher.assertions.StringAssertions.*;
 
 /**
@@ -21,7 +22,7 @@ public class KafkaExample {
 
     // Валидация списка записей Kafka с применением различных проверок списка.
     public void validateRecords(List<ConsumerRecord<String, String>> records) {
-        KafkaValidator.forRecords(records).shouldHaveList(
+        EntityValidator.of(records).shouldHaveList(
                 listIsNotEmpty(), // список не пуст
                 listCountGreaterThan(1), // больше одной записи
                 listCountLessThan(100), // меньше 100 записей
@@ -30,7 +31,7 @@ public class KafkaExample {
 
     // Валидация отдельной записи Kafka с применением проверок ключа, значения, партиции, смещения, заголовков и временной метки.
     public void validateRecord(ConsumerRecord<String, String> record) {
-        KafkaValidator.forRecords(record).shouldHave(
+        EntityValidator.of(record).shouldHave(
                 key(startsWith("key")),// ключ начинается с "key"
                 key(isNotBlank()), // ключ не пуст и не только пробелы
                 topic(equalTo("topic")), // название топика == "topic"
@@ -42,7 +43,7 @@ public class KafkaExample {
 
     // Пример составных проверок (AND, OR, NOT, nOf) для одной записи Kafka.
     public void validateCompositeConditions(ConsumerRecord<String, String> record) {
-        KafkaValidator.forRecords(record).shouldHave(
+        EntityValidator.of(record).shouldHave(
                 and( // все условия должны быть верны
                         topic(equalTo("topic")), // топик == "topic"
                         key(contains("key1")) // ключ содержит "key1"
@@ -61,7 +62,7 @@ public class KafkaExample {
     }
 
     public void validateJsonStringField(ConsumerRecord<String, String> record) {
-        KafkaValidator.forRecords(record).shouldHave(
+        EntityValidator.of(record).shouldHave(
                 value("$.user.name", equalTo("Alice")), // из JSON-path "$.user.name" извлечена строка "Alice"
                 value("$.metrics.count", numberGreaterThan(100), Integer.class), // извлечено число по "$.metrics.count" и проверено > 100
                 value("$.flags.active", isTrue()), // извлечено булево по "$.flags.active" и проверка true
