@@ -6,7 +6,7 @@ import com.svedentsov.core.annotations.Url;
 import com.svedentsov.ui.helper.BrowserActions;
 import lombok.Getter;
 import org.openqa.selenium.By;
-import com.svedentsov.manager.UiManager;
+import com.svedentsov.steps.manager.UiManager;
 import com.svedentsov.ui.element.popup.ErrorPopup;
 import com.svedentsov.ui.element.popup.ModalPopup;
 

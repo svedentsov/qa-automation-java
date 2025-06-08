@@ -1,9 +1,9 @@
 package com.svedentsov.steps.common;
 
-import com.svedentsov.manager.DBManager;
-import com.svedentsov.manager.KafkaManager;
-import com.svedentsov.manager.RestManager;
-import com.svedentsov.manager.UiManager;
+import com.svedentsov.steps.manager.DBManager;
+import com.svedentsov.steps.manager.KafkaManager;
+import com.svedentsov.steps.manager.RestManager;
+import com.svedentsov.steps.manager.UiManager;
 
 public class BaseSteps {
     public final DBManager db = DBManager.getManager();

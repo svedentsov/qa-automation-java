@@ -1,4 +1,4 @@
-package com.svedentsov.manager;
+package com.svedentsov.steps.manager;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;

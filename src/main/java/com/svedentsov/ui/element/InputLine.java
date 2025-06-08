@@ -5,7 +5,7 @@ import org.openqa.selenium.By;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
-import com.svedentsov.manager.UiManager;
+import com.svedentsov.steps.manager.UiManager;
 import com.svedentsov.ui.helper.Widget;
 
 import java.awt.*;

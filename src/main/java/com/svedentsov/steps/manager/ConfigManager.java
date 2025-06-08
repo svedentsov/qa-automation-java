@@ -1,4 +1,4 @@
-package com.svedentsov.manager;
+package com.svedentsov.steps.manager;
 
 import com.svedentsov.config.AllureConfig;
 import com.svedentsov.config.AppConfig;

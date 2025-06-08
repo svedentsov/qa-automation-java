@@ -3,7 +3,7 @@ package com.svedentsov.steps;
 import com.svedentsov.steps.theinternet.*;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import com.svedentsov.manager.UiManager;
+import com.svedentsov.steps.manager.UiManager;
 
 import java.util.Optional;
 

@@ -104,7 +104,7 @@ kafka.matcher/
    ```
 3. **Гибкость**: Легко комбинировать условия, использовать логические операции:
    ```java
-   shouldHave(value(anyOf(equalsTo("admin"), matchesRegex("user_.*"))));
+   shouldHave(value(anyOf(equalsTo("editor"), matchesRegex("user_.*"))));
    ```
 4. **Понятные сообщения об ошибках**: При неудаче теста вы получите информативное сообщение о том, какая проверка не
    прошла и почему.
@@ -214,7 +214,7 @@ shouldHave(value(contains("testUser")));
 - Используйте JsonPath для проверки вложенных полей JSON.
 - Применяйте логические операции:
  ```java
-  shouldHave(value(anyOf(equalsTo("admin"), matchesRegex("user_.*"))));
+  shouldHave(value(anyOf(equalsTo("editor"), matchesRegex("user_.*"))));
   ```
 
 ### Шаг 3: Создавайте собственные условия

@@ -5,6 +5,7 @@ import com.svedentsov.matcher.JsonReader;
 import com.svedentsov.matcher.PropertyMatcher;
 import com.svedentsov.matcher.assertions.BooleanAssertions.BooleanCondition;
 import com.svedentsov.matcher.assertions.CollectionAssertions.CollectionCondition;
+import com.svedentsov.matcher.assertions.CompositeAssertions;
 import com.svedentsov.matcher.assertions.InstantAssertions.InstantCondition;
 import com.svedentsov.matcher.assertions.ListAssertions.ListCondition;
 import com.svedentsov.matcher.assertions.NumberAssertions.NumberCondition;
@@ -34,51 +35,56 @@ public class RestMatcher {
     /**
      * Создаёт условие для проверки статусного кода ответа.
      *
-     * @param condition условие для проверки статусного кода
+     * @param conditions перечень условий для проверки статусного кода
      * @return {@link StatusCondition} для проверки статусного кода
      */
-    public static StatusCondition status(@NonNull StatusCondition condition) {
-        return condition;
+    @SafeVarargs
+    public static StatusCondition status(@NonNull StatusCondition... conditions) {
+        return (StatusCondition) CompositeAssertions.and(conditions);
     }
 
     /**
      * Создаёт условие для проверки заголовков ответа.
      *
-     * @param condition условие для проверки заголовков.
+     * @param conditions перечень условий для проверки заголовков.
      * @return {@link HeaderCondition} для проверки заголовков.
      */
-    public static HeaderCondition header(@NonNull HeaderCondition condition) {
-        return condition;
+    @SafeVarargs
+    public static HeaderCondition header(@NonNull HeaderCondition... conditions) {
+        return (HeaderCondition) CompositeAssertions.and(conditions);
     }
 
     /**
      * Создаёт условие для проверки куки в ответе.
      *
-     * @param condition условие для проверки куки.
+     * @param conditions перечень условий для проверки куки.
      * @return {@link CookieCondition} для проверки куки.
      */
-    public static CookieCondition cookie(@NonNull CookieCondition condition) {
-        return condition;
+    @SafeVarargs
+    public static CookieCondition cookie(@NonNull CookieCondition... conditions) {
+        return (CookieCondition) CompositeAssertions.and(conditions);
     }
 
     /**
      * Создаёт условие для проверки времени ответа.
      *
-     * @param condition условие для проверки времени ответа.
+     * @param conditions перечень условий для проверки времени ответа.
      * @return {@link TimeCondition} для проверки времени ответа.
      */
-    public static TimeCondition time(@NonNull TimeCondition condition) {
-        return condition;
+    @SafeVarargs
+    public static TimeCondition time(@NonNull TimeCondition... conditions) {
+        return (TimeCondition) CompositeAssertions.and(conditions);
     }
 
     /**
      * Создаёт условие для проверки тела ответа.
      *
-     * @param condition условие для проверки тела ответа.
+     * @param conditions перечень условий для проверки тела ответа.
      * @return {@link BodyCondition} для проверки тела ответа.
      */
-    public static BodyCondition body(@NonNull BodyCondition condition) {
-        return condition;
+    @SafeVarargs
+    public static BodyCondition body(@NonNull BodyCondition... conditions) {
+        return (BodyCondition) CompositeAssertions.and(conditions);
     }
 
     /**

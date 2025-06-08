@@ -1,14 +1,13 @@
 package com.svedentsov.ui.helper;
 
 import com.codeborne.selenide.Configuration;
-import com.svedentsov.manager.ConfigManager;
+import com.svedentsov.steps.manager.ConfigManager;
 
 /**
  * Класс для инициализации конфигурации Selenide.
  * Настраивает основные параметры для тестов, используя конфигурации из {@link ConfigManager}.
  */
 public final class SelenideProvider {
-
     /**
      * Инициализирует конфигурацию Selenide.
      * Устанавливает базовый URL, имя браузера, таймаут ожидания, размер окна браузера и папку для отчетов.

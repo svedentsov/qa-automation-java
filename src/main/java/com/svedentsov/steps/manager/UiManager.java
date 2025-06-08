@@ -1,4 +1,4 @@
-package com.svedentsov.manager;
+package com.svedentsov.steps.manager;
 
 import com.codeborne.selenide.Selenide;
 import com.svedentsov.ui.pages.theinternet.*;

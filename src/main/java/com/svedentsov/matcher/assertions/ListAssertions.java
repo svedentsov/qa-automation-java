@@ -474,8 +474,7 @@ public class ListAssertions {
      */
     public static <T> ListCondition<T> listSumEqual(
             @NonNull Function<T, ? extends Number> getter,
-            double expected
-    ) {
+            double expected) {
         return list -> {
             requireList(list);
             double sum = list.stream()
@@ -576,8 +575,7 @@ public class ListAssertions {
      */
     public static <T, K> ListCondition<T> listGroupedBySize(
             @NonNull Function<T, K> getter,
-            @NonNull Map<K, Integer> expectedSizes
-    ) {
+            @NonNull Map<K, Integer> expectedSizes) {
         return list -> {
             requireList(list);
             Map<K, Long> actual = list.stream()

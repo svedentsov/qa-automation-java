@@ -1,4 +1,4 @@
-package com.svedentsov.manager;
+package com.svedentsov.steps.manager;
 
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
@@ -19,5 +19,4 @@ public class KafkaManager {
     public KafkaSteps steps() {
         return Optional.ofNullable(kafkaSteps).orElseGet(() -> kafkaSteps = new KafkaSteps());
     }
-
 }

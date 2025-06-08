@@ -1,6 +1,6 @@
 package com.svedentsov.steps;
 
-import com.svedentsov.manager.RestManager;
+import com.svedentsov.steps.manager.RestManager;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import com.svedentsov.steps.petstore.PetSteps;

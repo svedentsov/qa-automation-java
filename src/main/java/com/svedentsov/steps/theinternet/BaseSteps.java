@@ -1,6 +1,6 @@
 package com.svedentsov.steps.theinternet;
 
-import com.svedentsov.manager.UiManager;
+import com.svedentsov.steps.manager.UiManager;
 
 /**
  * Базовый класс шагов, предоставляющий доступ к маршрутизатору пользовательского интерфейса.
