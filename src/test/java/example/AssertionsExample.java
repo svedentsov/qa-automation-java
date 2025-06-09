@@ -65,8 +65,8 @@ public class AssertionsExample {
                 value(MyEntity::description, hasWord("long")), // описание содержит слово "long"
                 value(MyEntity::description, hasWordIgnoreCase("TEXT")), // описание содержит слово "TEXT" без учета регистра
                 value(MyEntity::id, matchesPattern(Pattern.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$"))), // id соответствует шаблону UUID
-                value(MyEntity::name, isPalindrome()), // Имя является палиндромом (провалится)
-                value(MyEntity::jsonString, isXml()), // jsonString является корректным XML (провалится)
+                value(MyEntity::name, isPalindrome()), // Имя является палиндромом
+                value(MyEntity::jsonString, isXml()), // jsonString является корректным XML
                 value(MyEntity::type, containsOnlyCharacters("UserTy123")), // тип содержит только указанные символы
                 value(MyEntity::name, doesNotContainCharacters("!@#$")), // Имя не содержит запрещенных символов
                 value(MyEntity::blankString, isBinary()), // Строка является двоичным числом
@@ -75,7 +75,7 @@ public class AssertionsExample {
                 value(MyEntity::id, isValidUuidWithoutHyphens()), // id является корректным UUID без дефисов
                 value(MyEntity::multiLineText, hasLineCount(3)), // multiLineText содержит 3 строки
                 value(MyEntity::description, hasOccurrences("o", 2)), // описание содержит 'o' 2 раза
-                value(MyEntity::name, containsDigit()), // Имя содержит хотя бы одну цифру (провалится)
+                value(MyEntity::name, containsDigit()), // Имя содержит хотя бы одну цифру
                 value(MyEntity::name, containsLetter()), // Имя содержит хотя бы одну букву
                 value(MyEntity::name, containsUpperCase()), // Имя содержит хотя бы один символ в верхнем регистре
                 value(MyEntity::name, containsLowerCase()), // Имя содержит хотя бы один символ в нижнем регистре
@@ -88,11 +88,11 @@ public class AssertionsExample {
                 value(MyEntity::type, containsOnly("UserTy123")), // тип содержит только символы из "UserTy123"
                 value(MyEntity::hexColor, isValidHexColor()), // hexColor является корректным HEX-цветом
                 value(MyEntity::name, hasCharacterCount('T', 1)), // Имя содержит символ 'T' 1 раз
-                value(MyEntity::name, startsWithDigit()), // Имя начинается с цифры (провалится)
-                value(MyEntity::name, endsWithDigit()), // Имя заканчивается цифрой (провалится)
+                value(MyEntity::name, startsWithDigit()), // Имя начинается с цифры
+                value(MyEntity::name, endsWithDigit()), // Имя заканчивается цифрой
                 value(MyEntity::name, startsWithLetter()), // Имя начинается с буквы
                 value(MyEntity::name, endsWithLetter()), // Имя заканчивается буквой
-                value(MyEntity::description, containsDigits()), // описание содержит последовательность цифр (провалится)
+                value(MyEntity::description, containsDigits()), // описание содержит последовательность цифр
                 value(MyEntity::name, containsLetters()), // Имя содержит последовательность букв
                 value(MyEntity::isTrueString, isBoolean()), // Строка представляет собой логическое значение (true или false, без учёта регистра)
                 value(MyEntity::uniqueCharsString, containsOnlyUniqueCharacters()), // Содержит только уникальные символы
