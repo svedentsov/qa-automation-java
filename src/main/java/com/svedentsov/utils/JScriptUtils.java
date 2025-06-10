@@ -12,7 +12,7 @@ import java.time.Duration;
 import static com.codeborne.selenide.Selenide.executeJavaScript;
 import static com.svedentsov.utils.WaitUtils.doWait;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.awaitility.Duration.ONE_SECOND;
+import static org.awaitility.Durations.ONE_SECOND;
 
 /**
  * Утилитарный класс для работы с JavaScript в тестах.

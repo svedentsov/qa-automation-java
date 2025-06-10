@@ -16,10 +16,8 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 
-import static com.svedentsov.utils.DateUtil.convert;
 import static com.svedentsov.utils.StrUtil.EMPTY;
 import static org.awaitility.Awaitility.await;
-import static org.awaitility.Duration.ONE_SECOND;
 
 /**
  * Утилитарный класс для выполнения различных операций ожидания.
@@ -34,6 +32,7 @@ public final class WaitUtils {
     public static final Duration TIMEOUT_LONG = PropertiesController.appTimeoutConfig().utilWaitLongTimeout();
     private static final Duration INTERVAL = Duration.of(1, ChronoUnit.SECONDS);
     private static final Duration DELAY = Duration.of(3, ChronoUnit.SECONDS);
+    private static final Duration ONE_SECOND = Duration.of(1, ChronoUnit.SECONDS);
     private static final String LOG_MESSAGE = "{} (прошло времени: {} мс, оставшееся время: {} мс)\n";
     private static final String LOG_MESSAGE_SHORT = "оставшееся время {} мс";
     private static String logDescription = EMPTY;
@@ -53,7 +52,7 @@ public final class WaitUtils {
      * @return {@link ConditionFactory} для настройки ожидания с задержкой
      */
     public static ConditionFactory doWaitWithDelay() {
-        return doWait(INTERVAL, TIMEOUT).pollDelay(convert(DELAY));
+        return doWait(INTERVAL, TIMEOUT).pollDelay(DELAY);
     }
 
     /**
@@ -155,8 +154,8 @@ public final class WaitUtils {
                         log.trace(LOG_MESSAGE_SHORT, condition.getRemainingTimeInMS());
                     }
                 })
-                .atMost(convert(timeout))
-                .pollInterval(convert(pollInterval))
+                .atMost(timeout)
+                .pollInterval(pollInterval)
                 .pollDelay(ONE_SECOND); // пропуск ожидания на 1-й итерации
     }
 

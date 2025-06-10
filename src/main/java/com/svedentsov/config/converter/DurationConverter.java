@@ -1,4 +1,4 @@
-package com.svedentsov.config.converters;
+package com.svedentsov.config.converter;
 
 import com.svedentsov.utils.StrUtil;
 import com.svedentsov.utils.StreamUtils;

@@ -210,27 +210,4 @@ public class DbSteps {
             sessionFactory.close();
         }
     }
-
-    /**
-     * Основной метод для запуска демонстрации.
-     */
-    public static void main(String[] args) {
-        DbSteps dbSteps = new DbSteps();
-
-        try {
-            dbSteps.demonstrateCrudOperations();
-            dbSteps.demonstrateHqlQuery();
-            dbSteps.demonstrateSqlQuery();
-            dbSteps.demonstrateNamedQuery();
-            dbSteps.demonstrateCriteriaQuery();
-            dbSteps.demonstrateBatchOperation();
-            dbSteps.demonstrateUpdateOrDelete();
-            dbSteps.demonstrateQuerySettings();
-            dbSteps.demonstrateAsyncOperation();
-            dbSteps.demonstrateTransactionIsolationLevel();
-            dbSteps.demonstrateLockMode();
-        } finally {
-            dbSteps.shutdown();
-        }
-    }
 }

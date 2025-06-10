@@ -12,14 +12,12 @@ import java.time.format.DateTimeParseException;
 import java.time.temporal.ChronoUnit;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
  * Утилитный класс {@code DateUtil} предоставляет методы для работы с датами и временем.
  * Этот класс предоставляет функциональность для парсинга дат, изменения форматов,
- * получения диапазонов дат, а также конвертации объектов {@link java.time.Duration}
- * в объекты {@link org.awaitility.Duration}.
+ * получения диапазонов дат, а также конвертации объектов {@link java.time.Duration}.
  */
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -83,16 +81,6 @@ public final class DateUtil {
             throw new IllegalArgumentException("Дата и формат не могут быть null или пустыми");
         }
         return ldt.format(DateTimeFormatter.ofPattern(format));
-    }
-
-    /**
-     * Конвертирует объект {@link java.time.Duration} в {@link org.awaitility.Duration}.
-     *
-     * @param duration объект {@link java.time.Duration}
-     * @return объект {@link org.awaitility.Duration}
-     */
-    public static org.awaitility.Duration convert(java.time.Duration duration) {
-        return new org.awaitility.Duration(duration.getSeconds(), TimeUnit.SECONDS);
     }
 
     /**

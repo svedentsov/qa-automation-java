@@ -4,7 +4,7 @@ buildscript {
         allureVersion = '2.27.0'
         assertjVersion = '3.25.3'
         aspectjVersion = '1.9.22'
-        awaitilityVersion = '3.1.3'
+        awaitilityVersion = '4.2.1'
         commonsBeanutilsVersion = '1.9.4'
         commonsIoVersion = '2.15.1'
         configVersion = '1.4.1'
@@ -17,6 +17,7 @@ buildscript {
         junitVersion = '5.10.1'
         kafkaClientsVersion = '2.1.1'
         lombokVersion = '1.18.32'
+        mockitoVersion = '5.17.0'
         okhttp3Version = '3.14.9'
         ownerVersion = '1.0.12'
         retrofitVersion = '2.11.0'
@@ -84,9 +85,9 @@ dependencies { // Зависимости проекта
     implementation "org.assertj:assertj-core:${assertjVersion}"
     implementation "org.awaitility:awaitility:${awaitilityVersion}"
 
-    // Инструменты сборки и аннотации
-    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    // Lombok
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
+    annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     // Веб-тестирование
     implementation "com.codeborne:selenide:${selenideVersion}"
@@ -111,7 +112,7 @@ dependencies { // Зависимости проекта
     testImplementation "io.confluent:kafka-avro-serializer:${confluentVersion}"
     testImplementation "io.confluent:kafka-streams-avro-serde:${confluentVersion}"
 
-    // Утилиты и вспомогательные библиотеки
+    // Утилиты
     implementation "com.github.javafaker:javafaker:${javafakerVersion}"
     implementation "commons-io:commons-io:${commonsIoVersion}"
     implementation "commons-beanutils:commons-beanutils:${commonsBeanutilsVersion}"
@@ -123,6 +124,11 @@ dependencies { // Зависимости проекта
     implementation "com.jayway.jsonpath:json-path:${jaywayVersion}"
     implementation "com.typesafe:config:${configVersion}"
     implementation "org.aspectj:aspectjweaver:${aspectjVersion}"
+
+    // Mockito
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    testImplementation "org.mockito:mockito-junit-jupiter:${mockitoVersion}"
+
 //    implementation "org.jsmart:zerocode-tdd:1.3.44"
 }
 
@@ -135,6 +141,8 @@ test { // Настройки для выполнения тестов
         }
     }
 }
+
+// --- Конфигурация задач ---
 
 tasks {
     compileJava {

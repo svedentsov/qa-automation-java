@@ -1,6 +1,6 @@
 package com.svedentsov.config;
 
-import com.svedentsov.config.converters.DurationConverter;
+import com.svedentsov.config.converter.DurationConverter;
 import org.aeonbits.owner.Config;
 import org.aeonbits.owner.Config.Sources;
 

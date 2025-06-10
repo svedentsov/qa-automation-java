@@ -16,11 +16,13 @@ import lombok.experimental.Accessors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Category {
+
     /**
      * Уникальный идентификатор категории.
      */
     @JsonProperty("id")
     private long id;
+
     /**
      * Название категории.
      */

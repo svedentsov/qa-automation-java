@@ -358,7 +358,7 @@ public class Widget<T extends Widget<T>> {
      * @param timeout тайм-аут для ожидания
      */
     protected void waitToDisappear(Duration timeout) {
-        doWait().timeout(DateUtil.convert(timeout)).untilAsserted(
+        doWait().timeout(timeout).untilAsserted(
                 () -> assertThat(isDisplayed()).as("Виджет виден").isFalse());
     }
 

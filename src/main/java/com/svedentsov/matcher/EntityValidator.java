@@ -10,7 +10,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 /**
  * Универсальный валидатор для выполнения набора проверок (условий)
@@ -65,10 +64,7 @@ public class EntityValidator<T> {
         validateConditions(conditions);
         Condition<T> compositeCondition = CompositeAssertions.and(conditions);
         log.debug("Проверка условия '{}' для {} записей", compositeCondition, records.size());
-        records.forEach(record -> executeCheck(
-                () -> compositeCondition.check(record),
-                compositeCondition,
-                () -> String.valueOf(record)));
+        records.forEach(record -> executeCheck(() -> compositeCondition.check(record)));
         return this;
     }
 
@@ -85,31 +81,23 @@ public class EntityValidator<T> {
         validateConditions(conditions);
         Condition<List<T>> compositeCondition = CompositeAssertions.and(conditions);
         log.debug("Проверка списка условий '{}' для {} записей", compositeCondition, records.size());
-        executeCheck(
-                () -> compositeCondition.check(records),
-                compositeCondition,
-                () -> "список записей из " + records.size() + " элементов");
+        executeCheck(() -> compositeCondition.check(records));
         return this;
     }
 
     /**
-     * Выполняет проверку и оборачивает возможные исключения в ValidationException
-     * для стандартизации ошибок валидации.
+     * Выполняет проверку и оборачивает возможные исключения в ValidationException для стандартизации ошибок валидации.
      *
-     * @param check               проверка в виде {@link Runnable}
-     * @param condition           проверяемое условие для логгирования
-     * @param targetLabelSupplier поставщик описания цели валидации (конкретный объект или список)
+     * @param check проверка в виде {@link Runnable}
      */
-    private void executeCheck(Runnable check, Object condition, Supplier<String> targetLabelSupplier) {
+    private void executeCheck(Runnable check) {
         try {
             check.run();
         } catch (AssertionError error) {
-            String errorMessage = String.format("Условие '%s' не выполнено для '%s': %s",
-                    condition, targetLabelSupplier.get(), error.getMessage());
+            String errorMessage = String.format("Условие не выполнено: %s", error.getMessage());
             throw new ValidationException(errorMessage, error);
         } catch (Exception exception) {
-            String errorMessage = String.format("Ошибка при проверке условия '%s' для '%s': %s",
-                    condition, targetLabelSupplier.get(), exception.getMessage());
+            String errorMessage = String.format("Ошибка при проверке условия: %s", exception.getMessage());
             throw new ValidationException(errorMessage, exception);
         }
     }
