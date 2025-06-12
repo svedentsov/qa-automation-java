@@ -1,11 +1,10 @@
 package com.svedentsov.ui.helper;
 
-import com.svedentsov.steps.manager.UiManager;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.WebDriverRunner;
-import com.svedentsov.utils.DateUtil;
+import com.svedentsov.steps.manager.UiManager;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;

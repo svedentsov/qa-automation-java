@@ -43,10 +43,8 @@ public class MatcherAliases {
 
     /**
      * Алиас для {@link PropertyMatcher#value(Function, Condition)}.
-     * <p>
      * Создаёт условие для проверки значения, извлечённого из объекта с помощью геттера.
      * Используется для валидации свойств обычных Java-объектов и сущностей.
-     * </p>
      *
      * @param <T>       тип исходного объекта
      * @param <R>       тип значения, возвращаемого геттером
@@ -64,10 +62,8 @@ public class MatcherAliases {
 
     /**
      * Алиас для {@link RestMatcher#value(Function, Condition)}.
-     * <p>
      * Создаёт условие для проверки значения, извлечённого из REST ответа.
      * Используется для валидации HTTP ответов, полученных через RestAssured.
-     * </p>
      *
      * @param <R>       тип значения, возвращаемого геттером
      * @param getter    функция для извлечения значения из Response (например, {@code Response::asString})
@@ -84,10 +80,8 @@ public class MatcherAliases {
 
     /**
      * Алиас для {@link KafkaMatcher#value(Function, Condition)}.
-     * <p>
      * Создаёт условие для проверки значения, извлечённого из Kafka сообщения.
      * Используется для валидации сообщений Apache Kafka с типами ключа и значения String.
-     * </p>
      *
      * @param <R>       тип значения, возвращаемого геттером
      * @param getter    функция для извлечения значения из ConsumerRecord (например, {@code ConsumerRecord::key})
