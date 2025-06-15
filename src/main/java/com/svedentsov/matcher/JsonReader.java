@@ -60,10 +60,7 @@ public class JsonReader {
         if (!expectedType.isInstance(value)) {
             String errorMessage = String.format(
                     "Тип значения по пути '%s' не соответствует ожидаемому. Ожидали: %s, получили: %s (%s)",
-                    jsonPath,
-                    expectedType.getSimpleName(),
-                    value,
-                    value.getClass().getSimpleName());
+                    jsonPath, expectedType.getSimpleName(), value, value.getClass().getSimpleName());
             log.error(errorMessage);
             throw new AssertionError(errorMessage);
         }

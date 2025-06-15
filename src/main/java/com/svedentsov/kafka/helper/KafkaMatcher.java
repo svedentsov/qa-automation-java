@@ -4,6 +4,7 @@ import com.svedentsov.matcher.Condition;
 import com.svedentsov.matcher.JsonReader;
 import com.svedentsov.matcher.PropertyMatcher;
 import com.svedentsov.matcher.assertions.BooleanAssertions.BooleanCondition;
+import com.svedentsov.matcher.assertions.CompositeAssertions;
 import com.svedentsov.matcher.assertions.InstantAssertions.InstantCondition;
 import com.svedentsov.matcher.assertions.NumberAssertions.NumberCondition;
 import com.svedentsov.matcher.assertions.PropertyAssertions.PropertyCondition;
@@ -16,9 +17,8 @@ import java.time.Instant;
 import java.util.function.Function;
 
 /**
- * Утилитный класс, предоставляющий DSL для создания условий (Condition)
- * для Kafka-записей. Все специфичные проверки сводятся к одному универсальному
- * методу {@link #value(Function, Condition)}, что упрощает поддержку и расширение.
+ * Утилитный класс, предоставляющий DSL для создания условий (Condition) для Kafka-записей.
+ * Все специфичные проверки сводятся к одному универсальному методу {@link #value(Function, Condition)}.
  */
 @UtilityClass
 public class KafkaMatcher {
@@ -26,61 +26,74 @@ public class KafkaMatcher {
     /**
      * Проверка ключа записи.
      *
-     * @param condition строковое условие для ключа
+     * @param conditions строковые условия для ключа
      * @return {@link Condition} для проверки {@link ConsumerRecord#key()}
      */
-    public static Condition<ConsumerRecord<String, String>> key(@NonNull StringCondition condition) {
-        return value(ConsumerRecord::key, condition);
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> key(@NonNull StringCondition... conditions) {
+        StringCondition compositeCondition = (StringCondition) CompositeAssertions.and(conditions);
+        return value(ConsumerRecord::key, compositeCondition);
     }
 
     /**
      * Проверка имени топика записи.
      *
-     * @param condition строковое условие для топика
+     * @param conditions строковые условия для топика
      * @return {@link Condition} для проверки {@link ConsumerRecord#topic()}
      */
-    public static Condition<ConsumerRecord<String, String>> topic(@NonNull StringCondition condition) {
-        return value(ConsumerRecord::topic, condition);
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> topic(@NonNull StringCondition... conditions) {
+        StringCondition compositeCondition = (StringCondition) CompositeAssertions.and(conditions);
+        return value(ConsumerRecord::topic, compositeCondition);
     }
 
     /**
      * Проверка номера партиции записи.
      *
-     * @param condition числовое условие для проверки партиции
+     * @param conditions числовые условия для проверки партиции
      * @return {@link Condition} для проверки {@link ConsumerRecord#partition()}
      */
-    public static Condition<ConsumerRecord<String, String>> partition(@NonNull NumberCondition<Integer> condition) {
-        return value(ConsumerRecord::partition, condition);
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> partition(@NonNull NumberCondition<Integer>... conditions) {
+        @SuppressWarnings("unchecked")
+        NumberCondition<Integer> compositeCondition = (NumberCondition<Integer>) CompositeAssertions.and(conditions);
+        return value(ConsumerRecord::partition, compositeCondition);
     }
 
     /**
      * Проверка смещения записи.
      *
-     * @param condition числовое условие для проверки смещения
+     * @param conditions числовые условия для проверки смещения
      * @return {@link Condition} для проверки {@link ConsumerRecord#offset()}
      */
-    public static Condition<ConsumerRecord<String, String>> offset(@NonNull NumberCondition<Long> condition) {
-        return value(ConsumerRecord::offset, condition);
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> offset(@NonNull NumberCondition<Long>... conditions) {
+        @SuppressWarnings("unchecked")
+        NumberCondition<Long> compositeCondition = (NumberCondition<Long>) CompositeAssertions.and(conditions);
+        return value(ConsumerRecord::offset, compositeCondition);
     }
 
     /**
      * Проверка временной метки записи: преобразует {@code record.timestamp()} в {@link Instant}.
      *
-     * @param condition условие для проверки {@link Instant}
+     * @param conditions условия для проверки {@link Instant}
      * @return {@link Condition} для проверки времени записи
      */
-    public static Condition<ConsumerRecord<String, String>> timestamp(@NonNull InstantCondition condition) {
-        return value(record -> Instant.ofEpochMilli(record.timestamp()), condition);
+    @SafeVarargs
+    public static Condition<ConsumerRecord<String, String>> timestamp(@NonNull InstantCondition... conditions) {
+        InstantCondition compositeCondition = (InstantCondition) CompositeAssertions.and(conditions);
+        return value(record -> Instant.ofEpochMilli(record.timestamp()), compositeCondition);
     }
 
     /**
      * Проверка строкового значения всего тела записи.
      *
-     * @param condition строковое условие для проверки
+     * @param conditions строковые условия для проверки
      * @return {@link Condition} для проверки {@link ConsumerRecord#value()}
      */
-    public static Condition<ConsumerRecord<String, String>> value(@NonNull StringCondition condition) {
-        return value(ConsumerRecord::value, condition);
+    public static Condition<ConsumerRecord<String, String>> value(@NonNull StringCondition... conditions) {
+        StringCondition compositeCondition = (StringCondition) CompositeAssertions.and(conditions);
+        return value(ConsumerRecord::value, compositeCondition);
     }
 
     /**

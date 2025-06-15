@@ -9,10 +9,10 @@ import java.util.List;
 import static com.svedentsov.kafka.helper.KafkaMatcher.*;
 import static com.svedentsov.matcher.assertions.BooleanAssertions.isTrue;
 import static com.svedentsov.matcher.assertions.CompositeAssertions.*;
+import static com.svedentsov.matcher.assertions.InstantAssertions.instantAfter;
 import static com.svedentsov.matcher.assertions.InstantAssertions.instantBefore;
 import static com.svedentsov.matcher.assertions.ListAssertions.*;
-import static com.svedentsov.matcher.assertions.NumberAssertions.numberEqualTo;
-import static com.svedentsov.matcher.assertions.NumberAssertions.numberGreaterThan;
+import static com.svedentsov.matcher.assertions.NumberAssertions.*;
 import static com.svedentsov.matcher.assertions.StringAssertions.*;
 
 public class KafkaExample {
@@ -33,13 +33,24 @@ public class KafkaExample {
      */
     public void validateRecord(ConsumerRecord<String, String> record) {
         EntityValidator.of(record).shouldHave(
-                key(startsWith("key")),// ключ начинается с "key"
-                key(isNotBlank()), // ключ не пуст и не только пробелы
-                topic(equalTo("topic")), // название топика == "topic"
-                partition(numberEqualTo(0)),// партиция == 0
-                offset(numberGreaterThan(0L)), // смещение > 0
-                timestamp(instantBefore(Instant.now().plusSeconds(60))), // временная метка не позже, чем через 60 секунд
-                value(contains("\"name\":\"John\""))); // value содержит JSON-поле "name":"John"
+                key( // Валидация заголовков
+                        startsWith("key"), // ключ начинается с "key"
+                        isAlphabetic()), // ключ состоит только из букв
+                topic( // Валидация имени топика
+                        equalTo("topic1"), // топик == "topic1" или == "topic2"
+                        hasLengthLessThan(10)), // длина названия топика < 10
+                partition( // Валидация номера партиции
+                        numberGreaterThan(5), // партиция > 5
+                        numberEqualTo(3)), // партиция не == 3
+                offset( // Валидация смещения
+                        numberGreaterThan(100L), // смещение > 100
+                        numberLessThan(1000L)), // смещение < 1000
+                timestamp( // Валидация временной метки
+                        instantAfter(Instant.now().minusSeconds(300)), // временная метка не раньше, чем 5 минут назад
+                        instantBefore(Instant.now().plusSeconds(120))), // и не позже, чем через 2 минуты
+                value( // Валидация значения всего тела
+                        startsWith("topic"), // значение начинает с "topic"
+                        contains("user"))); // значение содержит "user"
     }
 
     /**
