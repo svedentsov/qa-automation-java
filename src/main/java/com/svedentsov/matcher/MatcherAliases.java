@@ -12,12 +12,10 @@ import java.util.function.Function;
 
 /**
  * Утилитарный класс для предоставления алиасов методов value из различных матчеров.
- * <p>
  * Этот класс решает проблему конфликта имён методов {@code value} в классах
  * {@link PropertyMatcher}, {@link RestMatcher} и {@link KafkaMatcher},
  * позволяя использовать все три типа матчеров в одном тесте без необходимости
  * указания полных имён классов.
- * </p>
  *
  * <p><b>Пример использования:</b></p>
  * <pre>{@code
@@ -28,10 +26,8 @@ import java.util.function.Function;
  *     public void testWithAliases() {
  *         // Проверка свойств сущности
  *         var entityCondition = propertyValue(MyEntity::getName, equalTo("test"));
- *
  *         // Проверка REST ответа
  *         var responseCondition = restValue(Response::asString, contains("success"));
- *
  *         // Проверка Kafka сообщения
  *         var kafkaCondition = kafkaValue(ConsumerRecord::key, equalTo("test-key"));
  *     }

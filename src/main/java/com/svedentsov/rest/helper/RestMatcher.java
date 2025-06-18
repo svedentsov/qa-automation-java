@@ -40,7 +40,7 @@ public class RestMatcher {
      */
     @SafeVarargs
     public static StatusCondition status(@NonNull StatusCondition... conditions) {
-        return (StatusCondition) CompositeAssertions.and(conditions);
+        return response -> CompositeAssertions.and(conditions).check(response);
     }
 
     /**
@@ -51,7 +51,7 @@ public class RestMatcher {
      */
     @SafeVarargs
     public static HeaderCondition header(@NonNull HeaderCondition... conditions) {
-        return (HeaderCondition) CompositeAssertions.and(conditions);
+        return response -> CompositeAssertions.and(conditions).check(response);
     }
 
     /**
@@ -62,7 +62,7 @@ public class RestMatcher {
      */
     @SafeVarargs
     public static CookieCondition cookie(@NonNull CookieCondition... conditions) {
-        return (CookieCondition) CompositeAssertions.and(conditions);
+        return response -> CompositeAssertions.and(conditions).check(response);
     }
 
     /**
@@ -73,7 +73,7 @@ public class RestMatcher {
      */
     @SafeVarargs
     public static TimeCondition time(@NonNull TimeCondition... conditions) {
-        return (TimeCondition) CompositeAssertions.and(conditions);
+        return response -> CompositeAssertions.and(conditions).check(response);
     }
 
     /**
@@ -84,7 +84,7 @@ public class RestMatcher {
      */
     @SafeVarargs
     public static BodyCondition body(@NonNull BodyCondition... conditions) {
-        return (BodyCondition) CompositeAssertions.and(conditions);
+        return response -> CompositeAssertions.and(conditions).check(response);
     }
 
     /**
@@ -210,6 +210,6 @@ public class RestMatcher {
     public static <R> BodyCondition value(
             @NonNull Function<? super Response, ? extends R> getter,
             @NonNull Condition<? super R> condition) {
-        return (BodyCondition) PropertyMatcher.value(getter, condition);
+        return response -> PropertyMatcher.value(getter, condition).check(response);
     }
 }

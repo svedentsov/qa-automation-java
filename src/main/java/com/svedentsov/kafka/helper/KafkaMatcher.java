@@ -157,6 +157,6 @@ public class KafkaMatcher {
     public static <R> Condition<ConsumerRecord<String, String>> value(
             @NonNull Function<? super ConsumerRecord<String, String>, ? extends R> getter,
             @NonNull Condition<? super R> condition) {
-        return PropertyMatcher.value(getter, condition);
+        return record -> PropertyMatcher.value(getter, condition).check(record);
     }
 }
