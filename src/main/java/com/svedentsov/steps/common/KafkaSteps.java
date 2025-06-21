@@ -1,5 +1,6 @@
 package com.svedentsov.steps.common;
 
+import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.helper.KafkaExecutor;
 import com.svedentsov.matcher.Condition;
@@ -25,13 +26,19 @@ public class KafkaSteps {
 
     private final KafkaExecutor kafkaExecutor = new KafkaExecutor();
 
+    @Step("Установить конфигурацию KafkaListenerConfig")
+    public KafkaSteps setListenerConfig(KafkaListenerConfig config) {
+        kafkaExecutor.setListenerConfig(config);
+        return this;
+    }
+
     @Step("Установить продюсер с типом '{producerType}'")
     public KafkaSteps setProducerType(ContentType producerType) {
         kafkaExecutor.setProducerType(producerType);
         return this;
     }
 
-    @Step("Установить консюмер с типом '{consumerType}'")
+    @Step("Установить консьюмер с типом '{consumerType}'")
     public KafkaSteps setConsumerType(ContentType contentType) {
         kafkaExecutor.setConsumerType(contentType);
         return this;

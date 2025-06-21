@@ -1,40 +1,66 @@
 package com.svedentsov.kafka.helper;
 
+import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 /**
  * Менеджер для хранения и управления записями, полученными из Kafka.
  * Обеспечивает хранение уникальных записей для каждого топика.
  */
-public class KafkaRecordsManager {
+@UtilityClass
+public final class KafkaRecordsManager {
 
     /**
-     * Структура для хранения уникальных записей по топикам.
-     * Ключ: название топика
-     * Значение: Map, где ключ - уникальная пара (partition, offset), значение - ConsumerRecord.
-     * Это гарантирует, что в рамках одного топика не будет дубликатов по сочетанию partition и offset.
+     * Хранилище записей: топик -> (partition, offset) -> ConsumerRecord
      */
-    private static final Map<String, Map<PartitionOffset, ConsumerRecord<?, ?>>> RECORDS = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<String, ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>>> RECORDS = new ConcurrentHashMap<>();
 
     /**
-     * Добавляет записи для указанного топика.
-     * Каждая запись идентифицируется парой partition-offset.
-     * Если такая запись уже существует, она не будет добавлена повторно.
+     * Добавляет одну запись для указанного топика.
+     * Если запись с тем же partition+offset уже существует, она не будет добавлена.
      *
-     * @param topic   название топика, для которого добавляются записи
-     * @param records записи, которые необходимо добавить
-     * @throws NullPointerException если {@code records} равен {@code null}
+     * @param topic  название топика, не должно быть null или пустым
+     * @param record запись для добавления, не null
+     * @throws NullPointerException     если topic или record == null
+     * @throws IllegalArgumentException если topic пустой
+     */
+    public static void addRecord(String topic, ConsumerRecord<?, ?> record) {
+        Objects.requireNonNull(topic, "topic не должен быть null");
+        if (topic.trim().isEmpty()) {
+            throw new IllegalArgumentException("topic не должен быть пустым");
+        }
+        Objects.requireNonNull(record, "record не должен быть null");
+        ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicRecords =
+                RECORDS.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
+        PartitionOffset key = new PartitionOffset(record.partition(), record.offset());
+        topicRecords.putIfAbsent(key, record);
+    }
+
+    /**
+     * Добавляет множество записей для указанного топика.
+     * Если запись с тем же partition+offset уже существует, она не будет добавлена.
+     *
+     * @param topic   название топика, не должно быть null или пустым
+     * @param records записи для добавления, не null
+     * @throws NullPointerException     если topic или records == null
+     * @throws IllegalArgumentException если topic пустой
      */
     public static void addRecords(String topic, ConsumerRecords<?, ?> records) {
+        Objects.requireNonNull(topic, "topic не должен быть null");
         Objects.requireNonNull(records, "records не должны быть null");
-        RECORDS.computeIfAbsent(topic, k -> new ConcurrentHashMap<>());
-        Map<PartitionOffset, ConsumerRecord<?, ?>> topicRecords = RECORDS.get(topic);
+        if (topic.trim().isEmpty()) {
+            throw new IllegalArgumentException("topic не должен быть пустым");
+        }
 
+        ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicRecords =
+                RECORDS.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
         for (ConsumerRecord<?, ?> record : records) {
+            if (record == null) continue;
             PartitionOffset key = new PartitionOffset(record.partition(), record.offset());
             // putIfAbsent добавляет запись только если ключа нет, гарантируя уникальность
             topicRecords.putIfAbsent(key, record);
@@ -43,29 +69,46 @@ public class KafkaRecordsManager {
 
     /**
      * Получает список всех уникальных записей для указанного топика.
-     * Если для указанного топика записей нет, возвращается пустой список.
+     * Возвращается копия списка; изменение её не влияет на внутреннее хранилище.
      *
-     * @param topic название топика, записи для которого нужно получить
-     * @return список уникальных записей для указанного топика
+     * @param topic название топика, не должно быть null или пустым
+     * @return список уникальных записей, или пустой список, если записей нет
+     * @throws NullPointerException     если topic == null
+     * @throws IllegalArgumentException если topic пустой
      */
     public static List<ConsumerRecord<?, ?>> getRecords(String topic) {
-        return new ArrayList<>(RECORDS.getOrDefault(topic, Collections.emptyMap()).values());
+        Objects.requireNonNull(topic, "topic не должен быть null");
+        if (topic.trim().isEmpty()) {
+            throw new IllegalArgumentException("topic не должен быть пустым");
+        }
+        ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicMap = RECORDS.get(topic);
+        if (topicMap == null || topicMap.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return new ArrayList<>(topicMap.values());
     }
 
     /**
-     * Получает все записи для всех топиков в формате Map<topic, список уникальных записей>.
+     * Получает все записи для всех топиков.
+     * Возвращается копия внутреннего состояния.
      *
-     * @return карта всех уникальных записей для всех топиков
+     * @return карта: topic -> список уникальных записей; если нет записей, возвращается пустая карта или пустые списки
      */
     public static Map<String, List<ConsumerRecord<?, ?>>> getAllRecords() {
         Map<String, List<ConsumerRecord<?, ?>>> result = new HashMap<>();
-        RECORDS.forEach((topic, recordsMap) -> result.put(topic, new ArrayList<>(recordsMap.values())));
+        RECORDS.forEach((topic, recordsMap) -> {
+            if (recordsMap == null || recordsMap.isEmpty()) {
+                result.put(topic, Collections.emptyList());
+            } else {
+                result.put(topic, new ArrayList<>(recordsMap.values()));
+            }
+        });
         return result;
     }
 
     /**
      * Очищает все записи для всех топиков.
-     * После вызова этого метода все данные будут удалены.
+     * После вызова внутреннее хранилище становится пустым.
      */
     public static void clearRecords() {
         RECORDS.clear();
@@ -73,18 +116,75 @@ public class KafkaRecordsManager {
 
     /**
      * Очищает записи для указанного топика.
-     * Если записи для данного топика отсутствуют, метод не выполняет никаких действий.
+     * Если записей нет, метод ничего не делает.
      *
-     * @param topic название топика, записи для которого нужно очистить
+     * @param topic название топика, не должно быть null или пустым
+     * @throws NullPointerException     если topic == null
+     * @throws IllegalArgumentException если topic пустой
      */
     public static void clearRecords(String topic) {
+        Objects.requireNonNull(topic, "topic не должен быть null");
+        if (topic.trim().isEmpty()) {
+            throw new IllegalArgumentException("topic не должен быть пустым");
+        }
         RECORDS.remove(topic);
     }
 
     /**
-     * Вспомогательный класс для идентификации записи по partition и offset.
+     * Возвращает количество уникальных записей для заданного топика.
+     *
+     * @param topic название топика, не должно быть null или пустым
+     * @return количество записей, или 0 если записей нет
+     * @throws NullPointerException     если topic == null
+     * @throws IllegalArgumentException если topic пустой
      */
-    private static class PartitionOffset {
+    public static int getRecordCount(String topic) {
+        Objects.requireNonNull(topic, "topic не должен быть null");
+        if (topic.trim().isEmpty()) {
+            throw new IllegalArgumentException("topic не должен быть пустым");
+        }
+        ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> map = RECORDS.get(topic);
+        return map != null ? map.size() : 0;
+    }
+
+    /**
+     * Возвращает последнюю запись (с максимальным offset) для заданного топика.
+     *
+     * @param topic название топика, не должно быть null или пустым
+     * @return Optional с записью или Optional.empty(), если записей нет
+     * @throws NullPointerException     если topic == null
+     * @throws IllegalArgumentException если topic пустой
+     */
+    public static Optional<ConsumerRecord<?, ?>> getLatestRecord(String topic) {
+        List<ConsumerRecord<?, ?>> records = getRecords(topic);
+        if (records.isEmpty()) {
+            return Optional.empty();
+        }
+        return records.stream()
+                .max(Comparator.comparingLong(ConsumerRecord::offset));
+    }
+
+    /**
+     * Получает список записей, отсортированных по возрастанию offset.
+     *
+     * @param topic название топика, не должно быть null или пустым
+     * @return отсортированный список, или пустой, если записей нет
+     * @throws NullPointerException     если topic == null
+     * @throws IllegalArgumentException если topic пустой
+     */
+    public static List<ConsumerRecord<?, ?>> getRecordsSortedByOffset(String topic) {
+        List<ConsumerRecord<?, ?>> records = getRecords(topic);
+        if (records.isEmpty()) {
+            return Collections.emptyList();
+        }
+        records.sort(Comparator.comparingLong(ConsumerRecord::offset));
+        return records;
+    }
+
+    /**
+     * Вспомогательный класс для ключа: пара partition+offset.
+     */
+    private static final class PartitionOffset {
         private final int partition;
         private final long offset;
 
@@ -104,6 +204,11 @@ public class KafkaRecordsManager {
         @Override
         public int hashCode() {
             return Objects.hash(partition, offset);
+        }
+
+        @Override
+        public String toString() {
+            return "PartitionOffset{partition=" + partition + ", offset=" + offset + '}';
         }
     }
 }
