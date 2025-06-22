@@ -7,6 +7,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.stream.Collectors;
 
 import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
 
@@ -33,11 +34,9 @@ public final class KafkaRecordsManager {
      * @throws IllegalArgumentException если topic пустой
      */
     public static void addRecord(String topic, ConsumerRecord<?, ?> record) {
-        requireNonBlank(topic, "Topic не может быть null или пустым.");
-        Objects.requireNonNull(record, "record не должен быть null.");
-        ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicRecords =
-                RECORDS.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
-        PartitionOffset key = new PartitionOffset(record.partition(), record.offset());
+        validateTopicAndRecord(topic, record);
+        var topicRecords = RECORDS.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
+        var key = PartitionOffset.of(record.partition(), record.offset());
         topicRecords.putIfAbsent(key, record);
     }
 
@@ -51,41 +50,37 @@ public final class KafkaRecordsManager {
      * @throws IllegalArgumentException если topic пустой
      */
     public static void addRecords(String topic, ConsumerRecords<?, ?> records) {
-        requireNonBlank(topic, "Topic не может быть null или пустым.");
-        Objects.requireNonNull(records, "records не должны быть null.");
-        ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicRecords =
-                RECORDS.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
-        for (ConsumerRecord<?, ?> record : records) {
-            if (record == null) continue;
-            PartitionOffset key = new PartitionOffset(record.partition(), record.offset());
-            // putIfAbsent добавляет запись только если ключа нет, гарантируя уникальность
-            topicRecords.putIfAbsent(key, record);
-        }
+        validateTopicAndRecords(topic, records);
+        var topicRecords = RECORDS.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
+        records.forEach(record -> {
+            if (record != null) {
+                var key = PartitionOffset.of(record.partition(), record.offset());
+                topicRecords.putIfAbsent(key, record);
+            }
+        });
     }
 
     /**
-     * Получает список всех уникальных записей для указанного топика.
-     * Возвращается копия списка; изменение её не влияет на внутреннее хранилище.
+     * Получает неизменяемый список всех уникальных записей для указанного топика.
      *
      * @param topic название топика, не должно быть null или пустым
-     * @return список уникальных записей, или пустой список, если записей нет
+     * @return неизменяемый список уникальных записей, или пустой список, если записей нет
      * @throws NullPointerException     если topic == null
      * @throws IllegalArgumentException если topic пустой
      */
     public static List<ConsumerRecord<?, ?>> getRecords(String topic) {
         requireNonBlank(topic, "Topic не может быть null или пустым.");
-        ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicMap = RECORDS.get(topic);
-        if (topicMap == null || topicMap.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return new ArrayList<>(topicMap.values());
+        return Optional.ofNullable(RECORDS.get(topic))
+                .filter(map -> !map.isEmpty())
+                .map(map -> List.copyOf(map.values()))
+                .orElse(List.of());
     }
 
     /**
      * Получает все записи для всех топиков.
-     * Возвращается копия внутреннего состояния.
+     * Возвращается неизменяемая копия внутреннего состояния.
      *
-     * @return карта: topic -> список уникальных записей; если нет записей, возвращается пустая карта или пустые списки
+     * @return неизменяемая карта: topic -> список уникальных записей
      */
     public static Map<String, List<ConsumerRecord<?, ?>>> getAllRecords() {
         Map<String, List<ConsumerRecord<?, ?>>> result = new HashMap<>();
@@ -97,14 +92,6 @@ public final class KafkaRecordsManager {
             }
         });
         return result;
-    }
-
-    /**
-     * Очищает все записи для всех топиков.
-     * После вызова внутреннее хранилище становится пустым.
-     */
-    public static void clearRecords() {
-        RECORDS.clear();
     }
 
     /**
@@ -120,6 +107,10 @@ public final class KafkaRecordsManager {
         RECORDS.remove(topic);
     }
 
+    /**
+     * Очищает все записи для всех топиков.
+     * После вызова внутреннее хранилище становится пустым.
+     */
     public static void clearAllRecords() {
         RECORDS.clear();
     }
@@ -134,8 +125,9 @@ public final class KafkaRecordsManager {
      */
     public static int getRecordCount(String topic) {
         requireNonBlank(topic, "Topic не может быть null или пустым.");
-        ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> map = RECORDS.get(topic);
-        return map != null ? map.size() : 0;
+        return Optional.ofNullable(RECORDS.get(topic))
+                .map(ConcurrentMap::size)
+                .orElse(0);
     }
 
     /**
@@ -147,48 +139,66 @@ public final class KafkaRecordsManager {
      * @throws IllegalArgumentException если topic пустой
      */
     public static Optional<ConsumerRecord<?, ?>> getLatestRecord(String topic) {
-        List<ConsumerRecord<?, ?>> records = getRecords(topic);
-        if (records.isEmpty()) return Optional.empty();
-        return records.stream().max(Comparator.comparingLong(ConsumerRecord::offset));
+        return getRecords(topic).stream()
+                .max(Comparator.comparingLong(ConsumerRecord::offset));
     }
 
     /**
-     * Получает список записей, отсортированных по возрастанию offset.
+     * Получает неизменяемый список записей, отсортированных по возрастанию offset.
      *
      * @param topic название топика, не должно быть null или пустым
-     * @return отсортированный список, или пустой, если записей нет
+     * @return неизменяемый отсортированный список, или пустой, если записей нет
      * @throws NullPointerException     если topic == null
      * @throws IllegalArgumentException если topic пустой
      */
     public static List<ConsumerRecord<?, ?>> getRecordsSortedByOffset(String topic) {
-        List<ConsumerRecord<?, ?>> records = getRecords(topic);
-        if (records.isEmpty()) return Collections.emptyList();
-        records.sort(Comparator.comparingLong(ConsumerRecord::offset));
-        return records;
+        var records = getRecords(topic);
+        if (records.isEmpty()) return List.of();
+        return records.stream()
+                .sorted(Comparator.comparingLong(ConsumerRecord::offset))
+                .collect(Collectors.toUnmodifiableList());
     }
 
     /**
-     * Вспомогательный класс для ключа: пара partition+offset.
+     * Проверяет, есть ли записи для указанного топика.
+     *
+     * @param topic название топика, не должно быть null или пустым
+     * @return true, если есть записи для топика
+     * @throws NullPointerException     если topic == null
+     * @throws IllegalArgumentException если topic пустой
      */
-    private static final class PartitionOffset {
-        private final int partition;
-        private final long offset;
+    public static boolean hasRecords(String topic) {
+        return getRecordCount(topic) > 0;
+    }
 
-        PartitionOffset(int partition, long offset) {
-            this.partition = partition;
-            this.offset = offset;
-        }
+    /**
+     * Получает список всех топиков, для которых есть записи.
+     *
+     * @return неизменяемый список названий топиков
+     */
+    public static Set<String> getTopicsWithRecords() {
+        return RECORDS.entrySet().stream()
+                .filter(entry -> entry.getValue() != null && !entry.getValue().isEmpty())
+                .map(Map.Entry::getKey)
+                .collect(Collectors.toUnmodifiableSet());
+    }
 
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof PartitionOffset that)) return false;
-            return partition == that.partition && offset == that.offset;
-        }
+    private static void validateTopicAndRecord(String topic, ConsumerRecord<?, ?> record) {
+        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        Objects.requireNonNull(record, "record не должен быть null.");
+    }
 
-        @Override
-        public int hashCode() {
-            return Objects.hash(partition, offset);
+    private static void validateTopicAndRecords(String topic, ConsumerRecords<?, ?> records) {
+        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        Objects.requireNonNull(records, "records не должны быть null.");
+    }
+
+    /**
+     * Вспомогательный record для ключа: пара partition+offset.
+     */
+    private record PartitionOffset(int partition, long offset) {
+        public static PartitionOffset of(int partition, long offset) {
+            return new PartitionOffset(partition, offset);
         }
     }
 }
