@@ -4,33 +4,43 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Function;
 
 /**
- * Интерфейс для сервиса потребителя Kafka.
- * Предоставляет методы для запуска и остановки прослушивания топиков, а также для получения записей из топиков.
+ * Сервис потребителя Kafka для тестов.
  */
 public interface KafkaConsumerService {
 
     /**
-     * Запускает прослушивание указанного топика.
+     * Запускает прослушивание topic.
      *
-     * @param topic   название топика, который нужно слушать
-     * @param timeout продолжительность ожидания новых сообщений
+     * @param topic   имя топика
+     * @param timeout poll timeout
      */
     void startListening(String topic, Duration timeout);
 
     /**
-     * Останавливает прослушивание указанного топика.
+     * Останавливает прослушивание.
      *
-     * @param topic название топика, для которого нужно остановить прослушивание
+     * @param topic имя топика
      */
     void stopListening(String topic);
 
     /**
-     * Получает все записи из указанного топика.
+     * Возвращает все сохранённые ConsumerRecord<String, String> (строка).
      *
-     * @param topic название топика, из которого нужно получить записи
-     * @return список записей, полученных из топика
+     * @param topic имя
+     * @return список
      */
     List<ConsumerRecord<String, String>> getAllRecords(String topic);
+
+    /**
+     * Для Avro: преобразует GenericRecord → String или POJO.
+     *
+     * @param topic   имя
+     * @param mapper  функция преобразования строки JSON → T
+     * @param <T>     тип
+     * @return список T
+     */
+    <T> List<T> getAllRecordsAs(String topic, Function<String, T> mapper);
 }

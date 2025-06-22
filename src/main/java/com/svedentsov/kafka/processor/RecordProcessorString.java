@@ -1,14 +1,17 @@
 package com.svedentsov.kafka.processor;
 
 import com.svedentsov.kafka.config.KafkaListenerConfig;
+import com.svedentsov.kafka.exception.KafkaListenerException.ProcessingException;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
+import java.util.Objects;
+
 /**
- * Обработчик строковых записей Kafka.
+ * Обработка строковых сообщений: сохраняет записи в KafkaRecordsManager.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -18,39 +21,34 @@ public class RecordProcessorString implements RecordProcessor<String> {
     private final KafkaListenerConfig config;
 
     /**
-     * Обрабатывает пакет строковых записей, сохраняет и логирует ошибки.
+     * Обрабатывает пакет строковых записей, сохраняет их и логирует ошибки.
      *
      * @param records набор записей для обработки
      */
     @Override
     public void processRecords(ConsumerRecords<String, String> records) {
+        Objects.requireNonNull(records, "records не может быть null.");
         int processedCount = 0;
         int errorCount = 0;
         for (ConsumerRecord<String, String> record : records) {
+            if (record == null) {
+                log.warn("Обнаружена null-запись в топике '{}', пропуск.", topicName);
+                errorCount++;
+                continue;
+            }
             try {
-                processRecord(record);
+                KafkaRecordsManager.addRecord(topicName, record);
                 processedCount++;
             } catch (Exception e) {
                 errorCount++;
-                log.warn("Ошибка при обработке строковой записи из топика '{}' (offset: {}, partition: {}): {}",
-                        topicName, record.offset(), record.partition(), e.getMessage());
+                log.warn("Ошибка при обработке записи из топика '{}', offset={}, partition={}: {}", topicName, record.offset(), record.partition(), e.getMessage(), e);
                 if (config.shouldStopOnError()) {
-                    throw new RuntimeException("Критическая ошибка обработки записи", e);
+                    throw new ProcessingException("Критическая ошибка при обработке записи в топике " + topicName, e);
                 }
             }
         }
         if (config.isEnableMetrics()) {
-            log.debug("Обработано записей: {}, ошибок: {} для топика '{}'",
-                    processedCount, errorCount, topicName);
+            log.debug("Обработано {} строковых записей (ошибок: {}) для топика '{}'", processedCount, errorCount, topicName);
         }
-    }
-
-    /**
-     * Сохраняет запись в менеджер.
-     *
-     * @param record запись для сохранения
-     */
-    private void processRecord(ConsumerRecord<String, String> record) {
-        KafkaRecordsManager.addRecord(topicName, record);
     }
 }

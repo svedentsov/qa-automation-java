@@ -24,6 +24,13 @@ public interface KafkaConfig extends Config {
     String groupId();
 
     /**
+     * Включена ли поддержка SSL-соединений.
+     */
+    @Key("kafka.ssl.enabled")
+    @DefaultValue("false")
+    boolean sslEnabled();
+
+    /**
      * Путь к файлу truststore, содержащему доверенные сертификаты для SSL соединений.
      */
     @Key("kafka.ssl.truststore.location")

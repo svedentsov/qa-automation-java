@@ -8,9 +8,12 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
+import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
+
 /**
- * Менеджер для хранения и управления записями, полученными из Kafka.
- * Обеспечивает хранение уникальных записей для каждого топика.
+ * Потокобезопасный менеджер накопления полученных записей для тестов.
+ * Хранит по topic→(partition,offset)→ConsumerRecord.
+ * Требует явного вызова clearRecords(topic) или clearAllRecords() между тестами.
  */
 @UtilityClass
 public final class KafkaRecordsManager {
@@ -30,11 +33,8 @@ public final class KafkaRecordsManager {
      * @throws IllegalArgumentException если topic пустой
      */
     public static void addRecord(String topic, ConsumerRecord<?, ?> record) {
-        Objects.requireNonNull(topic, "topic не должен быть null");
-        if (topic.trim().isEmpty()) {
-            throw new IllegalArgumentException("topic не должен быть пустым");
-        }
-        Objects.requireNonNull(record, "record не должен быть null");
+        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        Objects.requireNonNull(record, "record не должен быть null.");
         ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicRecords =
                 RECORDS.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
         PartitionOffset key = new PartitionOffset(record.partition(), record.offset());
@@ -51,12 +51,8 @@ public final class KafkaRecordsManager {
      * @throws IllegalArgumentException если topic пустой
      */
     public static void addRecords(String topic, ConsumerRecords<?, ?> records) {
-        Objects.requireNonNull(topic, "topic не должен быть null");
-        Objects.requireNonNull(records, "records не должны быть null");
-        if (topic.trim().isEmpty()) {
-            throw new IllegalArgumentException("topic не должен быть пустым");
-        }
-
+        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        Objects.requireNonNull(records, "records не должны быть null.");
         ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicRecords =
                 RECORDS.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
         for (ConsumerRecord<?, ?> record : records) {
@@ -77,10 +73,7 @@ public final class KafkaRecordsManager {
      * @throws IllegalArgumentException если topic пустой
      */
     public static List<ConsumerRecord<?, ?>> getRecords(String topic) {
-        Objects.requireNonNull(topic, "topic не должен быть null");
-        if (topic.trim().isEmpty()) {
-            throw new IllegalArgumentException("topic не должен быть пустым");
-        }
+        requireNonBlank(topic, "Topic не может быть null или пустым.");
         ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> topicMap = RECORDS.get(topic);
         if (topicMap == null || topicMap.isEmpty()) {
             return Collections.emptyList();
@@ -123,11 +116,12 @@ public final class KafkaRecordsManager {
      * @throws IllegalArgumentException если topic пустой
      */
     public static void clearRecords(String topic) {
-        Objects.requireNonNull(topic, "topic не должен быть null");
-        if (topic.trim().isEmpty()) {
-            throw new IllegalArgumentException("topic не должен быть пустым");
-        }
+        requireNonBlank(topic, "Topic не может быть null или пустым.");
         RECORDS.remove(topic);
+    }
+
+    public static void clearAllRecords() {
+        RECORDS.clear();
     }
 
     /**
@@ -139,10 +133,7 @@ public final class KafkaRecordsManager {
      * @throws IllegalArgumentException если topic пустой
      */
     public static int getRecordCount(String topic) {
-        Objects.requireNonNull(topic, "topic не должен быть null");
-        if (topic.trim().isEmpty()) {
-            throw new IllegalArgumentException("topic не должен быть пустым");
-        }
+        requireNonBlank(topic, "Topic не может быть null или пустым.");
         ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>> map = RECORDS.get(topic);
         return map != null ? map.size() : 0;
     }
@@ -157,11 +148,8 @@ public final class KafkaRecordsManager {
      */
     public static Optional<ConsumerRecord<?, ?>> getLatestRecord(String topic) {
         List<ConsumerRecord<?, ?>> records = getRecords(topic);
-        if (records.isEmpty()) {
-            return Optional.empty();
-        }
-        return records.stream()
-                .max(Comparator.comparingLong(ConsumerRecord::offset));
+        if (records.isEmpty()) return Optional.empty();
+        return records.stream().max(Comparator.comparingLong(ConsumerRecord::offset));
     }
 
     /**
@@ -174,9 +162,7 @@ public final class KafkaRecordsManager {
      */
     public static List<ConsumerRecord<?, ?>> getRecordsSortedByOffset(String topic) {
         List<ConsumerRecord<?, ?>> records = getRecords(topic);
-        if (records.isEmpty()) {
-            return Collections.emptyList();
-        }
+        if (records.isEmpty()) return Collections.emptyList();
         records.sort(Comparator.comparingLong(ConsumerRecord::offset));
         return records;
     }
@@ -196,19 +182,13 @@ public final class KafkaRecordsManager {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof PartitionOffset)) return false;
-            PartitionOffset that = (PartitionOffset) o;
+            if (!(o instanceof PartitionOffset that)) return false;
             return partition == that.partition && offset == that.offset;
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(partition, offset);
-        }
-
-        @Override
-        public String toString() {
-            return "PartitionOffset{partition=" + partition + ", offset=" + offset + '}';
         }
     }
 }

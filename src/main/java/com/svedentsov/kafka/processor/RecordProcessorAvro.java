@@ -1,21 +1,27 @@
 package com.svedentsov.kafka.processor;
 
 import com.svedentsov.kafka.config.KafkaListenerConfig;
+import com.svedentsov.kafka.exception.KafkaListenerException;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Schema;
+import org.apache.avro.generic.GenericDatumWriter;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.avro.io.EncoderFactory;
+import org.apache.avro.io.JsonEncoder;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.SerializationException;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.*;
 
 /**
- * Обработчик Avro-записей Kafka с фильтрацией невалидных сообщений.
+ * Обработка Avro-сообщений: фильтрация невалидных, сохранение валидных в KafkaRecordsManager.
+ * Также сохраняет JSON-представление значения для QA, если нужно.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -31,44 +37,44 @@ public class RecordProcessorAvro implements RecordProcessor<Object> {
      */
     @Override
     public void processRecords(ConsumerRecords<String, Object> records) {
-        ConsumerRecords<String, Object> validRecords = filterValidRecords(records);
+        Objects.requireNonNull(records, "records не могут быть null.");
+        ConsumerRecords<String, Object> validRecords = filterValid(records);
+        int errorCount = 0, successCount = 0;
         for (ConsumerRecord<String, Object> record : validRecords) {
             try {
-                processRecord(record);
+                KafkaRecordsManager.addRecord(topicName, record);
+                successCount++;
             } catch (Exception e) {
-                log.error("Критическая ошибка при обработке Avro записи из топика '{}'", topicName, e);
+                errorCount++;
+                log.error("Ошибка при обработке Avro-записи из топика '{}', offset={}, partition={}: {}", topicName, record.offset(), record.partition(), e.getMessage(), e);
                 if (config.shouldStopOnError()) {
-                    throw new RuntimeException("Критическая ошибка обработки Avro записи", e);
+                    throw new KafkaListenerException.ProcessingException("Критическая ошибка при обработке Avro-записи в топике " + topicName, e);
                 }
             }
         }
         if (config.isEnableMetrics()) {
-            log.debug("Обработано {} валидных Avro записей из {} для топика '{}'",
-                    validRecords.count(), records.count(), topicName);
+            log.debug("Обработано {} валидных Avro-записей (ошибок: {}) из {} для топика '{}'", successCount, errorCount, records.count(), topicName);
         }
     }
 
-    /**
-     * Фильтрует валидные записи, исключая повреждённые (SerializationException).
-     *
-     * @param records все записи
-     * @return ConsumerRecords, содержащий только валидные записи
-     */
-    private ConsumerRecords<String, Object> filterValidRecords(ConsumerRecords<String, Object> records) {
+    private ConsumerRecords<String, Object> filterValid(ConsumerRecords<String, Object> records) {
         Map<TopicPartition, List<ConsumerRecord<String, Object>>> validMap = new HashMap<>();
         int invalidCount = 0;
         for (ConsumerRecord<String, Object> record : records) {
-            if (isValidRecord(record)) {
-                validMap.computeIfAbsent(
-                        new TopicPartition(record.topic(), record.partition()),
-                        k -> new ArrayList<>()
-                ).add(record);
+            if (record == null) {
+                invalidCount++;
+                log.warn("Обнаружена null-запись в топике '{}', пропуск.", topicName);
+                continue;
+            }
+            if (isValid(record)) {
+                TopicPartition tp = new TopicPartition(record.topic(), record.partition());
+                validMap.computeIfAbsent(tp, k -> new ArrayList<>()).add(record);
             } else {
                 invalidCount++;
             }
         }
         if (invalidCount > 0) {
-            log.info("Отфильтровано {} невалидных Avro записей из топика '{}'", invalidCount, topicName);
+            log.info("Отфильтровано {} невалидных Avro-записей для топика '{}'.", invalidCount, topicName);
         }
         return new ConsumerRecords<>(validMap);
     }
@@ -79,38 +85,47 @@ public class RecordProcessorAvro implements RecordProcessor<Object> {
      * @param record запись для проверки
      * @return true, если запись валидна; false иначе
      */
-    private boolean isValidRecord(ConsumerRecord<String, Object> record) {
+    private boolean isValid(ConsumerRecord<String, Object> record) {
         try {
             Object value = record.value();
+            if (value == null) {
+                log.warn("Значение Avro null в топике '{}', offset={}, partition={}", topicName, record.offset(), record.partition());
+                return false;
+            }
+            if (!(value instanceof GenericRecord)) {
+                log.warn("Значение Avro не является GenericRecord в топике '{}', offset={}, тип={}", topicName, record.offset(), value.getClass().getName());
+                return false;
+            }
             return true;
         } catch (SerializationException e) {
-            logInvalidRecord(record, e);
+            log.warn("SerializationException при проверке записи Avro в топике '{}', offset={}, partition={}: {}", topicName, record.offset(), record.partition(), e.getMessage());
             return false;
         } catch (Exception e) {
-            log.warn("Неожиданная ошибка при валидации Avro записи из топика '{}' (offset: {}, partition: {}): {}",
-                    topicName, record.offset(), record.partition(), e.getMessage());
+            log.warn("Неожиданная ошибка при проверке Avro-записи в топике '{}', offset={}, partition={}: {}", topicName, record.offset(), record.partition(), e.getMessage(), e);
             return false;
         }
     }
 
     /**
-     * Логирует и сохраняет запись.
+     * Преобразует GenericRecord в JSON-строку (Avro JSON).
+     * Может использоваться в тестах для анализа содержимого.
      *
-     * @param record запись для обработки
+     * @param genericRecord GenericRecord
+     * @param schema        Avro Schema
+     * @return JSON-строка
      */
-    private void processRecord(ConsumerRecord<String, Object> record) {
-        KafkaRecordsManager.addRecord(topicName, record);
-    }
-
-    /**
-     * Логирует невалидную запись.
-     *
-     * @param record запись
-     * @param e      причина ошибки десериализации
-     */
-    private void logInvalidRecord(ConsumerRecord<String, Object> record, SerializationException e) {
-        log.warn("Невалидная Avro запись в топике '{}' пропущена. Offset: {}, Partition: {}, Timestamp: {}, Key: {}, Error: {}",
-                topicName, record.offset(), record.partition(),
-                record.timestamp(), record.key(), e.getMessage());
+    public static String genericRecordToJson(GenericRecord genericRecord, Schema schema) {
+        Objects.requireNonNull(genericRecord, "GenericRecord не может быть null.");
+        Objects.requireNonNull(schema, "Schema не может быть null.");
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        try {
+            GenericDatumWriter<GenericRecord> writer = new GenericDatumWriter<>(schema);
+            JsonEncoder encoder = EncoderFactory.get().jsonEncoder(schema, out);
+            writer.write(genericRecord, encoder);
+            encoder.flush();
+        } catch (IOException e) {
+            throw new RuntimeException("Ошибка при преобразовании GenericRecord в JSON", e);
+        }
+        return out.toString(java.nio.charset.StandardCharsets.UTF_8);
     }
 }

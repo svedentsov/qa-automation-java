@@ -8,11 +8,14 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static com.svedentsov.kafka.utils.ValidationUtils.requireNonNull;
 
 /**
  * Реализация сервиса потребителя Kafka для строковых данных.
- * Использует KafkaListenerManager для управления listener-ами.
+ * Использует {@link KafkaListenerManager} для управления подпиской и получением записей.
  */
 @Slf4j
 public class KafkaConsumerServiceString implements KafkaConsumerService {
@@ -20,78 +23,77 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     private final KafkaListenerManager listenerManager;
 
     /**
-     * Конструктор, создаёт собственный KafkaListenerManager на базе переданного конфига.
+     * Конструктор, создающий менеджер KafkaListener на основе переданной конфигурации.
      *
-     * @param config конфигурация listener-ов, не null
-     * @throws IllegalArgumentException если config == null
+     * @param config конфигурация KafkaListener'а (не null)
+     * @throws IllegalArgumentException если {@code config} равен {@code null}
      */
     public KafkaConsumerServiceString(KafkaListenerConfig config) {
-        if (config == null) {
-            throw new IllegalArgumentException("KafkaListenerConfig не может быть null");
-        }
+        requireNonNull(config,"KafkaListenerConfig не может быть null.");
         this.listenerManager = new KafkaListenerManager(config);
     }
 
     /**
-     * Альтернативный конструктор: если менеджер создаётся или управляется извне.
+     * Конструктор, принимающий готовый {@link KafkaListenerManager}.
      *
-     * @param listenerManager готовый менеджер, не null
-     * @throws IllegalArgumentException если listenerManager == null
+     * @param listenerManager менеджер KafkaListener'а (не null)
+     * @throws IllegalArgumentException если {@code listenerManager} равен {@code null}
      */
     public KafkaConsumerServiceString(KafkaListenerManager listenerManager) {
-        if (listenerManager == null) {
-            throw new IllegalArgumentException("KafkaListenerManager не может быть null");
-        }
+        requireNonNull(listenerManager,"KafkaListenerManager не может быть null.");
         this.listenerManager = listenerManager;
     }
 
     /**
      * Запускает прослушивание указанного топика для строковых данных.
      *
-     * @param topic   название топика, не null/пустое
-     * @param timeout таймаут polling'а
+     * @param topic   название Kafka-топика
+     * @param timeout таймаут ожидания записи (poll timeout)
      */
     @Override
     public void startListening(String topic, Duration timeout) {
-        try {
-            listenerManager.startListening(topic, timeout, false);
-            log.info("Запущено прослушивание топика '{}'", topic);
-        } catch (Exception e) {
-            log.error("Не удалось запустить прослушивание топика '{}'", topic, e);
-            throw e;
-        }
+        listenerManager.startListening(topic, timeout, false);
+        log.info("Начато прослушивание строкового топика '{}'", topic);
     }
 
     /**
      * Останавливает прослушивание указанного топика.
      *
-     * @param topic название топика, не null/пустое
+     * @param topic название Kafka-топика
      */
     @Override
     public void stopListening(String topic) {
-        try {
-            boolean stopped = listenerManager.stopListening(topic);
-            if (stopped) {
-                log.info("Остановлено прослушивание топика '{}'", topic);
-            } else {
-                log.warn("При попытке остановки прослушивания топика '{}': listener не найден", topic);
-            }
-        } catch (Exception e) {
-            log.error("Ошибка при остановке прослушивания топика '{}'", topic, e);
-            throw e;
-        }
+        listenerManager.stopListening(topic);
+        log.info("Завершено прослушивание строкового топика '{}'", topic);
     }
 
     /**
-     * Получает все уникальные записи из указанного топика в формате строк.
+     * Получает все записи из указанного топика.
      *
-     * @param topic название топика, не null/пустое
-     * @return список уникальных записей в формате строк; если записей нет, возвращается пустой список
+     * @param topic название Kafka-топика
+     * @return список записей {@link ConsumerRecord} с ключами и значениями в виде строк
      */
+    @SuppressWarnings("unchecked")
     @Override
     public List<ConsumerRecord<String, String>> getAllRecords(String topic) {
         return KafkaRecordsManager.getRecords(topic).stream()
                 .map(record -> (ConsumerRecord<String, String>) record)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Получает все значения записей из топика и преобразует их через указанный маппер.
+     *
+     * @param topic  название Kafka-топика
+     * @param mapper функция преобразования строки в объект типа {@code T}
+     * @param <T>    тип возвращаемых объектов
+     * @return список объектов, полученных из значений записей
+     */
+    @Override
+    public <T> List<T> getAllRecordsAs(String topic, Function<String, T> mapper) {
+        return getAllRecords(topic).stream()
+                .map(ConsumerRecord::value)
+                .map(mapper)
                 .collect(Collectors.toList());
     }
 }

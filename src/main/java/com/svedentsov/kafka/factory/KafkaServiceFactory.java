@@ -1,24 +1,33 @@
 package com.svedentsov.kafka.factory;
 
+import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
-import com.svedentsov.kafka.service.*;
+import com.svedentsov.kafka.service.KafkaConsumerService;
+import com.svedentsov.kafka.service.KafkaConsumerServiceAvro;
+import com.svedentsov.kafka.service.KafkaConsumerServiceString;
+import com.svedentsov.kafka.service.KafkaProducerService;
+import com.svedentsov.kafka.service.KafkaProducerServiceAvro;
+import com.svedentsov.kafka.service.KafkaProducerServiceString;
 import lombok.experimental.UtilityClass;
+
+import static com.svedentsov.kafka.utils.ValidationUtils.requireNonNull;
 
 /**
  * Фабрика для создания экземпляров сервисов Kafka.
  * Этот класс предоставляет статические методы для создания объектов, реализующих интерфейсы
- * {@link KafkaProducerService} и {@link KafkaConsumerService}, в зависимости от переданного типа.
+ * {@link KafkaProducerService} и {@link KafkaConsumerService}, в зависимости от переданного типа контента.
+ * Использует паттерн "Фабричный метод" для инкапсуляции логики создания объектов.
  */
 @UtilityClass
 public class KafkaServiceFactory {
 
     /**
-     * Создаёт KafkaProducerService по указанному типу формата.
+     * Создаёт {@link KafkaProducerService} по указанному типу формата данных.
      *
-     * @param type STRING_FORMAT или AVRO_FORMAT
-     * @return KafkaProducerService-реализация
-     * @throws IllegalArgumentException если type == null или неизвестен
+     * @param type тип контента ({@link ContentType#STRING_FORMAT} или {@link ContentType#AVRO_FORMAT}).
+     * @return реализация {@link KafkaProducerService}, соответствующая указанному типу.
+     * @throws IllegalArgumentException если {@code type} равен {@code null} или является неизвестным типом.
      */
     public static KafkaProducerService createProducer(ContentType type) {
         requireNonNull(type, "ContentType для Producer не может быть null");
@@ -30,12 +39,12 @@ public class KafkaServiceFactory {
     }
 
     /**
-     * Создаёт KafkaConsumerService по типу и уже существующему менеджеру слушателей.
+     * Создаёт {@link KafkaConsumerService} по типу контента и уже существующему менеджеру слушателей.
      *
-     * @param type    STRING_FORMAT или AVRO_FORMAT
-     * @param manager KafkaListenerManager, не null
-     * @return KafkaConsumerService-реализация
-     * @throws IllegalArgumentException если type или manager == null, либо неизвестен тип
+     * @param type    тип контента ({@link ContentType#STRING_FORMAT} или {@link ContentType#AVRO_FORMAT}).
+     * @param manager экземпляр {@link KafkaListenerManager}, не может быть {@code null}.
+     * @return реализация {@link KafkaConsumerService}, соответствующая указанному типу.
+     * @throws IllegalArgumentException если {@code type} или {@code manager} равен {@code null}, либо тип неизвестен.
      */
     public static KafkaConsumerService createConsumer(ContentType type, KafkaListenerManager manager) {
         requireNonNull(type, "ContentType для Consumer не может быть null");
@@ -48,12 +57,21 @@ public class KafkaServiceFactory {
     }
 
     /**
-     * Приватный помощник для проверки на null с выбросом IllegalArgumentException.
+     * Создаёт {@link KafkaConsumerService} по типу контента и конфигурации слушателя.
+     * В этом случае {@link KafkaConsumerService} самостоятельно создаст и будет управлять своим экземпляром {@link KafkaListenerManager}.
      *
-     * @param obj     проверяемый объект
-     * @param message сообщение исключения, если obj == null
+     * @param type   тип контента ({@link ContentType#STRING_FORMAT} или {@link ContentType#AVRO_FORMAT}).
+     * @param config конфигурация слушателя {@link KafkaListenerConfig}, не может быть {@code null}.
+     * @return реализация {@link KafkaConsumerService}, соответствующая указанному типу.
+     * @throws IllegalArgumentException если {@code type} или {@code config} равен {@code null}, либо тип неизвестен.
      */
-    private static void requireNonNull(Object obj, String message) {
-        if (obj == null) throw new IllegalArgumentException(message);
+    public static KafkaConsumerService createConsumer(ContentType type, KafkaListenerConfig config) {
+        requireNonNull(type, "ContentType для Consumer не может быть null");
+        requireNonNull(config, "KafkaListenerConfig не может быть null");
+        return switch (type) {
+            case STRING_FORMAT -> new KafkaConsumerServiceString(config);
+            case AVRO_FORMAT -> new KafkaConsumerServiceAvro(config);
+            default -> throw new IllegalArgumentException("Неизвестный тип Consumer: " + type);
+        };
     }
 }

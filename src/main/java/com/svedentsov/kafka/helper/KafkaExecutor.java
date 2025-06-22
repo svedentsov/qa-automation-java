@@ -1,8 +1,8 @@
 package com.svedentsov.kafka.helper;
 
 import com.svedentsov.kafka.config.KafkaListenerConfig;
-import com.svedentsov.kafka.config.KafkaListenerConfig.EnvConfig;
 import com.svedentsov.kafka.enums.ContentType;
+import com.svedentsov.kafka.exception.KafkaListenerException;
 import com.svedentsov.kafka.factory.KafkaServiceFactory;
 import com.svedentsov.kafka.model.Record;
 import com.svedentsov.kafka.service.KafkaConsumerService;
@@ -12,7 +12,6 @@ import com.svedentsov.matcher.Condition;
 import com.svedentsov.matcher.EntityValidator;
 import com.svedentsov.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.avro.Schema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
@@ -23,77 +22,102 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+import static com.svedentsov.kafka.config.KafkaListenerConfig.EnvConfig.testing;
+import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
+import static com.svedentsov.kafka.utils.ValidationUtils.requireNonNull;
+
 /**
  * Вспомогательный класс для работы с Kafka, обеспечивающий удобное управление продюсерами и консьюмерами Kafka.
- * Теперь ожидается, что перед использованием consumer-а будет установлена конфигурация слушателей через KafkaListenerConfig.
+ * Предоставляет текучий (fluent) API для настройки, отправки и получения сообщений, а также их валидации.
+ * Ожидается, что перед использованием consumer-а будет установлена конфигурация слушателей через KafkaListenerConfig.
  */
 @Slf4j
-public class KafkaExecutor {
+public class KafkaExecutor implements AutoCloseable {
 
     private KafkaProducerService producer;
     private KafkaConsumerService consumer;
-    private KafkaListenerConfig listenerConfig = EnvConfig.testing();
+    private ContentType contentType;
+    private KafkaListenerConfig listenerConfig = testing();
     private KafkaListenerManager listenerManager = new KafkaListenerManager(listenerConfig);
     private final Record record = new Record();
     private Duration timeout = Duration.ofMillis(300);
 
     /**
-     * Явно установить конфигурацию слушателя.
-     * Если не вызывать, будет использоваться KafkaListenerConfig.testing().
+     * Явно устанавливает конфигурацию слушателя.
+     * Если этот метод не вызывается, будет использоваться конфигурация по умолчанию (testing).
+     * Пересоздает внутренний KafkaListenerManager с новой конфигурацией.
+     *
+     * @param config конфигурация слушателя {@link KafkaListenerConfig}, не может быть {@code null}.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalArgumentException если переданная конфигурация {@code null}.
      */
     public KafkaExecutor setListenerConfig(KafkaListenerConfig config) {
+        requireNonNull(config, "KafkaListenerConfig не может быть null");
+        if (this.listenerManager != null) {
+            this.listenerManager.shutdown();
+        }
         this.listenerConfig = config;
         this.listenerManager = new KafkaListenerManager(config);
         return this;
     }
 
     /**
-     * Устанавливает тип продюсера.
+     * Устанавливает тип продюсера. Этот метод должен быть вызван перед отправкой сообщений.
      *
-     * @param type тип продюсера (например, STRING_FORMAT или AVRO_FORMAT)
-     * @return текущий экземпляр KafkaExecutor
+     * @param type тип продюсера (например, {@link ContentType#STRING_FORMAT} или {@link ContentType#AVRO_FORMAT}).
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
      */
     public KafkaExecutor setProducerType(ContentType type) {
+        requireNonNull(type, "ContentType для продюсера не может быть null");
+        this.contentType = type;
         this.producer = KafkaServiceFactory.createProducer(type);
         return this;
     }
 
     /**
-     * Устанавливает тип консьюмера.
-     * Если конфиг слушателя не задан явно, используется тестовый.
+     * Устанавливает тип консьюмера. Этот метод должен быть вызван перед получением сообщений.
+     *
+     * @param type тип консьюмера (например, {@link ContentType#STRING_FORMAT} или {@link ContentType#AVRO_FORMAT}).
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
      */
     public KafkaExecutor setConsumerType(ContentType type) {
+        requireNonNull(type, "ContentType для консьюмера не может быть null");
+        this.contentType = type;
         this.consumer = KafkaServiceFactory.createConsumer(type, listenerManager);
         return this;
     }
 
     /**
-     * Устанавливает тайм-аут для получения записей.
+     * Устанавливает тайм-аут для операции получения записей (poll timeout).
      *
-     * @param millis тайм-аут в миллисекундах
-     * @return текущий экземпляр KafkaExecutor
+     * @param millis тайм-аут в миллисекундах. Должен быть неотрицательным.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalArgumentException если {@code millis} отрицательный.
      */
     public KafkaExecutor setTimeout(long millis) {
+        if (millis < 0) throw new IllegalArgumentException("Таймаут в миллисекундах не может быть отрицательным.");
         this.timeout = Duration.ofMillis(millis);
         return this;
     }
 
     /**
-     * Устанавливает имя топика.
+     * Устанавливает имя топика для операций отправки или получения.
      *
-     * @param topicName имя топика
-     * @return текущий экземпляр KafkaExecutor
+     * @param topicName имя топика, не может быть {@code null} или пустым.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalArgumentException если {@code topicName} {@code null} или пустой.
      */
     public KafkaExecutor setTopic(String topicName) {
+        requireNonBlank(topicName, "Имя топика не может быть null или пустым.");
         this.record.setTopic(topicName);
         return this;
     }
 
     /**
-     * Устанавливает номер партиции.
+     * Устанавливает номер партиции, в которую будет отправлена запись (для продюсера).
      *
-     * @param partition номер партиции
-     * @return текущий экземпляр KafkaExecutor
+     * @param partition номер партиции.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
      */
     public KafkaExecutor setPartition(int partition) {
         this.record.setPartition(partition);
@@ -103,8 +127,8 @@ public class KafkaExecutor {
     /**
      * Устанавливает ключ записи.
      *
-     * @param key ключ записи
-     * @return текущий экземпляр KafkaExecutor
+     * @param key ключ записи, может быть {@code null}.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
      */
     public KafkaExecutor setRecordKey(String key) {
         this.record.setKey(key);
@@ -112,44 +136,52 @@ public class KafkaExecutor {
     }
 
     /**
-     * Устанавливает заголовок записи.
+     * Устанавливает один заголовок записи.
      *
-     * @param name  имя заголовка
-     * @param value значение заголовка
-     * @return текущий экземпляр KafkaExecutor
+     * @param name  имя заголовка, не может быть {@code null} или пустым.
+     * @param value значение заголовка, может быть {@code null}.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalArgumentException если имя заголовка {@code null} или пустое.
      */
     public KafkaExecutor setRecordHeader(String name, Object value) {
+        requireNonBlank(name, "Имя заголовка не может быть null или пустым.");
         this.record.getHeaders().put(name, value);
         return this;
     }
 
     /**
-     * Устанавливает заголовки записи.
+     * Устанавливает заголовки записи из списка Kafka {@link Header}.
+     * Значения заголовков преобразуются в строки.
      *
-     * @param headers список заголовков Kafka Header
-     * @return текущий экземпляр KafkaExecutor
+     * @param headers список заголовков Kafka, не может быть {@code null}.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalArgumentException если переданный список заголовков {@code null}.
      */
     public KafkaExecutor setRecordHeaders(List<Header> headers) {
-        headers.forEach(header -> record.getHeaders().put(header.key(), new String(header.value())));
+        requireNonNull(headers, "Список заголовков не может быть null.");
+        headers.forEach(header -> this.record.getHeaders().put(header.key(), new String(header.value())));
         return this;
     }
 
     /**
-     * Устанавливает Avro-схему для записи.
+     * Устанавливает Avro-схему для записи. Используется, когда тип продюсера {@link ContentType#AVRO_FORMAT}.
      *
-     * @param schema Avro-схема
-     * @return текущий экземпляр KafkaExecutor
+     * @param schema Avro-схема, не может быть {@code null}.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalArgumentException если переданная схема {@code null}.
      */
-    public KafkaExecutor setAvroSchema(Schema schema) {
+    public KafkaExecutor setAvroSchema(org.apache.avro.Schema schema) {
+        requireNonNull(schema, "Avro схема не может быть null.");
         this.record.setAvroSchema(schema);
         return this;
     }
 
     /**
-     * Устанавливает тело записи.
+     * Устанавливает тело записи. Тип значения должен соответствовать типу продюсера:
+     * {@code String} для {@link ContentType#STRING_FORMAT} или Avro-объект для {@link ContentType#AVRO_FORMAT}.
      *
-     * @param value значение записи: строка или Avro-объект
-     * @return текущий экземпляр KafkaExecutor
+     * @param value значение записи: строка или Avro-объект.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
      */
     public KafkaExecutor setRecordBody(Object value) {
         if (value instanceof String) {
@@ -161,10 +193,11 @@ public class KafkaExecutor {
     }
 
     /**
-     * Загружает значение записи из источника через RecordLoader.
+     * Загружает значение записи из файла или ресурса через {@link RecordLoader}.
+     * Предполагается, что загруженное значение будет строкой.
      *
-     * @param source источник данных
-     * @return текущий экземпляр KafkaExecutor
+     * @param source путь к файлу или ресурсу, откуда загрузить значение.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
      */
     public KafkaExecutor loadRecordBody(String source) {
         this.record.setValue(RecordLoader.loadRecordValue(source));
@@ -172,47 +205,62 @@ public class KafkaExecutor {
     }
 
     /**
-     * Отправляет запись в Kafka.
+     * Отправляет сконфигурированную запись в Kafka.
+     * Требует предварительной настройки продюсера через {@link #setProducerType(ContentType)} и топика через {@link #setTopic(String)}.
+     * После отправки сбрасывает состояние Record (для повторного использования).
      *
-     * @return текущий экземпляр KafkaExecutor
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalStateException если продюсер не установлен или топик не задан.
      */
     public KafkaExecutor sendRecord() {
-        validateProducer();
+        validateProducerAndTopic();
+        // здесь можно добавить логику сериализации/валидации перед отправкой
         producer.sendRecord(record);
+        // Очищаем Record для следующего использования
+        record.clear();
         return this;
     }
 
     /**
-     * Получает записи из Kafka.
+     * Запускает прослушивание записей из Kafka для текущего топика, ожидает заданный pollTimeout,
+     * затем останавливает прослушивание и возвращает управление.
+     * Используется обычно в тестовых сценариях для ожидания появления сообщений.
      *
-     * @return текущий экземпляр KafkaExecutor
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
+     * @throws KafkaListenerException если возникла ошибка при запуске или остановке прослушивания.
      */
     public KafkaExecutor receiveRecords() {
-        validateConsumer();
+        validateConsumerAndTopic();
         String topic = record.getTopic();
-        listenerManager.startListening(topic, timeout, determineAvroForConsumer());
+        listenerManager.startListening(topic, timeout, contentType == ContentType.AVRO_FORMAT);
         listenerManager.stopListening(topic);
         return this;
     }
 
     /**
-     * Запускает прослушивание записей из Kafka.
+     * Запускает прослушивание записей из Kafka для текущего топика в фоновом режиме.
+     * Прослушивание будет продолжаться до явного вызова {@link #stopListening()}.
      *
-     * @return текущий экземпляр KafkaExecutor
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
+     * @throws KafkaListenerException если возникла ошибка при запуске прослушивания.
      */
     public KafkaExecutor startListening() {
-        validateConsumer();
-        listenerManager.startListening(record.getTopic(), timeout, determineAvroForConsumer());
+        validateConsumerAndTopic();
+        listenerManager.startListening(record.getTopic(), timeout, contentType == ContentType.AVRO_FORMAT);
         return this;
     }
 
     /**
-     * Останавливает прослушивание записей из Kafka.
+     * Останавливает ранее запущенное прослушивание записей из Kafka для текущего топика.
      *
-     * @return текущий экземпляр KafkaExecutor
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
+     * @throws KafkaListenerException если возникла ошибка при остановке прослушивания.
      */
     public KafkaExecutor stopListening() {
-        validateConsumer();
+        validateConsumerAndTopic();
         listenerManager.stopListening(record.getTopic());
         return this;
     }
@@ -229,57 +277,62 @@ public class KafkaExecutor {
     }
 
     /**
-     * Получает все записи для текущего топика.
+     * Получает все записи для текущего топика, которые были собраны консьюмером.
      *
-     * @return список записей для текущего топика
+     * @return список записей {@link ConsumerRecord} для текущего топика.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public List<ConsumerRecord<String, String>> getAllRecords() {
-        validateConsumer();
+        validateConsumerAndTopic();
         return consumer.getAllRecords(record.getTopic());
     }
 
     /**
-     * Получает записи по ключу.
+     * Получает записи для текущего топика по указанному ключу.
      *
-     * @param key ключ записи
-     * @return список записей с указанным ключом
+     * @param key ключ записи, по которому производится фильтрация.
+     * @return список записей {@link ConsumerRecord} с указанным ключом.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public List<ConsumerRecord<String, String>> getRecordsByKey(String key) {
         return filterRecordsBy(records -> key.equals(records.key()));
     }
 
     /**
-     * Получает записи по значению заголовка.
+     * Получает записи для текущего топика по значению заголовка.
      *
-     * @param headerKey   ключ заголовка
-     * @param headerValue значение заголовка
-     * @return список записей, содержащих указанный заголовок с указанным значением
+     * @param headerKey   ключ заголовка.
+     * @param headerValue значение заголовка, по которому производится фильтрация.
+     * @return список записей {@link ConsumerRecord}, содержащих указанный заголовок с указанным значением.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public List<ConsumerRecord<String, String>> getRecordsByHeader(String headerKey, String headerValue) {
         return filterRecordsBy(record -> getHeaderValue(record, headerKey).equals(headerValue));
     }
 
     /**
-     * Получает первую запись, удовлетворяющую условию.
+     * Получает первую запись для текущего топика, удовлетворяющую указанному условию.
      *
-     * @param condition условие для фильтрации записей
-     * @return первая запись или null, если нет
+     * @param condition условие {@link Condition} для фильтрации записей.
+     * @return первая запись {@link ConsumerRecord}, удовлетворяющая условию, или {@code null}, если таких записей нет.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public ConsumerRecord<String, String> getRecordByCondition(Condition condition) {
         return getRecordsByCondition(condition).stream().findFirst().orElse(null);
     }
 
     /**
-     * Получает записи, удовлетворяющие условию.
+     * Получает все записи для текущего топика, удовлетворяющие указанному условию.
      *
-     * @param condition условие для фильтрации записей
-     * @return список записей
+     * @param condition условие {@link Condition} для фильтрации записей.
+     * @return список записей {@link ConsumerRecord}, удовлетворяющих условию.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public List<ConsumerRecord<String, String>> getRecordsByCondition(Condition condition) {
-        validateConsumer();
+        validateConsumerAndTopic();
         return filterRecordsBy(record -> {
             try {
-                condition.check(record);
+                condition.check(this.record);
                 return true;
             } catch (AssertionError e) {
                 return false;
@@ -288,25 +341,31 @@ public class KafkaExecutor {
     }
 
     /**
-     * Преобразует первую запись в объект указанного типа.
+     * Преобразует значение первой записи для текущего топика в объект указанного типа.
+     * Предполагается, что значение записи является JSON-строкой.
      *
-     * @param tClass класс типа, в который нужно преобразовать запись
-     * @param <T>    тип объекта
-     * @return объект указанного типа или null, если нет записей
+     * @param tClass класс типа, в который нужно преобразовать значение записи.
+     * @param <T>    тип объекта.
+     * @return объект указанного типа или {@code null}, если нет записей или ошибка десериализации.
+     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
+     * @throws KafkaListenerException если возникла ошибка при получении или десериализации записи.
      */
     public <T> T getRecordAs(Class<T> tClass) {
-        validateConsumer();
+        validateConsumerAndTopic();
         String firstRecordValue = consumer.getAllRecords(record.getTopic()).getFirst().value();
         return JsonUtils.fromJson(firstRecordValue, tClass);
     }
 
     /**
-     * Преобразует первую запись, удовлетворяющую условию, в объект указанного типа.
+     * Преобразует значение первой записи для текущего топика, удовлетворяющей условию, в объект указанного типа.
+     * Предполагается, что значение записи является JSON-строкой.
      *
-     * @param tClass    класс типа, в который нужно преобразовать запись
-     * @param condition условие для фильтрации записей
-     * @param <T>       тип объекта
-     * @return объект указанного типа или null, если нет подходящих записей
+     * @param tClass    класс типа, в который нужно преобразовать значение записи.
+     * @param condition условие {@link Condition} для фильтрации записей.
+     * @param <T>       тип объекта.
+     * @return объект указанного типа или {@code null}, если нет подходящих записей или ошибка десериализации.
+     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
+     * @throws KafkaListenerException если возникла ошибка при получении или десериализации записи.
      */
     public <T> T getRecordAs(Class<T> tClass, Condition condition) {
         List<ConsumerRecord<String, String>> records = getRecordsByCondition(condition);
@@ -314,26 +373,32 @@ public class KafkaExecutor {
     }
 
     /**
-     * Преобразует все записи в список объектов указанного типа.
+     * Преобразует значения всех записей для текущего топика в список объектов указанного типа.
+     * Предполагается, что значения записей являются JSON-строками.
      *
-     * @param tClass класс типа, в который нужно преобразовать записи
-     * @param <T>    тип объектов
-     * @return список объектов, может быть пустым
+     * @param tClass класс типа, в который нужно преобразовать значения записей.
+     * @param <T>    тип объектов.
+     * @return список объектов указанного типа; может быть пустым, если нет записей.
+     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
+     * @throws KafkaListenerException если возникла ошибка при десериализации записей.
      */
     public <T> List<T> getRecordsAsList(Class<T> tClass) {
-        validateConsumer();
+        validateConsumerAndTopic();
         return consumer.getAllRecords(record.getTopic()).stream()
                 .map(record -> JsonUtils.fromJson(record.value(), tClass))
                 .collect(Collectors.toList());
     }
 
     /**
-     * Преобразует записи, удовлетворяющие условию, в список объектов указанного типа.
+     * Преобразует значения записей для текущего топика, удовлетворяющих условию, в список объектов указанного типа.
+     * Предполагается, что значения записей являются JSON-строками.
      *
-     * @param tClass    класс типа, в который нужно преобразовать записи
-     * @param condition условие для фильтрации записей
-     * @param <T>       тип объектов
-     * @return список объектов, может быть пустым
+     * @param tClass    класс типа, в который нужно преобразовать значения записей.
+     * @param condition условие {@link Condition} для фильтрации записей.
+     * @param <T>       тип объектов.
+     * @return список объектов указанного типа; может быть пустым, если нет подходящих записей.
+     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
+     * @throws KafkaListenerException если возникла ошибка при десериализации записей.
      */
     public <T> List<T> getRecordsAsList(Class<T> tClass, Condition condition) {
         List<ConsumerRecord<String, String>> records = getRecordsByCondition(condition);
@@ -343,13 +408,16 @@ public class KafkaExecutor {
     }
 
     /**
-     * Проверяет, что все записи удовлетворяют указанному условию.
+     * Проверяет, что все записи для текущего топика удовлетворяют указанному набору условий.
+     * Использует {@link EntityValidator} для выполнения утверждений.
      *
-     * @param conditions массив условий
-     * @return текущий экземпляр KafkaExecutor
+     * @param conditions массив условий {@link Condition}, которым должны удовлетворять записи.
+     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
+     * @throws AssertionError        если одно или несколько условий не выполнены.
      */
     public KafkaExecutor shouldHave(Condition... conditions) {
-        validateConsumer();
+        validateConsumerAndTopic();
         List<ConsumerRecord<String, String>> records = consumer.getAllRecords(record.getTopic());
         EntityValidator.of(records).shouldHave(conditions);
         return this;
@@ -370,25 +438,21 @@ public class KafkaExecutor {
                 .orElse(null);
     }
 
-    /**
-     * Проверяет, установлен ли продюсер.
-     *
-     * @throws IllegalStateException если продюсер не установлен
-     */
-    private void validateProducer() {
-        if (Objects.isNull(producer)) {
-            throw new IllegalStateException("Продюсер не установлен. Вызовите setProducerType().");
+    private void validateProducerAndTopic() {
+        if (producer == null) {
+            throw new IllegalStateException("Продюссер не установлен. Вызовите setProducerType().");
+        }
+        if (record.getTopic() == null || record.getTopic().isBlank()) {
+            throw new IllegalStateException("Топик для отправки не задан. Вызовите setTopic().");
         }
     }
 
-    /**
-     * Проверяет, установлен ли консьюмер.
-     *
-     * @throws IllegalStateException если консьюмер не установлен
-     */
-    private void validateConsumer() {
+    private void validateConsumerAndTopic() {
         if (Objects.isNull(consumer)) {
             throw new IllegalStateException("Консьюмер не установлен. Вызовите setConsumerType().");
+        }
+        if (Objects.isNull(record) || record.getTopic().isBlank()) {
+            throw new IllegalStateException("Топик для получения не задан. Вызовите setTopic().");
         }
     }
 
@@ -399,16 +463,23 @@ public class KafkaExecutor {
      * @return список записей, удовлетворяющих условию
      */
     private List<ConsumerRecord<String, String>> filterRecordsBy(Predicate<ConsumerRecord<String, String>> predicate) {
-        validateConsumer();
+        validateConsumerAndTopic();
         return consumer.getAllRecords(record.getTopic()).stream()
                 .filter(predicate)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     /**
-     * Определяем, Avro ли консьюмер. Можно улучшить, добавив метод в интерфейс.
+     * Закрывает все активные слушатели и очищает ресурсы, связанные с {@link KafkaListenerManager}.
+     * Этот метод вызывается автоматически при использовании try-with-resources или может быть вызван явно.
      */
-    private boolean determineAvroForConsumer() {
-        return consumer.getClass().getSimpleName().toLowerCase().contains("avro");
+    @Override
+    public void close() {
+        if (this.listenerManager != null) {
+            log.info("Завершение работы KafkaExecutor: остановка KafkaListenerManager.");
+            this.listenerManager.shutdown();
+        }
+        // здесь можно добавить очистку клиентов, если требуется:
+        // KafkaClientPool.closeAllProducers(); KafkaClientPool.closeAllConsumers();
     }
 }

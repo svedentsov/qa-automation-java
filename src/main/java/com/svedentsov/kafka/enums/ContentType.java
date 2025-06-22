@@ -5,11 +5,11 @@ package com.svedentsov.kafka.enums;
  */
 public enum ContentType {
     /**
-     * Работающий с записями в формате строки.
+     * Работающий с записями, где ключ и значение представлены строками.
      */
     STRING_FORMAT,
     /**
-     * Работающий с записями в формате Avro.
+     * Работающий с записями в формате Avro, где ключ строка и значение - Avro GenericRecord.
      */
     AVRO_FORMAT
 }
