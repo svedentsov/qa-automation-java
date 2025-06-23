@@ -1,5 +1,6 @@
 package com.svedentsov.kafka.factory;
 
+import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 
@@ -23,9 +24,9 @@ public interface ProducerFactory {
      * Создаёт KafkaProducer для Avro-формата.
      *
      * @param topicName имя топика
-     * @return KafkaProducer<String, Object>
+     * @return KafkaProducer<String, GenericRecord>
      */
-    KafkaProducer<String, Object> createAvroProducer(String topicName);
+    KafkaProducer<String, GenericRecord> createAvroProducer(String topicName);
 
     /**
      * Явно закрывает все ресурсы продюсеров, созданных данной фабрикой.

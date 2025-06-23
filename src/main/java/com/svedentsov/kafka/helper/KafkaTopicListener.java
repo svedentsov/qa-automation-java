@@ -3,7 +3,8 @@ package com.svedentsov.kafka.helper;
 import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.exception.KafkaListenerException;
 import com.svedentsov.kafka.exception.KafkaListenerException.ProcessingException;
-import com.svedentsov.kafka.pool.KafkaClientPool;
+import com.svedentsov.kafka.factory.ConsumerFactory;
+import com.svedentsov.kafka.factory.ConsumerFactoryDefault;
 import com.svedentsov.kafka.processor.RecordProcessor;
 import com.svedentsov.kafka.processor.RecordProcessorAvro;
 import com.svedentsov.kafka.processor.RecordProcessorString;
@@ -39,6 +40,7 @@ public class KafkaTopicListener implements AutoCloseable {
     private final boolean isAvro;
     private final KafkaListenerConfig config;
     private final RecordProcessor<?> recordProcessor;
+    private final ConsumerFactory consumerFactory = new ConsumerFactoryDefault();
     // Состояние lifecycle
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
     private final AtomicBoolean isShutdownRequested = new AtomicBoolean(false);
@@ -163,9 +165,8 @@ public class KafkaTopicListener implements AutoCloseable {
      */
     private void initializeConsumer() {
         consumer = isAvro
-                ? KafkaClientPool.getAvroConsumer(topicName)
-                : KafkaClientPool.getStringConsumer(topicName);
-
+                ? consumerFactory.createAvroConsumer(topicName)
+                : consumerFactory.createStringConsumer(topicName);
         log.debug("Consumer инициализирован для топика '{}' (Avro: {})", topicName, isAvro);
     }
 

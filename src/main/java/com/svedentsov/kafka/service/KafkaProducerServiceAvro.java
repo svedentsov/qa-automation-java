@@ -1,63 +1,34 @@
 package com.svedentsov.kafka.service;
 
+import com.svedentsov.kafka.factory.ProducerFactoryDefault;
 import com.svedentsov.kafka.model.Record;
-import com.svedentsov.kafka.pool.KafkaClientPool;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.header.internals.RecordHeader;
 
-import java.util.Objects;
+import static com.svedentsov.kafka.utils.ValidationUtils.requireNonNull;
 
 /**
- * Реализация сервиса продюсера Kafka для данных в формате Avro.
- * Этот класс отвечает за отправку записей в формате Avro в Kafka.
+ * Реализация KafkaProducerService для Avro-сообщений.
  */
-@Slf4j
-public class KafkaProducerServiceAvro implements KafkaProducerService {
+public class KafkaProducerServiceAvro extends KafkaProducerServiceAbstract<GenericRecord> {
 
-    /**
-     * Отправляет строковую запись в Kafka.
-     *
-     * @param message запись, которая содержит топик, раздел, ключ и значение в формате Avro
-     * @throws IllegalArgumentException если топик или значение записи не установлены
-     * @throws RuntimeException         если произошла ошибка при отправке записи
-     */
     @Override
-    public void sendRecord(Record message) {
-
-        // Проверяем наличие топика и значения записи
-        if (message.getTopic() == null || message.getAvroValue() == null) {
-            throw new IllegalArgumentException("Топик и значение записи должны быть установлены");
+    protected void validateRecord(Record record) {
+        super.validateRecord(record);
+        requireNonNull(record.getAvroValue(), "Avro-value не может быть null");
+        if (record.getAvroValue() instanceof GenericRecord) {
+            return;
         }
+        throw new IllegalArgumentException("Неверный тип Avro-value: ожидался GenericRecord, получен " + record.getAvroValue().getClass().getName());
+    }
 
-        // Сериализуем Avro-запись
-        GenericRecord avroRecord = (GenericRecord) message.getAvroValue();
+    @Override
+    protected GenericRecord getValueFromRecord(Record record) {
+        return (GenericRecord) record.getAvroValue();
+    }
 
-        // Создаем ProducerRecord для отправки в Kafka
-        ProducerRecord<String, Object> record = new ProducerRecord<>(
-                message.getTopic(), message.getPartition(), message.getKey(), avroRecord);
-
-        // Добавляем заголовки, если они есть
-        message.getHeaders().forEach((key, value) ->
-                record.headers().add(new RecordHeader(key, value.toString().getBytes())));
-
-        // Отправляем запись с использованием KafkaProducer
-        try (KafkaProducer<String, Object> producer = KafkaClientPool.getAvroProducer(message.getTopic())) {
-            // Используем асинхронный метод send(record) без блокировки потока
-            producer.send(record, (metadata, exception) -> {
-                if (Objects.nonNull(exception)) {
-                    log.error("Не удалось отправить запись", exception);
-                    throw new RuntimeException("Не удалось отправить запись", exception);
-                }
-                log.info("Запись отправлена: {}", record);
-            });
-        } catch (Exception e) {
-            log.error("Не удалось отправить запись: {}", message, e);
-            throw new RuntimeException("Не удалось отправить запись", e);
-        } finally {
-            message.clear(); // Обязательная очистка записи после отправки
-        }
+    @Override
+    protected KafkaProducer<String, GenericRecord> getProducer(String topic) {
+        return new ProducerFactoryDefault().createAvroProducer(topic);
     }
 }
