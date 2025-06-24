@@ -24,7 +24,7 @@ import java.util.stream.StreamSupport;
 
 import static com.svedentsov.kafka.config.KafkaListenerConfig.EnvConfig.testing;
 import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
-import static com.svedentsov.kafka.utils.ValidationUtils.requireNonNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Вспомогательный класс для работы с Kafka, обеспечивающий удобное управление продюсерами и консьюмерами Kafka.

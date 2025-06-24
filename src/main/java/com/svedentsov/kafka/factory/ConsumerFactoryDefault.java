@@ -28,16 +28,14 @@ public class ConsumerFactoryDefault implements ConsumerFactory {
     @Override
     public KafkaConsumer<String, String> createStringConsumer(String topicName) {
         requireNonBlank(topicName, "Имя топика не может быть null или пустым.");
-        return stringConsumers.computeIfAbsent(
-                stringConsumerKey.apply(topicName),
+        return stringConsumers.computeIfAbsent(stringConsumerKey.apply(topicName),
                 key -> createConsumerInternal(topicName, StringDeserializer.class, StringDeserializer.class));
     }
 
     @Override
     public KafkaConsumer<String, Object> createAvroConsumer(String topicName) {
         requireNonBlank(topicName, "Имя топика не может быть null или пустым.");
-        return avroConsumers.computeIfAbsent(
-                avroConsumerKey.apply(topicName),
+        return avroConsumers.computeIfAbsent(avroConsumerKey.apply(topicName),
                 key -> createConsumerInternal(topicName, StringDeserializer.class, KafkaAvroDeserializer.class));
     }
 

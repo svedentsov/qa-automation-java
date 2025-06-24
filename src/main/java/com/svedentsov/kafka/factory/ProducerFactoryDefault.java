@@ -31,29 +31,15 @@ public class ProducerFactoryDefault implements ProducerFactory {
     @Override
     public KafkaProducer<String, String> createStringProducer(String topicName) {
         requireNonBlank(topicName, "Имя топика не может быть null или пустым.");
-        return stringProducers.computeIfAbsent(
-                stringProducerKey.apply(topicName),
+        return stringProducers.computeIfAbsent(stringProducerKey.apply(topicName),
                 key -> createProducerInternal(topicName, StringSerializer.class, StringSerializer.class));
     }
 
     @Override
     public KafkaProducer<String, GenericRecord> createAvroProducer(String topicName) {
         requireNonBlank(topicName, "Имя топика не может быть null или пустым.");
-        return avroProducers.computeIfAbsent(
-                avroProducerKey.apply(topicName),
-                key -> createAvroProducerInternal(topicName));
-    }
-
-    /**
-     * Создаёт KafkaProducer<String, GenericRecord> с KafkaAvroSerializer.
-     */
-    private KafkaProducer<String, GenericRecord> createAvroProducerInternal(String topicName) {
-        Properties props = KafkaConfigBuilder.getProducerConfig(topicName);
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class.getName());
-        log.info("Создание нового Avro KafkaProducer для топика '{}' [KeySerializer: {}, ValueSerializer: {}]",
-                topicName, StringSerializer.class.getSimpleName(), KafkaAvroSerializer.class.getSimpleName());
-        return new KafkaProducer<>(props);
+        return avroProducers.computeIfAbsent(avroProducerKey.apply(topicName),
+                key -> createProducerInternal(topicName, StringSerializer.class, KafkaAvroSerializer.class));
     }
 
     /**

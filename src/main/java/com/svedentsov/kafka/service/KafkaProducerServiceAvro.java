@@ -5,7 +5,7 @@ import com.svedentsov.kafka.model.Record;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
-import static com.svedentsov.kafka.utils.ValidationUtils.requireNonNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Реализация KafkaProducerService для Avro-сообщений.

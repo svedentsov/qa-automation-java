@@ -3,15 +3,10 @@ package com.svedentsov.kafka.factory;
 import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
-import com.svedentsov.kafka.service.KafkaConsumerService;
-import com.svedentsov.kafka.service.KafkaConsumerServiceAvro;
-import com.svedentsov.kafka.service.KafkaConsumerServiceString;
-import com.svedentsov.kafka.service.KafkaProducerService;
-import com.svedentsov.kafka.service.KafkaProducerServiceAvro;
-import com.svedentsov.kafka.service.KafkaProducerServiceString;
+import com.svedentsov.kafka.service.*;
 import lombok.experimental.UtilityClass;
 
-import static com.svedentsov.kafka.utils.ValidationUtils.requireNonNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Фабрика для создания экземпляров сервисов Kafka.

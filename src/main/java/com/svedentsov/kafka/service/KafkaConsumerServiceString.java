@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.svedentsov.kafka.utils.ValidationUtils.requireNonNull;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Реализация сервиса потребителя Kafka для строковых данных.
@@ -29,7 +29,7 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
      * @throws IllegalArgumentException если {@code config} равен {@code null}
      */
     public KafkaConsumerServiceString(KafkaListenerConfig config) {
-        requireNonNull(config,"KafkaListenerConfig не может быть null.");
+        requireNonNull(config, "KafkaListenerConfig не может быть null.");
         this.listenerManager = new KafkaListenerManager(config);
     }
 
@@ -40,7 +40,7 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
      * @throws IllegalArgumentException если {@code listenerManager} равен {@code null}
      */
     public KafkaConsumerServiceString(KafkaListenerManager listenerManager) {
-        requireNonNull(listenerManager,"KafkaListenerManager не может быть null.");
+        requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
         this.listenerManager = listenerManager;
     }
 
