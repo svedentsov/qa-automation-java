@@ -1,9 +1,8 @@
 package com.svedentsov.kafka.helper;
 
-import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.enums.ContentType;
-import com.svedentsov.kafka.exception.KafkaListenerException;
 import com.svedentsov.kafka.factory.KafkaServiceFactory;
+import com.svedentsov.kafka.factory.ProducerFactoryDefault;
 import com.svedentsov.kafka.model.Record;
 import com.svedentsov.kafka.service.KafkaConsumerService;
 import com.svedentsov.kafka.service.KafkaProducerService;
@@ -12,12 +11,12 @@ import com.svedentsov.matcher.Condition;
 import com.svedentsov.matcher.EntityValidator;
 import com.svedentsov.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.avro.Schema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
 import java.time.Duration;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -33,32 +32,28 @@ import static java.util.Objects.requireNonNull;
  */
 @Slf4j
 public class KafkaExecutor implements AutoCloseable {
-
+    private final KafkaServiceFactory serviceFactory;
+    private final KafkaListenerManager listenerManager;
     private KafkaProducerService producer;
     private KafkaConsumerService consumer;
     private ContentType contentType;
-    private KafkaListenerConfig listenerConfig = testing();
-    private KafkaListenerManager listenerManager = new KafkaListenerManager(listenerConfig);
     private final Record record = new Record();
-    private Duration timeout = Duration.ofMillis(300);
+    private Duration pollTimeout = Duration.ofMillis(1000);
+
+    public KafkaExecutor() {
+        this.serviceFactory = new KafkaServiceFactory(new ProducerFactoryDefault());
+        this.listenerManager = new KafkaListenerManager(testing());
+    }
 
     /**
-     * Явно устанавливает конфигурацию слушателя.
-     * Если этот метод не вызывается, будет использоваться конфигурация по умолчанию (testing).
-     * Пересоздает внутренний KafkaListenerManager с новой конфигурацией.
+     * Создает экземпляр KafkaExecutor с необходимыми зависимостями.
      *
-     * @param config конфигурация слушателя {@link KafkaListenerConfig}, не может быть {@code null}.
-     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
-     * @throws IllegalArgumentException если переданная конфигурация {@code null}.
+     * @param serviceFactory  фабрика для создания экземпляров Kafka-сервисов, не может быть {@code null}.
+     * @param listenerManager менеджер для управления жизненным циклом Kafka-слушателей, не может быть {@code null}.
      */
-    public KafkaExecutor setListenerConfig(KafkaListenerConfig config) {
-        requireNonNull(config, "KafkaListenerConfig не может быть null");
-        if (this.listenerManager != null) {
-            this.listenerManager.shutdown();
-        }
-        this.listenerConfig = config;
-        this.listenerManager = new KafkaListenerManager(config);
-        return this;
+    public KafkaExecutor(KafkaServiceFactory serviceFactory, KafkaListenerManager listenerManager) {
+        this.serviceFactory = requireNonNull(serviceFactory, "KafkaServiceFactory не может быть null.");
+        this.listenerManager = requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
     }
 
     /**
@@ -70,7 +65,7 @@ public class KafkaExecutor implements AutoCloseable {
     public KafkaExecutor setProducerType(ContentType type) {
         requireNonNull(type, "ContentType для продюсера не может быть null");
         this.contentType = type;
-        this.producer = KafkaServiceFactory.createProducer(type);
+        this.producer = serviceFactory.createProducer(type);
         return this;
     }
 
@@ -83,7 +78,7 @@ public class KafkaExecutor implements AutoCloseable {
     public KafkaExecutor setConsumerType(ContentType type) {
         requireNonNull(type, "ContentType для консьюмера не может быть null");
         this.contentType = type;
-        this.consumer = KafkaServiceFactory.createConsumer(type, listenerManager);
+        this.consumer = serviceFactory.createConsumer(type, listenerManager);
         return this;
     }
 
@@ -95,8 +90,8 @@ public class KafkaExecutor implements AutoCloseable {
      * @throws IllegalArgumentException если {@code millis} отрицательный.
      */
     public KafkaExecutor setTimeout(long millis) {
-        if (millis < 0) throw new IllegalArgumentException("Таймаут в миллисекундах не может быть отрицательным.");
-        this.timeout = Duration.ofMillis(millis);
+        if (millis < 0) throw new IllegalArgumentException("Таймаут не может быть отрицательным.");
+        this.pollTimeout = Duration.ofMillis(millis);
         return this;
     }
 
@@ -170,7 +165,7 @@ public class KafkaExecutor implements AutoCloseable {
      * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
      * @throws IllegalArgumentException если переданная схема {@code null}.
      */
-    public KafkaExecutor setAvroSchema(org.apache.avro.Schema schema) {
+    public KafkaExecutor setAvroSchema(Schema schema) {
         requireNonNull(schema, "Avro схема не может быть null.");
         this.record.setAvroSchema(schema);
         return this;
@@ -214,10 +209,8 @@ public class KafkaExecutor implements AutoCloseable {
      */
     public KafkaExecutor sendRecord() {
         validateProducerAndTopic();
-        // здесь можно добавить логику сериализации/валидации перед отправкой
         producer.sendRecord(record);
-        // Очищаем Record для следующего использования
-        record.clear();
+        record.clear(); // Очищаем Record для следующего использования
         return this;
     }
 
@@ -227,13 +220,12 @@ public class KafkaExecutor implements AutoCloseable {
      * Используется обычно в тестовых сценариях для ожидания появления сообщений.
      *
      * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
-     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
-     * @throws KafkaListenerException если возникла ошибка при запуске или остановке прослушивания.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public KafkaExecutor receiveRecords() {
         validateConsumerAndTopic();
         String topic = record.getTopic();
-        listenerManager.startListening(topic, timeout, contentType == ContentType.AVRO_FORMAT);
+        listenerManager.startListening(topic, pollTimeout, contentType == ContentType.AVRO_FORMAT);
         listenerManager.stopListening(topic);
         return this;
     }
@@ -243,12 +235,11 @@ public class KafkaExecutor implements AutoCloseable {
      * Прослушивание будет продолжаться до явного вызова {@link #stopListening()}.
      *
      * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
-     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
-     * @throws KafkaListenerException если возникла ошибка при запуске прослушивания.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public KafkaExecutor startListening() {
         validateConsumerAndTopic();
-        listenerManager.startListening(record.getTopic(), timeout, contentType == ContentType.AVRO_FORMAT);
+        listenerManager.startListening(record.getTopic(), pollTimeout, contentType == ContentType.AVRO_FORMAT);
         return this;
     }
 
@@ -256,8 +247,7 @@ public class KafkaExecutor implements AutoCloseable {
      * Останавливает ранее запущенное прослушивание записей из Kafka для текущего топика.
      *
      * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
-     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
-     * @throws KafkaListenerException если возникла ошибка при остановке прослушивания.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public KafkaExecutor stopListening() {
         validateConsumerAndTopic();
@@ -347,8 +337,7 @@ public class KafkaExecutor implements AutoCloseable {
      * @param tClass класс типа, в который нужно преобразовать значение записи.
      * @param <T>    тип объекта.
      * @return объект указанного типа или {@code null}, если нет записей или ошибка десериализации.
-     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
-     * @throws KafkaListenerException если возникла ошибка при получении или десериализации записи.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public <T> T getRecordAs(Class<T> tClass) {
         validateConsumerAndTopic();
@@ -364,8 +353,7 @@ public class KafkaExecutor implements AutoCloseable {
      * @param condition условие {@link Condition} для фильтрации записей.
      * @param <T>       тип объекта.
      * @return объект указанного типа или {@code null}, если нет подходящих записей или ошибка десериализации.
-     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
-     * @throws KafkaListenerException если возникла ошибка при получении или десериализации записи.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public <T> T getRecordAs(Class<T> tClass, Condition condition) {
         List<ConsumerRecord<String, String>> records = getRecordsByCondition(condition);
@@ -379,8 +367,7 @@ public class KafkaExecutor implements AutoCloseable {
      * @param tClass класс типа, в который нужно преобразовать значения записей.
      * @param <T>    тип объектов.
      * @return список объектов указанного типа; может быть пустым, если нет записей.
-     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
-     * @throws KafkaListenerException если возникла ошибка при десериализации записей.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public <T> List<T> getRecordsAsList(Class<T> tClass) {
         validateConsumerAndTopic();
@@ -397,8 +384,7 @@ public class KafkaExecutor implements AutoCloseable {
      * @param condition условие {@link Condition} для фильтрации записей.
      * @param <T>       тип объектов.
      * @return список объектов указанного типа; может быть пустым, если нет подходящих записей.
-     * @throws IllegalStateException  если консьюмер не установлен или топик не задан.
-     * @throws KafkaListenerException если возникла ошибка при десериализации записей.
+     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
      */
     public <T> List<T> getRecordsAsList(Class<T> tClass, Condition condition) {
         List<ConsumerRecord<String, String>> records = getRecordsByCondition(condition);
@@ -440,7 +426,7 @@ public class KafkaExecutor implements AutoCloseable {
 
     private void validateProducerAndTopic() {
         if (producer == null) {
-            throw new IllegalStateException("Продюссер не установлен. Вызовите setProducerType().");
+            throw new IllegalStateException("Продюсер не установлен. Вызовите setProducerType().");
         }
         if (record.getTopic() == null || record.getTopic().isBlank()) {
             throw new IllegalStateException("Топик для отправки не задан. Вызовите setTopic().");
@@ -448,10 +434,10 @@ public class KafkaExecutor implements AutoCloseable {
     }
 
     private void validateConsumerAndTopic() {
-        if (Objects.isNull(consumer)) {
+        if (consumer == null) {
             throw new IllegalStateException("Консьюмер не установлен. Вызовите setConsumerType().");
         }
-        if (Objects.isNull(record) || record.getTopic().isBlank()) {
+        if (record.getTopic() == null || record.getTopic().isBlank()) {
             throw new IllegalStateException("Топик для получения не задан. Вызовите setTopic().");
         }
     }

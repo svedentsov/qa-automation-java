@@ -1,5 +1,7 @@
 package com.svedentsov.kafka.service;
 
+import com.svedentsov.kafka.exception.KafkaSendingException;
+import com.svedentsov.kafka.factory.ProducerFactory;
 import com.svedentsov.kafka.model.Record;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -8,110 +10,98 @@ import org.apache.kafka.common.header.internals.RecordHeader;
 
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletionException;
+
+import static java.util.Objects.requireNonNull;
 
 /**
- * Базовый обобщенный класс для KafkaProducerService.
- * Реализует общую логику отправки, валидации и обработки CompletableFuture.
- * Использует шаблонный метод для получения специфичных для реализации данных.
+ * Абстрактный базовый класс для {@link KafkaProducerService}.
+ * Реализует общую логику отправки, валидации и обработки ошибок,
+ * делегируя специфичные для формата данных операции дочерним классам
+ * через шаблонный метод.
  *
  * @param <V> Тип значения сообщения (e.g., String, GenericRecord).
  */
 @Slf4j
 public abstract class KafkaProducerServiceAbstract<V> implements KafkaProducerService {
 
+    protected final ProducerFactory producerFactory;
+
     /**
-     * Валидирует запись перед отправкой.
-     * Базовая реализация проверяет, что record и topic не null.
-     * Наследники должны вызвать super.validateRecord(record) и добавить свои проверки.
+     * Конструктор для внедрения зависимости {@link ProducerFactory}.
      *
-     * @param record запись для валидации
-     * @throws IllegalArgumentException если обязательные поля не заполнены
+     * @param producerFactory фабрика для создания Kafka продюсеров.
+     */
+    protected KafkaProducerServiceAbstract(ProducerFactory producerFactory) {
+        this.producerFactory = requireNonNull(producerFactory, "ProducerFactory не может быть null.");
+    }
+
+    /**
+     * Шаблонный метод для валидации записи перед отправкой.
+     * Базовая реализация проверяет на null саму запись и ее топик.
+     * Наследники должны вызывать {@code super.validateRecord(record)} и добавлять свои проверки.
+     *
+     * @param record запись для валидации.
+     * @throws IllegalArgumentException если обязательные поля не заполнены.
      */
     protected void validateRecord(Record record) {
-        if (record == null) {
-            throw new IllegalArgumentException("Record не может быть null");
-        }
-        if (record.getTopic() == null || record.getTopic().isBlank()) {
-            throw new IllegalArgumentException("Topic не может быть null или пустым");
+        requireNonNull(record, "Record не может быть null.");
+        requireNonNull(record.getTopic(), "Topic не может быть null или пустым.");
+        if (record.getTopic().isBlank()) {
+            throw new IllegalArgumentException("Topic не может быть пустым.");
         }
     }
 
     /**
-     * Извлекает типизированное значение из объекта Record.
+     * Шаблонный метод для извлечения типизированного значения из объекта {@link Record}.
      *
-     * @param record объект записи
-     * @return значение нужного типа V
+     * @param record объект записи.
+     * @return значение типа {@code V}.
      */
     protected abstract V getValueFromRecord(Record record);
 
     /**
-     * Получает KafkaProducer из пула для конкретного типа значения.
+     * Шаблонный метод для получения {@link KafkaProducer} из фабрики.
      *
-     * @param topic топик, в который будет производиться отправка
-     * @return инстанс KafkaProducer<String, V>
+     * @param topic топик, в который будет производиться отправка.
+     * @return экземпляр {@link KafkaProducer<String, V>}.
      */
     protected abstract KafkaProducer<String, V> getProducer(String topic);
 
     @Override
     public void sendRecord(Record record) {
         try {
-            sendRecordAsync(record).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            log.error("Поток был прерван во время ожидания синхронной отправки: {}", record, e);
-            throw new RuntimeException("Отправка прервана", e);
-        } catch (ExecutionException e) {
-            log.error("Ошибка при синхронной отправке записи: {}", record, e.getCause());
-            throw new RuntimeException("Не удалось отправить запись синхронно", e.getCause());
+            sendRecordAsync(record).join();
+        } catch (CompletionException e) {
+            Throwable cause = e.getCause() != null ? e.getCause() : e;
+            log.error("Ошибка при синхронной отправке записи: {}", record, cause);
+            throw new KafkaSendingException("Не удалось отправить запись синхронно", cause);
         }
     }
 
     @Override
     public CompletableFuture<Void> sendRecordAsync(Record record) {
+        CompletableFuture<Void> resultFuture = new CompletableFuture<>();
         try {
             validateRecord(record);
-        } catch (Exception e) {
-            log.error("Ошибка валидации записи: {}", record, e);
-            cleanupRecord(record);
-            return CompletableFuture.failedFuture(e);
-        }
-        return doSend(record)
-                .whenComplete((result, ex) -> {
-                    if (ex != null) {
-                        log.error("Ошибка при асинхронной отправке записи: {}", record, ex);
-                    } else {
-                        log.info("Запись успешно отправлена в асинхронном режиме: {}", record);
-                    }
-                    cleanupRecord(record);
-                });
-    }
-
-    /**
-     * Основной метод, выполняющий отправку. Он инкапсулирует всю логику работы с KafkaProducer API.
-     */
-    private CompletableFuture<Void> doSend(Record record) {
-        final CompletableFuture<Void> future = new CompletableFuture<>();
-        try {
             V value = getValueFromRecord(record);
             ProducerRecord<String, V> producerRecord = buildProducerRecord(record, value);
             KafkaProducer<String, V> producer = getProducer(record.getTopic());
-            if (producer == null) {
-                throw new IllegalStateException("KafkaProducer, полученный из пула, равен null для топика: " + record.getTopic());
-            }
+            log.debug("Отправка записи: {}", producerRecord);
             producer.send(producerRecord, (metadata, exception) -> {
                 if (exception != null) {
-                    future.completeExceptionally(exception);
+                    log.error("Ошибка при асинхронной отправке записи: {}", record, exception);
+                    resultFuture.completeExceptionally(exception);
                 } else {
-                    log.debug("Запись успешно отправлена: topic={}, partition={}, offset={}",
-                            metadata.topic(), metadata.partition(), metadata.offset());
-                    future.complete(null);
+                    log.info("Запись успешно отправлена: topic={}, partition={}, offset={}", metadata.topic(), metadata.partition(), metadata.offset());
+                    resultFuture.complete(null);
                 }
             });
         } catch (Exception e) {
-            future.completeExceptionally(e);
+            log.error("Ошибка на этапе подготовки записи к отправке: {}", record, e);
+            resultFuture.completeExceptionally(e);
         }
-        return future;
+        return resultFuture.whenComplete((res, ex) -> cleanupRecord(record));
     }
 
     /**
@@ -125,12 +115,10 @@ public abstract class KafkaProducerServiceAbstract<V> implements KafkaProducerSe
                 value);
         if (record.getHeaders() != null) {
             record.getHeaders().forEach((k, v) -> {
-                try {
-                    if (k != null && v != null) {
-                        producerRecord.headers().add(new RecordHeader(k, v.toString().getBytes(StandardCharsets.UTF_8)));
-                    }
-                } catch (Exception ex) {
-                    log.warn("Не удалось добавить header '{}'='{}' в сообщение: {}", k, v, ex.getMessage());
+                if (k != null && v != null) {
+                    producerRecord.headers().add(new RecordHeader(k, v.toString().getBytes(StandardCharsets.UTF_8)));
+                } else {
+                    log.warn("Пропущен null-header для записи в топик '{}'", record.getTopic());
                 }
             });
         }
@@ -146,7 +134,7 @@ public abstract class KafkaProducerServiceAbstract<V> implements KafkaProducerSe
                 record.clear();
             }
         } catch (Exception ex) {
-            log.warn("Ошибка при вызове record.clear() после отправки: {}", ex.getMessage(), ex);
+            log.warn("Ошибка при очистке объекта Record после отправки: {}", ex.getMessage(), ex);
         }
     }
 }

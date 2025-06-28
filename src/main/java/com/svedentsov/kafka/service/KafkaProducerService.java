@@ -5,25 +5,27 @@ import com.svedentsov.kafka.model.Record;
 import java.util.concurrent.CompletableFuture;
 
 /**
- * Интерфейс для сервиса отправки записей в Kafka.
- * Реализация может отправлять синхронно или асинхронно.
+ * Интерфейс сервиса для отправки записей в Kafka.
+ * Определяет контракт для синхронной и асинхронной отправки.
  */
 public interface KafkaProducerService {
 
     /**
-     * Отправляет запись в Kafka в синхронном режиме.
-     * Бросает RuntimeException, если не удалось отправить.
+     * Отправляет запись в Kafka в синхронном (блокирующем) режиме.
+     * Метод вернет управление только после подтверждения получения брокером.
      *
-     * @param record объект записи, содержащий информацию о топике, ключе, значении и заголовках
+     * @param record объект записи для отправки.
      */
     void sendRecord(Record record);
 
     /**
      * Отправляет запись в Kafka в асинхронном режиме.
-     * Возвращает CompletableFuture, который завершится успешно или с ошибкой.
+     * Возвращает {@link CompletableFuture}, который можно использовать для отслеживания
+     * результата операции.
      *
-     * @param record запись для отправки
-     * @return CompletableFuture<Void> результат асинхронной отправки.
+     * @param record запись для отправки.
+     * @return {@link CompletableFuture<Void>} который завершается null при успехе
+     * или исключением при ошибке.
      */
     CompletableFuture<Void> sendRecordAsync(Record record);
 }

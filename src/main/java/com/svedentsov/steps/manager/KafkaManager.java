@@ -1,8 +1,8 @@
 package com.svedentsov.steps.manager;
 
+import com.svedentsov.steps.common.KafkaSteps;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
-import com.svedentsov.steps.common.KafkaSteps;
 
 import java.util.Optional;
 
