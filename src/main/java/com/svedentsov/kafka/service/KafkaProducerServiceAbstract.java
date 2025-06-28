@@ -16,7 +16,7 @@ import static java.util.Objects.requireNonNull;
 /**
  * Абстрактный базовый класс для {@link KafkaProducerService}, реализующий общую логику отправки.
  * Этот класс использует {@link KafkaProducer}, внедренный через конструктор, для отправки сообщений.
- * Он реализует шаблонный метод (Template Method Pattern), делегируя специфичные для формата данных
+ * Он реализует "Шаблонный метод" (Template Method Pattern), делегируя специфичные для формата данных
  * операции (валидацию и извлечение значения) дочерним классам.
  *
  * @param <V> тип значения сообщения Kafka (например, {@code String} или {@code GenericRecord}).
@@ -38,27 +38,28 @@ public abstract class KafkaProducerServiceAbstract<V> implements KafkaProducerSe
 
     /**
      * Шаблонный метод для валидации записи перед отправкой.
-     * Базовая реализация проверяет, что сама запись и её топик не являются {@code null} или пустыми.
+     * Базовая реализация проверяет, что сама запись, её топик не являются {@code null} или пустыми.
      * Классы-наследники <strong>обязаны</strong> вызывать {@code super.validateRecord(record)}
      * и могут добавлять собственные, специфичные для формата, проверки.
      *
      * @param record запись для валидации.
-     * @throws IllegalArgumentException если обязательные поля не заполнены.
+     * @throws IllegalArgumentException если обязательные поля не заполнены или имеют неверный формат.
      */
     protected void validateRecord(Record record) {
         requireNonNull(record, "Record не может быть null.");
-        requireNonNull(record.getTopic(), "Topic не может быть null.");
+        requireNonNull(record.getTopic(), "Topic в записи не может быть null.");
         if (record.getTopic().isBlank()) {
-            throw new IllegalArgumentException("Topic не может быть пустым.");
+            throw new IllegalArgumentException("Topic в записи не может быть пустым.");
         }
     }
 
     /**
      * Абстрактный шаблонный метод для извлечения типизированного значения из объекта {@link Record}.
-     * Реализация в дочернем классе должна вернуть значение, соответствующее типу {@code V}.
+     * Реализация в дочернем классе должна извлечь и вернуть значение, соответствующее типу {@code V}.
+     * Предполагается, что на момент вызова этого метода запись уже прошла валидацию.
      *
-     * @param record объект записи, из которого извлекается значение
-     * @return значение типа {@code V}
+     * @param record объект записи, из которого извлекается значение.
+     * @return значение типа {@code V}.
      */
     protected abstract V getValueFromRecord(Record record);
 
@@ -67,9 +68,10 @@ public abstract class KafkaProducerServiceAbstract<V> implements KafkaProducerSe
         try {
             sendRecordAsync(record).join();
         } catch (CompletionException e) {
-            throw (KafkaSendingException) e.getCause();
-        } catch (KafkaSendingException e) {
-            throw e;
+            if (e.getCause() instanceof KafkaSendingException) {
+                throw (KafkaSendingException) e.getCause();
+            }
+            throw new KafkaSendingException("Не удалось дождаться завершения отправки записи.", e);
         }
     }
 
@@ -84,27 +86,30 @@ public abstract class KafkaProducerServiceAbstract<V> implements KafkaProducerSe
             producer.send(producerRecord, (metadata, exception) -> {
                 if (exception != null) {
                     log.error("Ошибка при асинхронной отправке записи в топик '{}'", record.getTopic(), exception);
-                    resultFuture.completeExceptionally(new KafkaSendingException("Ошибка при асинхронной отправке записи.", exception));
+                    resultFuture.completeExceptionally(new KafkaSendingException("Ошибка при отправке записи в Kafka.", exception));
                 } else {
                     log.info("Запись успешно отправлена: topic={}, partition={}, offset={}",
                             metadata.topic(), metadata.partition(), metadata.offset());
                     resultFuture.complete(null);
                 }
             });
+
         } catch (Exception e) {
             log.error("Ошибка на этапе подготовки записи к отправке в топик '{}'", record.getTopic(), e);
+            // Если ошибка произошла до вызова producer.send(), мы должны завершить Future с исключением.
             resultFuture.completeExceptionally(new KafkaSendingException("Ошибка подготовки записи к отправке.", e));
         }
+        // Гарантированно выполняем очистку после завершения операции (успешного или нет)
         return resultFuture.whenComplete((res, ex) -> cleanupRecord(record));
     }
 
     /**
-     * Вспомогательный метод для конструирования объекта {@link ProducerRecord} из нашей доменной модели {@link Record}.
-     * Также отвечает за маппинг заголовков.
+     * Собирает объект {@link ProducerRecord} из доменной модели {@link Record}.
+     * Также выполняет преобразование заголовков.
      *
-     * @param record входная запись
-     * @param value  типизированное значение для отправки
-     * @return сконструированный {@link ProducerRecord}
+     * @param record входная доменная запись.
+     * @param value  типизированное значение для отправки.
+     * @return готовый к отправке {@link ProducerRecord}.
      */
     private ProducerRecord<String, V> buildProducerRecord(Record record, V value) {
         ProducerRecord<String, V> producerRecord = new ProducerRecord<>(
@@ -127,17 +132,18 @@ public abstract class KafkaProducerServiceAbstract<V> implements KafkaProducerSe
 
     /**
      * Выполняет безопасную очистку ресурсов, удерживаемых объектом {@link Record}, после завершения отправки.
+     * Например, может обнулять большие поля (value), чтобы помочь сборщику мусора.
      * Ошибки во время очистки логируются, но не влияют на результат основной операции.
      *
      * @param record Запись для очистки.
      */
     private void cleanupRecord(Record record) {
         try {
-            if (record != null) {
-                record.clear();
+            if (record != null && record instanceof AutoCloseable) {
+                ((AutoCloseable) record).close();
             }
         } catch (Exception ex) {
-            log.warn("Ошибка при очистке объекта Record после отправки: {}", ex.getMessage(), ex);
+            log.warn("Не удалось корректно очистить объект Record после отправки: {}", ex.getMessage(), ex);
         }
     }
 }

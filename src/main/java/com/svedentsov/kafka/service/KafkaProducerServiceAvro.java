@@ -20,19 +20,32 @@ public class KafkaProducerServiceAvro extends KafkaProducerServiceAbstract<Gener
         super(producer);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Дополнительно проверяет, что Avro-значение в записи не является {@code null}
+     * и имеет корректный тип {@link GenericRecord}.
+     */
     @Override
     protected void validateRecord(Record record) {
         super.validateRecord(record);
-        requireNonNull(record.getAvroValue(), "Поле Avro-value в записи не может быть null.");
+        Object avroValue = record.getAvroValue();
+        requireNonNull(avroValue, "Поле Avro-value в записи не может быть null.");
+
+        if (!(avroValue instanceof GenericRecord)) {
+            throw new IllegalArgumentException("Неверный тип Avro-value: ожидался GenericRecord, но получен "
+                    + avroValue.getClass().getName());
+        }
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Возвращает значение в формате {@link GenericRecord} из записи.
+     * Выполняет безопасное приведение типа, так как проверка была произведена на этапе валидации.
+     */
     @Override
     protected GenericRecord getValueFromRecord(Record record) {
-        Object avroValue = record.getAvroValue();
-        if (avroValue instanceof GenericRecord) {
-            return (GenericRecord) avroValue;
-        }
-        throw new IllegalArgumentException("Неверный тип Avro-value: ожидался GenericRecord, но получен "
-                + (avroValue != null ? avroValue.getClass().getName() : "null"));
+        return (GenericRecord) record.getAvroValue();
     }
 }

@@ -11,10 +11,12 @@ import java.util.Properties;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Провайдер конфигураций для клиентов Kafka.
+ * Провайдер конфигураций для клиентов Kafka, построенный на принципах внедрения зависимостей.
  * Этот класс отвечает за создание объектов {@link Properties} для продюсеров и консюмеров.
- * В отличие от предыдущей реализации со статическими методами, этот класс является
- * stateful-компонентом, который получает конфигурацию через конструктор, что упрощает его тестирование и конфигурирование.
+ * В отличие от статических фабричных методов, данный класс является stateful-компонентом,
+ * который инстанцируется с конкретной конфигурацией {@link KafkaConfig}. Такой подход упрощает
+ * тестирование, позволяя легко подменять конфигурацию на mock-объекты, и соответствует
+ * принципам SOLID.
  */
 @Slf4j
 public class DefaultKafkaConfigProvider {
@@ -37,6 +39,7 @@ public class DefaultKafkaConfigProvider {
      * @return {@link Properties} с настройками для продюсера.
      */
     public Properties getProducerConfig(String topic) {
+        requireNonNull(topic, "Топик не может быть null.");
         log.info("Создание конфигурации продюсера для топика: {}", topic);
         Properties props = createBaseProducerConfig();
         applySslConfig(props);
@@ -47,11 +50,14 @@ public class DefaultKafkaConfigProvider {
 
     /**
      * Создает и возвращает конфигурацию для Kafka Consumer.
+     * Конфигурация включает базовые настройки, SSL (если задан) и может быть
+     * дополнена специфичными настройками для конкретного топика.
      *
-     * @param topic топик, для которого создается конфигурация.
-     * @return {@link Properties} с настройками для консюмера.
+     * @param topic топик, для которого создается конфигурация. Не может быть {@code null}.
+     * @return {@link Properties} с полным набором настроек для консюмера.
      */
     public Properties getConsumerConfig(String topic) {
+        requireNonNull(topic, "Топик не может быть null.");
         log.info("Создание конфигурации консюмера для топика: {}", topic);
         Properties props = createBaseConsumerConfig();
         applySslConfig(props);
@@ -63,6 +69,7 @@ public class DefaultKafkaConfigProvider {
     private Properties createBaseProducerConfig() {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers());
+        // Здесь можно добавить другие общие для всех продюсеров настройки
         return props;
     }
 
@@ -70,14 +77,16 @@ public class DefaultKafkaConfigProvider {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, config.groupId());
+        // Здесь можно добавить другие общие для всех консюмеров настройки
         return props;
     }
 
     private void applySslConfig(Properties props) {
         if (config.sslTruststoreLocation() == null || config.sslTruststoreLocation().isBlank()) {
-            log.warn("SSL конфигурация не будет применена, так как 'ssl.truststore.location' не задан.");
+            log.debug("SSL конфигурация не будет применена, так как 'ssl.truststore.location' не задан.");
             return;
         }
+        log.debug("Применение SSL конфигурации.");
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.sslTruststoreLocation());
         props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.sslTruststorePassword());
@@ -89,7 +98,7 @@ public class DefaultKafkaConfigProvider {
 
     /**
      * Применяет специфичные для топика настройки продюсера.
-     * Этот метод инкапсулирует логику кастомизации.
+     * Инкапсулирует логику кастомизации конфигурации.
      */
     private void applyTopicSpecificProducerConfig(Properties props, String topic) {
         if ("special-topic".equals(topic)) {
@@ -97,7 +106,7 @@ public class DefaultKafkaConfigProvider {
             props.put(ProducerConfig.ACKS_CONFIG, "all");
             props.put(ProducerConfig.RETRIES_CONFIG, 3);
         } else {
-            log.info("Используется стандартная конфигурация продюсера для топика: {}", topic);
+            log.info("Использование стандартной конфигурации продюсера для топика: {}", topic);
         }
     }
 
@@ -110,7 +119,7 @@ public class DefaultKafkaConfigProvider {
             props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, false);
             props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
         } else {
-            log.info("Используется стандартная конфигурация консюмера для топика: {}", topic);
+            log.info("Использование стандартной конфигурации консюмера для топика: {}", topic);
         }
     }
 }

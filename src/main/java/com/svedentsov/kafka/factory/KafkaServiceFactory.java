@@ -4,17 +4,15 @@ import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.service.*;
-import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Фабрика для создания экземпляров сервисов Kafka.
- * Этот класс инкапсулирует логику создания и внедрения зависимостей.
- * Он отвечает за корректную "сборку" сервиса, создавая необходимые компоненты
- * (например, {@link KafkaProducer}) с помощью {@link ProducerFactory} и внедряя их
- * в конечную реализацию сервиса (например, {@link KafkaProducerServiceString}).
+ * Фабрика для создания экземпляров сервисов Kafka (продюсеров и консюмеров).
+ * Этот класс инкапсулирует логику "сборки" сервисов, управляя внедрением зависимостей.
+ * Он использует {@link ProducerFactory} для получения необходимых {@link KafkaProducer}
+ * и передает их в конкретные реализации сервисов, такие как {@link KafkaProducerServiceString}.
  */
 public class KafkaServiceFactory {
 
@@ -39,14 +37,8 @@ public class KafkaServiceFactory {
     public KafkaProducerService createProducer(ContentType type) {
         requireNonNull(type, "ContentType для Producer не может быть null");
         return switch (type) {
-            case STRING_FORMAT -> {
-                KafkaProducer<String, String> stringProducer = producerFactory.createStringProducer();
-                yield new KafkaProducerServiceString(stringProducer);
-            }
-            case AVRO_FORMAT -> {
-                KafkaProducer<String, GenericRecord> avroProducer = producerFactory.createAvroProducer();
-                yield new KafkaProducerServiceAvro(avroProducer);
-            }
+            case STRING_FORMAT -> new KafkaProducerServiceString(producerFactory.createStringProducer());
+            case AVRO_FORMAT -> new KafkaProducerServiceAvro(producerFactory.createAvroProducer());
         };
     }
 

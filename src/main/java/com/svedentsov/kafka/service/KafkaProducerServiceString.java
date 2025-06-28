@@ -6,7 +6,7 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация {@link KafkaProducerService} для отправки сообщений в строковом формате.
+ * Реализация {@link KafkaProducerService} для отправки сообщений, где значением является {@link String}.
  */
 public class KafkaProducerServiceString extends KafkaProducerServiceAbstract<String> {
 
@@ -19,12 +19,22 @@ public class KafkaProducerServiceString extends KafkaProducerServiceAbstract<Str
         super(producer);
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Дополнительно проверяет, что строковое значение в записи не является {@code null}.
+     */
     @Override
     protected void validateRecord(Record record) {
         super.validateRecord(record);
         requireNonNull(record.getValue(), "Поле String-value в записи не может быть null.");
     }
 
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Возвращает строковое значение из записи.
+     */
     @Override
     protected String getValueFromRecord(Record record) {
         return record.getValue();

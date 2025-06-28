@@ -17,8 +17,10 @@ import org.apache.kafka.common.header.Header;
 
 import java.time.Duration;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.svedentsov.kafka.config.KafkaListenerConfig.EnvConfig.testing;
@@ -32,6 +34,7 @@ import static java.util.Objects.requireNonNull;
  */
 @Slf4j
 public class KafkaExecutor implements AutoCloseable {
+
     private final KafkaServiceFactory serviceFactory;
     private final KafkaListenerManager listenerManager;
     private KafkaProducerService producer;
@@ -210,7 +213,15 @@ public class KafkaExecutor implements AutoCloseable {
     public KafkaExecutor sendRecord() {
         validateProducerAndTopic();
         producer.sendRecord(record);
-        record.clear(); // Очищаем Record для следующего использования
+        return this;
+    }
+
+    /**
+     * Отправляет сконфигурированное сообщение в асинхронном режиме.
+     */
+    public KafkaExecutor sendRecordAsync() {
+        log.info("Асинхронная отправка записи в топик '{}': {}", record.getTopic(), record);
+        producer.sendRecordAsync(record);
         return this;
     }
 
@@ -391,6 +402,25 @@ public class KafkaExecutor implements AutoCloseable {
         return records.stream()
                 .map(record -> JsonUtils.fromJson(record.value(), tClass))
                 .collect(Collectors.toList());
+    }
+
+    public List<ConsumerRecord<String, Object>> getReceivedRecords(String topic) {
+        requireNonBlank(topic, "Имя топика не может быть пустым.");
+        List<ConsumerRecord<String, Object>> records = (List<ConsumerRecord<String, Object>>) (List<?>) KafkaRecordsManager.getRecords(topic);
+        return records;
+
+    }
+
+    public <T> List<T> getRecordsAs(String topic, Class<T> targetClass) {
+        return getRecordsAs(topic, record -> JsonUtils.fromJson(record.value().toString(), targetClass));
+    }
+
+    public <T> List<T> getRecordsAs(String topic, Function<ConsumerRecord<String, Object>, T> deserializer) {
+        return getReceivedRecords(topic).stream().map(deserializer).collect(Collectors.toList());
+    }
+
+    public Stream<ConsumerRecord<String, Object>> findRecords(String topic, Predicate<ConsumerRecord<String, Object>> predicate) {
+        return getReceivedRecords(topic).stream().filter(predicate);
     }
 
     /**
