@@ -1,6 +1,5 @@
 package com.svedentsov.kafka.service;
 
-import com.svedentsov.kafka.factory.ProducerFactory;
 import com.svedentsov.kafka.model.Record;
 import org.apache.avro.generic.GenericRecord;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -8,23 +7,23 @@ import org.apache.kafka.clients.producer.KafkaProducer;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация {@link KafkaProducerService} для отправки сообщений в формате Avro.
+ * Реализация {@link KafkaProducerService} для отправки сообщений в формате Avro ({@link GenericRecord}).
  */
 public class KafkaProducerServiceAvro extends KafkaProducerServiceAbstract<GenericRecord> {
 
     /**
-     * Создает сервис, используя предоставленную фабрику продюсеров.
+     * Создает сервис, используя предоставленный продюсер для Avro.
      *
-     * @param producerFactory фабрика для создания Kafka продюсеров.
+     * @param producer настроенный экземпляр {@link KafkaProducer} для отправки {@link GenericRecord}.
      */
-    public KafkaProducerServiceAvro(ProducerFactory producerFactory) {
-        super(producerFactory);
+    public KafkaProducerServiceAvro(KafkaProducer<String, GenericRecord> producer) {
+        super(producer);
     }
 
     @Override
     protected void validateRecord(Record record) {
         super.validateRecord(record);
-        requireNonNull(record.getAvroValue(), "Avro-value не может быть null.");
+        requireNonNull(record.getAvroValue(), "Поле Avro-value в записи не может быть null.");
     }
 
     @Override
@@ -34,11 +33,6 @@ public class KafkaProducerServiceAvro extends KafkaProducerServiceAbstract<Gener
             return (GenericRecord) avroValue;
         }
         throw new IllegalArgumentException("Неверный тип Avro-value: ожидался GenericRecord, но получен "
-                + avroValue.getClass().getName());
-    }
-
-    @Override
-    protected KafkaProducer<String, GenericRecord> getProducer(String topic) {
-        return producerFactory.createAvroProducer(topic);
+                + (avroValue != null ? avroValue.getClass().getName() : "null"));
     }
 }

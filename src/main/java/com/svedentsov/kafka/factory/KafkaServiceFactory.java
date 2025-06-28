@@ -4,15 +4,17 @@ import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.service.*;
+import org.apache.avro.generic.GenericRecord;
+import org.apache.kafka.clients.producer.KafkaProducer;
 
 import static java.util.Objects.requireNonNull;
 
 /**
  * Фабрика для создания экземпляров сервисов Kafka.
- * Этот класс инкапсулирует логику создания и внедрения зависимостей для
- * {@link KafkaProducerService} и {@link KafkaConsumerService}.
- * В отличие от статической фабрики, этот класс создается как объект, что позволяет
- * управлять его жизненным циклом и зависимостями (например, через DI-контейнер).
+ * Этот класс инкапсулирует логику создания и внедрения зависимостей.
+ * Он отвечает за корректную "сборку" сервиса, создавая необходимые компоненты
+ * (например, {@link KafkaProducer}) с помощью {@link ProducerFactory} и внедряя их
+ * в конечную реализацию сервиса (например, {@link KafkaProducerServiceString}).
  */
 public class KafkaServiceFactory {
 
@@ -20,23 +22,31 @@ public class KafkaServiceFactory {
 
     /**
      * Создает фабрику сервисов с указанной фабрикой продюсеров.
+     *
+     * @param producerFactory фабрика, ответственная за жизненный цикл {@link KafkaProducer}.
      */
     public KafkaServiceFactory(ProducerFactory producerFactory) {
         this.producerFactory = requireNonNull(producerFactory, "ProducerFactory не может быть null.");
     }
 
     /**
-     * Создаёт {@link KafkaProducerService} для указанного типа контента.
+     * Создаёт полностью сконфигурированный {@link KafkaProducerService} для указанного типа контента.
      *
-     * @param type тип контента ({@link ContentType#STRING_FORMAT} или {@link ContentType#AVRO_FORMAT}).
-     * @return реализация {@link KafkaProducerService}.
+     * @param type Тип контента ({@link ContentType#STRING_FORMAT} или {@link ContentType#AVRO_FORMAT}).
+     * @return Готовая к использованию реализация {@link KafkaProducerService}.
      * @throws IllegalArgumentException если {@code type} равен {@code null} или является неизвестным.
      */
     public KafkaProducerService createProducer(ContentType type) {
         requireNonNull(type, "ContentType для Producer не может быть null");
         return switch (type) {
-            case STRING_FORMAT -> new KafkaProducerServiceString(producerFactory);
-            case AVRO_FORMAT -> new KafkaProducerServiceAvro(producerFactory);
+            case STRING_FORMAT -> {
+                KafkaProducer<String, String> stringProducer = producerFactory.createStringProducer();
+                yield new KafkaProducerServiceString(stringProducer);
+            }
+            case AVRO_FORMAT -> {
+                KafkaProducer<String, GenericRecord> avroProducer = producerFactory.createAvroProducer();
+                yield new KafkaProducerServiceAvro(avroProducer);
+            }
         };
     }
 
