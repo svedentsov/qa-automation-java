@@ -1,5 +1,6 @@
 package com.svedentsov.kafka.factory;
 
+import com.svedentsov.kafka.config.DefaultKafkaConfigProvider; // Импортируем новый провайдер
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.generic.GenericRecord;
@@ -17,31 +18,22 @@ import static java.util.Objects.requireNonNull;
  * Кэширует созданные экземпляры {@link KafkaProducer} (по одному на каждый тип сериализатора)
  * для повторного использования. Это стандартная практика, позволяющая избежать
  * накладных расходов на создание новых TCP-соединений с брокерами Kafka при каждой отправке.
+ * Использует DefaultKafkaConfigProvider для получения базовых конфигураций.
  */
 @Slf4j
 public class ProducerFactoryDefault implements ProducerFactory {
 
     private final AtomicReference<KafkaProducer<String, String>> stringProducerRef = new AtomicReference<>();
     private final AtomicReference<KafkaProducer<String, GenericRecord>> avroProducerRef = new AtomicReference<>();
-    private final Properties baseProperties;
+    private final DefaultKafkaConfigProvider configProvider;
 
     /**
-     * Конструктор по умолчанию.
-     * Использует базовые настройки для подключения к Kafka на {@code localhost:9092}.
-     * Не рекомендуется для production-окружений.
-     */
-    public ProducerFactoryDefault() {
-        this(createDefaultProperties());
-    }
-
-    /**
-     * Рекомендуемый конструктор, создающий фабрику с предопределенной конфигурацией.
+     * Создает экземпляр ProducerFactoryDefault с указанным провайдером конфигураций.
      *
-     * @param baseProperties базовые свойства для всех создаваемых продюсеров (например, bootstrap.servers).
-     *                       Не может быть {@code null}.
+     * @param configProvider провайдер конфигураций Kafka, не может быть null.
      */
-    public ProducerFactoryDefault(Properties baseProperties) {
-        this.baseProperties = requireNonNull(baseProperties, "Базовые свойства (baseProperties) не могут быть null.");
+    public ProducerFactoryDefault(DefaultKafkaConfigProvider configProvider) {
+        this.configProvider = requireNonNull(configProvider, "DefaultKafkaConfigProvider не может быть null.");
     }
 
     @Override
@@ -66,9 +58,7 @@ public class ProducerFactoryDefault implements ProducerFactory {
     private <K, V> KafkaProducer<K, V> createProducerInternal(Class<?> keySerializerClass, Class<?> valueSerializerClass) {
         log.info("Создание нового экземпляра KafkaProducer [KeySerializer: {}, ValueSerializer: {}]",
                 keySerializerClass.getSimpleName(), valueSerializerClass.getSimpleName());
-        // Создаем копию, чтобы не модифицировать исходный объект `baseProperties`.
-        Properties props = new Properties();
-        props.putAll(baseProperties);
+        Properties props = configProvider.getProducerConfig(null);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializerClass.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializerClass.getName());
         return new KafkaProducer<>(props);
@@ -97,12 +87,5 @@ public class ProducerFactoryDefault implements ProducerFactory {
                 log.error("Ошибка при закрытии {} продюсера.", type, e);
             }
         }
-    }
-
-    private static Properties createDefaultProperties() {
-        Properties props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        // Здесь можно добавить другие общие свойства по умолчанию
-        return props;
     }
 }

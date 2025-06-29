@@ -1,8 +1,9 @@
 package com.svedentsov.kafka.helper;
 
+import com.svedentsov.kafka.config.DefaultKafkaConfigProvider;
+import com.svedentsov.kafka.config.KafkaConfig;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.factory.KafkaServiceFactory;
-import com.svedentsov.kafka.factory.ProducerFactoryDefault;
 import com.svedentsov.kafka.model.Record;
 import com.svedentsov.kafka.service.KafkaConsumerService;
 import com.svedentsov.kafka.service.KafkaProducerService;
@@ -11,6 +12,7 @@ import com.svedentsov.matcher.Condition;
 import com.svedentsov.matcher.EntityValidator;
 import com.svedentsov.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.aeonbits.owner.ConfigFactory;
 import org.apache.avro.Schema;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
@@ -44,7 +46,9 @@ public class KafkaExecutor implements AutoCloseable {
     private Duration pollTimeout = Duration.ofMillis(1000);
 
     public KafkaExecutor() {
-        this.serviceFactory = new KafkaServiceFactory(new ProducerFactoryDefault());
+        KafkaConfig config = ConfigFactory.create(KafkaConfig.class);
+        DefaultKafkaConfigProvider configProvider = new DefaultKafkaConfigProvider(config);
+        this.serviceFactory = new KafkaServiceFactory(configProvider); // Передаем configProvider в KafkaServiceFactory
         this.listenerManager = new KafkaListenerManager(testing());
     }
 

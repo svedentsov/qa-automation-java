@@ -36,15 +36,19 @@ public class DefaultKafkaConfigProvider {
      * Создает и возвращает конфигурацию для Kafka Producer.
      *
      * @param topic топик, для которого создается конфигурация. Может использоваться для кастомизации.
+     *              Если null, возвращаются базовые настройки без топик-специфичных.
      * @return {@link Properties} с настройками для продюсера.
      */
     public Properties getProducerConfig(String topic) {
-        requireNonNull(topic, "Топик не может быть null.");
-        log.info("Создание конфигурации продюсера для топика: {}", topic);
+        log.info("Создание конфигурации продюсера для топика: {}", topic != null ? topic : "общий");
         Properties props = createBaseProducerConfig();
         applySslConfig(props);
-        applyTopicSpecificProducerConfig(props, topic);
-        log.debug("Итоговая конфигурация продюсера для топика '{}': {}", topic, props);
+        if (topic != null) { // Применяем топик-специфичные настройки только если топик указан
+            applyTopicSpecificProducerConfig(props, topic);
+        } else {
+            log.debug("Топик не указан, применяются только базовые настройки продюсера.");
+        }
+        log.debug("Итоговая конфигурация продюсера для топика '{}': {}", topic != null ? topic : "общий", props);
         return props;
     }
 

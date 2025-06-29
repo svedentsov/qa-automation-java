@@ -1,7 +1,8 @@
 package com.svedentsov.kafka.factory;
 
-import com.svedentsov.kafka.config.KafkaConfigBuilder;
+import com.svedentsov.kafka.config.DefaultKafkaConfigProvider;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
@@ -13,17 +14,30 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
+import static java.util.Objects.requireNonNull;
 
 /**
- * Улучшенная, типобезопасная и тестируемая реализация ConsumerFactory.
+ * Улучшенная, типобезопасная и тестируемая реализация ConsumerFactory,
+ * использующая DefaultKafkaConfigProvider для получения конфигураций.
  */
 @Slf4j
+@NoArgsConstructor
 public class ConsumerFactoryDefault implements ConsumerFactory {
 
     private final Map<String, KafkaConsumer<String, String>> stringConsumers = new ConcurrentHashMap<>();
     private final Map<String, KafkaConsumer<String, Object>> avroConsumers = new ConcurrentHashMap<>();
     private final Function<String, String> stringConsumerKey = topicName -> topicName + ":string";
     private final Function<String, String> avroConsumerKey = topicName -> topicName + ":avro";
+    private DefaultKafkaConfigProvider configProvider;
+
+    /**
+     * Создает экземпляр ConsumerFactoryDefault с указанным провайдером конфигураций.
+     *
+     * @param configProvider провайдер конфигураций Kafka, не может быть null.
+     */
+    public ConsumerFactoryDefault(DefaultKafkaConfigProvider configProvider) {
+        this.configProvider = requireNonNull(configProvider, "DefaultKafkaConfigProvider не может быть null.");
+    }
 
     @Override
     public KafkaConsumer<String, String> createStringConsumer(String topicName) {
@@ -44,7 +58,7 @@ public class ConsumerFactoryDefault implements ConsumerFactory {
      * Использует константы из ConsumerConfig для надежности.
      */
     private <K, V> KafkaConsumer<K, V> createConsumerInternal(String topicName, Class<?> keyDeserializer, Class<?> valueDeserializer) {
-        Properties props = KafkaConfigBuilder.getConsumerConfig(topicName);
+        Properties props = configProvider.getConsumerConfig(topicName);
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, keyDeserializer.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, valueDeserializer.getName());
         log.info("Создание нового KafkaConsumer для топика '{}' [KeyDeserializer: {}, ValueDeserializer: {}]",

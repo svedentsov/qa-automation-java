@@ -1,38 +1,39 @@
 package com.svedentsov.kafka.factory;
 
+import com.svedentsov.kafka.config.DefaultKafkaConfigProvider;
 import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.service.*;
-import org.apache.kafka.clients.producer.KafkaProducer;
 
 import static java.util.Objects.requireNonNull;
 
 /**
- * Фабрика для создания экземпляров сервисов Kafka (продюсеров и консюмеров).
- * Этот класс инкапсулирует логику "сборки" сервисов, управляя внедрением зависимостей.
- * Он использует {@link ProducerFactory} для получения необходимых {@link KafkaProducer}
- * и передает их в конкретные реализации сервисов, такие как {@link KafkaProducerServiceString}.
+ * Фабрика для создания сервисов Kafka (ProducerService и ConsumerService).
+ * Управляет жизненным циклом базовых фабрик ProducerFactory и ConsumerFactory,
+ * обеспечивая их переиспользование.
  */
 public class KafkaServiceFactory {
 
     private final ProducerFactory producerFactory;
+    private final ConsumerFactory consumerFactory;
 
     /**
-     * Создает фабрику сервисов с указанной фабрикой продюсеров.
+     * Создает экземпляр KafkaServiceFactory с указанным провайдером конфигураций.
      *
-     * @param producerFactory фабрика, ответственная за жизненный цикл {@link KafkaProducer}.
+     * @param configProvider провайдер конфигураций Kafka, не может быть null.
      */
-    public KafkaServiceFactory(ProducerFactory producerFactory) {
-        this.producerFactory = requireNonNull(producerFactory, "ProducerFactory не может быть null.");
+    public KafkaServiceFactory(DefaultKafkaConfigProvider configProvider) {
+        this.producerFactory = new ProducerFactoryDefault(configProvider);
+        this.consumerFactory = new ConsumerFactoryDefault(configProvider);
     }
 
     /**
-     * Создаёт полностью сконфигурированный {@link KafkaProducerService} для указанного типа контента.
+     * Создает новый экземпляр KafkaProducerService на основе указанного типа контента.
      *
-     * @param type Тип контента ({@link ContentType#STRING_FORMAT} или {@link ContentType#AVRO_FORMAT}).
-     * @return Готовая к использованию реализация {@link KafkaProducerService}.
-     * @throws IllegalArgumentException если {@code type} равен {@code null} или является неизвестным.
+     * @param type тип контента (STRING_FORMAT, AVRO_FORMAT).
+     * @return настроенный KafkaProducerService.
+     * @throws IllegalArgumentException если тип контента не поддерживается.
      */
     public KafkaProducerService createProducer(ContentType type) {
         requireNonNull(type, "ContentType для Producer не может быть null");
