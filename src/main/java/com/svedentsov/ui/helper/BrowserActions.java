@@ -4,11 +4,10 @@ import com.codeborne.selenide.Selenide;
 import com.codeborne.selenide.SelenideElement;
 import com.svedentsov.core.annotations.Url;
 import com.svedentsov.utils.BeanTools;
+import com.svedentsov.utils.WaitUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.awaitility.core.ConditionTimeoutException;
 import org.openqa.selenium.Cookie;
 import org.openqa.selenium.JavascriptException;
-import org.openqa.selenium.TimeoutException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +18,6 @@ import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static com.svedentsov.utils.StrUtil.EMPTY;
 import static org.assertj.core.api.Assertions.assertThat;
-import static com.svedentsov.utils.WaitUtils.*;
 
 /**
  * Класс {@code BrowserActions} предоставляет набор методов для взаимодействия с браузером
@@ -39,7 +37,7 @@ public class BrowserActions {
      * Перезагружает текущую страницу и ожидает завершения загрузки.
      */
     public void reloadCurrentPage() {
-        getWebDriver().navigate().refresh();
+        refresh();
         waitForPageToLoad();
     }
 
@@ -49,7 +47,7 @@ public class BrowserActions {
      * @param index индекс iframe
      */
     public void switchToIframe(int index) {
-        getWebDriver().switchTo().frame(index);
+        switchTo().frame(index);
         waitForPageToLoad();
     }
 
@@ -59,23 +57,29 @@ public class BrowserActions {
      * @param el элемент Selenide, представляющий iframe
      */
     public void switchToIframeByWebElement(SelenideElement el) {
-        getWebDriver().switchTo().frame(el);
+        switchTo().frame(el);
         waitForPageToLoad();
     }
 
     /**
-     * Переключается на новую вкладку браузера.
+     * Переключается на последнюю открытую вкладку браузера.
      */
     public void switchToNewBrowserTab() {
-        doWait().until(this::getBrowserTabNames, tabs -> tabs.size() > 1)
-                .stream().reduce((a, b) -> b).ifPresent(this::switchToWindowByName);
+        var description = "Ожидание появления новой вкладки браузера";
+        // Ожидаем, пока количество вкладок не станет больше 1, и получаем список вкладок
+        List<String> tabs = new ArrayList<>(WaitUtils.waitUntilAndGet(
+                description,
+                this::getBrowserTabNames,
+                handles -> handles.size() > 1));
+        // Переключаемся на последнюю в списке
+        switchToWindowByName(tabs.get(tabs.size() - 1));
     }
 
     /**
      * Переключается на контент по умолчанию и ожидает завершения загрузки.
      */
     public void switchToDefaultContent() {
-        getWebDriver().switchTo().defaultContent();
+        switchTo().defaultContent();
         waitForPageToLoad();
     }
 
@@ -101,7 +105,7 @@ public class BrowserActions {
      * Нажимает кнопку "Назад" в браузере.
      */
     public void clickBrowserBackButton() {
-        getWebDriver().navigate().back();
+        back();
     }
 
     /**
@@ -110,20 +114,30 @@ public class BrowserActions {
      * @param action действие для выполнения
      */
     public void switchToNewBrowserTab(Runnable action) {
-        int tabsCnt = getBrowserTabNames().size();
+        int initialTabsCount = getBrowserTabsCount();
         action.run();
-        doWait().until(this::getBrowserTabNames, tabs -> tabs.size() > tabsCnt)
-                .stream().reduce((a, b) -> b).ifPresent(this::switchToWindowByName);
+        var description = "Ожидание открытия новой вкладки после действия";
+        // Ожидаем, что количество вкладок увеличится
+        List<String> tabs = new ArrayList<>(WaitUtils.waitUntilAndGet(
+                description,
+                this::getBrowserTabNames,
+                handles -> handles.size() > initialTabsCount));
+        // Переключаемся на последнюю в списке
+        switchToWindowByName(tabs.get(tabs.size() - 1));
     }
 
     /**
      * Закрывает текущую вкладку и переключается на последнюю оставшуюся вкладку.
      */
     public void closeCurrentTab() {
-        if (getBrowserTabNames().size() > 1) {
-            getWebDriver().close();
+        if (getBrowserTabsCount() > 1) {
+            closeWindow();
+            // После закрытия Selenide автоматически переключается на предыдущую вкладку
+            // Но для надежности можно явно переключиться на последнюю из оставшихся
             List<String> tabsList = new ArrayList<>(getBrowserTabNames());
-            getWebDriver().switchTo().window(tabsList.get(tabsList.size() - 1));
+            if (!tabsList.isEmpty()) {
+                switchToWindowByName(tabsList.get(tabsList.size() - 1));
+            }
         }
     }
 
@@ -144,12 +158,14 @@ public class BrowserActions {
     public void navigateToUrlNewTab(String url) {
         try {
             switchToNewBrowserTab(() -> executeJavaScript(JS_OPEN_NEW_TAB));
-            repeatAction(() -> {
-                Selenide.open(url);
-                return url;
-            });
-        } catch (TimeoutException | JavascriptException e) {
+            Selenide.open(url);
+            // Явно ждем, пока URL в браузере не будет соответствовать тому, что мы открыли
+            WaitUtils.waitUntilCondition(
+                    "Ожидание загрузки URL в новой вкладке: " + url,
+                    () -> getCurrentPageUrl().startsWith(url));
+        } catch (JavascriptException e) {
             log.error("Ошибка при открытии новой вкладки с URL: " + url, e);
+            throw new RuntimeException("Не удалось открыть новую вкладку через JS", e);
         }
     }
 
@@ -195,8 +211,9 @@ public class BrowserActions {
             }
             return Selenide.open(baseUrl + url, clazz);
         } else {
-            log.error(String.format("Нет аннотации @Url для класса %s", clazz.getCanonicalName()));
-            throw new RuntimeException(String.format("Нет аннотации @Url для класса %s", clazz.getCanonicalName()));
+            String errorMsg = String.format("Нет аннотации @Url для класса %s", clazz.getCanonicalName());
+            log.error(errorMsg);
+            throw new IllegalArgumentException(errorMsg);
         }
     }
 
@@ -234,7 +251,14 @@ public class BrowserActions {
      * @return смещение часового пояса
      */
     public long getBrowserTimeZoneOffset() {
-        return executeJavaScript(JS_TIMEZONE_OFFSET);
+        // Явно приводим результат к Number и получаем long, чтобы избежать ClassCastException
+        Object raw = executeJavaScript(JS_TIMEZONE_OFFSET);
+        if (raw instanceof Number) {
+            return ((Number) raw).longValue();
+        } else {
+            log.warn("Невозможно получить смещение часового пояса: ожидается Number, получено {}", raw);
+            throw new IllegalStateException("Неверный тип результата JS: " + raw);
+        }
     }
 
     /**
@@ -245,13 +269,19 @@ public class BrowserActions {
      */
     public boolean checkCurrentPageAt(Class<?> pageClass) {
         if (pageClass.isAnnotationPresent(Url.class)) {
-            doWait().untilAsserted(() -> assertThat(getCurrentPageUrl())
-                    .as(WAIT_PAGE_LOADED_MESSAGE, pageClass.getSimpleName())
-                    .matches(pageClass.getAnnotation(Url.class).pattern()));
+            var description = String.format("Проверка, что текущая страница - '%s'", pageClass.getSimpleName());
+            WaitUtils.waitUntilAsserted(description, () -> {
+                String readyState = executeJavaScript(JS_DOCUMENT_READY_STATE);
+                assertThat(readyState).isEqualTo(DOCUMENT_READY_STATE);
+                assertThat(getCurrentPageUrl())
+                        .as(WAIT_PAGE_LOADED_MESSAGE, pageClass.getSimpleName())
+                        .matches(pageClass.getAnnotation(Url.class).pattern());
+            });
             return true;
         }
-        log.error(String.format("Класс %s не имеет аннотации URL", pageClass.getName()));
-        throw new IllegalArgumentException(String.format("Класс %s не имеет аннотации URL", pageClass.getName()));
+        String errorMsg = String.format("Класс %s не имеет аннотации URL", pageClass.getName());
+        log.error(errorMsg);
+        throw new IllegalArgumentException(errorMsg);
     }
 
     /**
@@ -264,8 +294,9 @@ public class BrowserActions {
         if (pageClass.isAnnotationPresent(Url.class)) {
             return getWebDriver().getCurrentUrl().matches(pageClass.getAnnotation(Url.class).pattern());
         }
-        log.error(String.format("Класс %s не имеет аннотации URL", pageClass.getName()));
-        throw new IllegalArgumentException(String.format("Класс %s не имеет аннотации URL", pageClass.getName()));
+        String errorMsg = String.format("Класс %s не имеет аннотации URL", pageClass.getName());
+        log.error(errorMsg);
+        throw new IllegalArgumentException(errorMsg);
     }
 
     /**
@@ -276,21 +307,27 @@ public class BrowserActions {
      * @return экземпляр страницы или пустой Optional, если страница не загружена
      */
     public <T> Optional<T> waitForPageLoaded(Class<T> pageClass) {
-        try {
-            checkCurrentPageAt(pageClass);
+        var description = String.format("Проверка загрузки страницы '%s'", pageClass.getSimpleName());
+        boolean isLoaded = WaitUtils.checkConditionWithoutException(description,
+                () -> assertThat(getCurrentPageUrl()).matches(pageClass.getAnnotation(Url.class).pattern()));
+
+        if (isLoaded) {
             return Optional.of(BeanTools.createObject(pageClass));
-        } catch (ConditionTimeoutException e) {
-            log.info(String.format(WAIT_PAGE_LOADED_MESSAGE, pageClass.getSimpleName()), e);
+        } else {
+            log.info("Страница '{}' не была загружена в течение таймаута.", pageClass.getSimpleName());
+            return Optional.empty();
         }
-        return Optional.empty();
     }
 
     /**
      * Ожидает загрузки страницы, проверяя состояние документа.
      */
     private void waitForPageToLoad() {
-        waitAssertCondition(() ->
-                assertThat(DOCUMENT_READY_STATE).isEqualTo(executeJavaScript(JS_DOCUMENT_READY_STATE)));
+        var description = "Ожидание полной загрузки DOM (document.readyState == 'complete')";
+        WaitUtils.waitUntilAsserted(description, () -> {
+            String readyState = executeJavaScript(JS_DOCUMENT_READY_STATE);
+            assertThat(readyState).isEqualTo(DOCUMENT_READY_STATE);
+        });
     }
 
     /**

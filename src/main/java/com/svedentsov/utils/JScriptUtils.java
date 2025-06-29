@@ -10,9 +10,7 @@ import java.io.UncheckedIOException;
 import java.time.Duration;
 
 import static com.codeborne.selenide.Selenide.executeJavaScript;
-import static com.svedentsov.utils.WaitUtils.doWait;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.awaitility.Durations.ONE_SECOND;
 
 /**
  * Утилитарный класс для работы с JavaScript в тестах.
@@ -20,7 +18,7 @@ import static org.awaitility.Durations.ONE_SECOND;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class JScriptUtils {
 
-    private static final Duration WAIT_PAGE_TIMEOUT = PropertiesController.appTimeoutConfig().utilWaitTimeout();
+    private static final Duration SCRIPT_TIMEOUT = PropertiesController.appTimeoutConfig().utilWaitTimeout();
 
     /**
      * Загружает и выполняет скрипт jQuery из указанного файла.
@@ -28,7 +26,7 @@ public class JScriptUtils {
      * @param fileWithPath путь к файлу со скриптом
      */
     public static void loadJQuery(String fileWithPath) {
-        WebDriverRunner.getWebDriver().manage().timeouts().setScriptTimeout(WAIT_PAGE_TIMEOUT.toMillis(), MILLISECONDS);
+        WebDriverRunner.getWebDriver().manage().timeouts().setScriptTimeout(SCRIPT_TIMEOUT.toMillis(), MILLISECONDS);
         executeJavaScript(getScript(fileWithPath));
         waitForJQueryLoaded();
     }
@@ -52,8 +50,9 @@ public class JScriptUtils {
      * Ожидает, пока jQuery будет загружен и все AJAX-запросы завершены.
      */
     private static void waitForJQueryLoaded() {
-        doWait().pollInterval(ONE_SECOND)
-                .until(() -> Boolean.TRUE.equals(executeJavaScript("return !!window.jQuery && window.jQuery.active == 0")));
+        WaitUtils.waitUntilCondition(
+                "Ожидание загрузки jQuery и завершения AJAX-запросов",
+                () -> Boolean.TRUE.equals(executeJavaScript("return !!window.jQuery && window.jQuery.active == 0")));
     }
 
     /**
@@ -63,7 +62,7 @@ public class JScriptUtils {
      * @return элемент, до которого прокрутили страницу
      */
     public static SelenideElement scrollTo(SelenideElement element) {
-        executeJavaScript("arguments[0].scrollIntoView();", element);
+        executeJavaScript("arguments[0].scrollIntoView(true);", element);
         return element;
     }
 }

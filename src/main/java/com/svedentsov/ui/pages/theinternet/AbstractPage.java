@@ -1,18 +1,18 @@
 package com.svedentsov.ui.pages.theinternet;
 
 import com.codeborne.selenide.Selenide;
-import com.svedentsov.ui.helper.UrlController;
 import com.svedentsov.core.annotations.Url;
-import com.svedentsov.ui.helper.BrowserActions;
-import lombok.Getter;
-import org.openqa.selenium.By;
 import com.svedentsov.steps.manager.UiManager;
 import com.svedentsov.ui.element.popup.ErrorPopup;
 import com.svedentsov.ui.element.popup.ModalPopup;
+import com.svedentsov.ui.helper.BrowserActions;
+import com.svedentsov.ui.helper.UrlController;
+import com.svedentsov.utils.WaitUtils;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
+import org.openqa.selenium.By;
 
 import static com.svedentsov.utils.StrUtil.EMPTY;
-import static com.svedentsov.utils.WaitUtils.doWaitMedium;
-import static com.svedentsov.utils.WaitUtils.repeatAction;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
 /**
@@ -20,6 +20,7 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
  * Он предоставляет общие методы для работы с веб-страницами, такие как ожидание загрузки страницы, проверка открытия страницы,
  * обновление страницы, и открытие страниц по их классу.
  */
+@Slf4j
 @Getter
 public abstract class AbstractPage<T extends AbstractPage<T>> {
 
@@ -35,10 +36,13 @@ public abstract class AbstractPage<T extends AbstractPage<T>> {
      */
     public T waitPage() {
         if (getClass().isAnnotationPresent(Url.class)) {
-            doWaitMedium().untilAsserted(() -> assertThat(browserActions.getCurrentPageUrl())
-                    .as("Страница не загружена: %s", getClass().getSimpleName())
-                    .matches(getClass().getAnnotation(Url.class).pattern())
-            );
+            String description = String.format("Ожидание загрузки страницы '%s'", getClass().getSimpleName());
+            WaitUtils.waitUntilAsserted(
+                    description,
+                    () -> assertThat(browserActions.getCurrentPageUrl())
+                            .as("URL не соответствует паттерну страницы '%s'", getClass().getSimpleName())
+                            .matches(getClass().getAnnotation(Url.class).pattern()),
+                    WaitUtils.TIMEOUT_MEDIUM);
         }
         return (T) this;
     }
@@ -59,7 +63,7 @@ public abstract class AbstractPage<T extends AbstractPage<T>> {
      */
     public T refreshPage() {
         browserActions.reloadCurrentPage();
-        return (T) this;
+        return waitPage();
     }
 
     /**
@@ -67,10 +71,22 @@ public abstract class AbstractPage<T extends AbstractPage<T>> {
      *
      * @return текущий объект страницы
      */
+    @SuppressWarnings("unchecked")
     public T open() {
-        String url = getClass().isAnnotationPresent(Url.class) ?
-                getClass().getAnnotation(Url.class).pattern().replaceFirst("\\.\\*", EMPTY) :
-                EMPTY;
-        return repeatAction(() -> Selenide.open(UrlController.getUiHttpAppHost() + url, (Class<T>) getClass()));
+        String urlPattern = getClass().isAnnotationPresent(Url.class)
+                ? getClass().getAnnotation(Url.class).pattern()
+                : EMPTY;
+
+        // Убираем регулярные выражения, чтобы получить чистый путь
+        String cleanPath = urlPattern.replaceFirst("\\.\\*", EMPTY)
+                .replaceAll("\\\\", "");
+
+        if (cleanPath.isEmpty() && !urlPattern.isEmpty()) {
+            log.warn("Аннотация @Url для класса {} содержит только регулярное выражение. Открытие может быть некорректным.", getClass().getSimpleName());
+        }
+
+        // Команда Selenide.open уже включает в себя ожидания и возвращает инстанс страницы.
+        // Оборачивание в repeatAction является анти-паттерном.
+        return Selenide.open(UrlController.getUiHttpAppHost() + cleanPath, (Class<T>) getClass());
     }
 }

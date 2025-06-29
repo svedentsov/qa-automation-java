@@ -5,6 +5,7 @@ import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.awaitility.Awaitility;
 import org.awaitility.core.ConditionFactory;
 import org.awaitility.core.ConditionTimeoutException;
 import org.awaitility.core.ThrowingRunnable;
@@ -16,9 +17,6 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 
-import static com.svedentsov.utils.StrUtil.EMPTY;
-import static org.awaitility.Awaitility.await;
-
 /**
  * Утилитарный класс для выполнения различных операций ожидания.
  * Обеспечивает методы для гибкого управления таймаутами и интервалами опроса.
@@ -26,153 +24,215 @@ import static org.awaitility.Awaitility.await;
 @Slf4j
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public final class WaitUtils {
-
+    /**
+     * Стандартный таймаут для большинства операций.
+     */
     public static final Duration TIMEOUT = PropertiesController.appTimeoutConfig().utilWaitTimeout();
+    /**
+     * Увеличенный таймаут для операций, требующих больше времени.
+     */
     public static final Duration TIMEOUT_MEDIUM = PropertiesController.appTimeoutConfig().utilWaitMediumTimeout();
+    /**
+     * Длительный таймаут для самых долгих операций (например, обработка больших объемов данных).
+     */
     public static final Duration TIMEOUT_LONG = PropertiesController.appTimeoutConfig().utilWaitLongTimeout();
-    private static final Duration INTERVAL = Duration.of(1, ChronoUnit.SECONDS);
-    private static final Duration DELAY = Duration.of(3, ChronoUnit.SECONDS);
-    private static final Duration ONE_SECOND = Duration.of(1, ChronoUnit.SECONDS);
-    private static final String LOG_MESSAGE = "{} (прошло времени: {} мс, оставшееся время: {} мс)\n";
-    private static final String LOG_MESSAGE_SHORT = "оставшееся время {} мс";
-    private static String logDescription = EMPTY;
+    private static final Duration DEFAULT_POLL_INTERVAL = Duration.of(1, ChronoUnit.SECONDS);
+    private static final Duration DEFAULT_POLL_DELAY = Duration.ZERO; // По умолчанию начинаем опрос сразу
 
     /**
-     * Создает фабрику условий с использованием стандартного интервала и таймаута.
+     * Ожидает, пока указанный поставщик (supplier) не вернет не-null значение, и возвращает его.
+     * Использует таймаут по умолчанию (TIMEOUT_MEDIUM).
+     * <p>
+     * Идеально подходит для сценария "дождаться появления записи/объекта и получить его для дальнейших проверок".
      *
-     * @return {@link ConditionFactory} для настройки ожидания
+     * @param description   Описание ожидания. Будет выведено в лог при ошибке таймаута.
+     * @param valueSupplier {@link Callable}, который пытается получить значение. Ожидание прекратится, когда результат будет не {@code null}.
+     * @param <T>           Тип ожидаемого значения.
+     * @return Полученное не-null значение.
+     * @throws ConditionTimeoutException если таймаут истек, а поставщик так и не вернул не-null значение.
      */
-    public static ConditionFactory doWait() {
-        return doWait(INTERVAL, TIMEOUT);
+    public static <T> T waitUntilAndGet(String description, Callable<T> valueSupplier) {
+        return waitUntilAndGet(description, valueSupplier, Objects::nonNull, TIMEOUT_MEDIUM);
     }
 
     /**
-     * Создает фабрику условий с задержкой перед началом ожидания.
+     * Ожидает, пока указанный поставщик (supplier) не вернет значение, удовлетворяющее предикату, и возвращает это значение.
+     * Использует таймаут по умолчанию (TIMEOUT_MEDIUM).
      *
-     * @return {@link ConditionFactory} для настройки ожидания с задержкой
+     * @param description   Описание ожидания.
+     * @param valueSupplier {@link Callable}, который поставляет значение для проверки.
+     * @param condition     {@link Predicate}, которому должно удовлетворять полученное значение.
+     * @param <T>           Тип ожидаемого значения.
+     * @return Полученное значение, удовлетворяющее условию.
+     * @throws ConditionTimeoutException если таймаут истек, а условие не было выполнено.
      */
-    public static ConditionFactory doWaitWithDelay() {
-        return doWait(INTERVAL, TIMEOUT).pollDelay(DELAY);
+    public static <T> T waitUntilAndGet(String description, Callable<T> valueSupplier, Predicate<T> condition) {
+        return waitUntilAndGet(description, valueSupplier, condition, TIMEOUT_MEDIUM);
     }
 
     /**
-     * Создает фабрику условий с заданным таймаутом.
+     * Ожидает, пока указанный поставщик (supplier) не вернет значение, удовлетворяющее предикату, и возвращает это значение,
+     * используя заданный таймаут.
      *
-     * @param timeout длительность таймаута
-     * @return {@link ConditionFactory} для настройки ожидания
+     * @param description   Описание ожидания.
+     * @param valueSupplier {@link Callable}, который поставляет значение для проверки.
+     * @param condition     {@link Predicate}, которому должно удовлетворять полученное значение.
+     * @param timeout       Максимальное время ожидания.
+     * @param <T>           Тип ожидаемого значения.
+     * @return Полученное значение, удовлетворяющее условию.
+     * @throws ConditionTimeoutException если таймаут истек, а условие не было выполнено.
      */
-    public static ConditionFactory doWait(Duration timeout) {
-        return doWait(INTERVAL.multipliedBy(3), timeout);
+    public static <T> T waitUntilAndGet(String description, Callable<T> valueSupplier, Predicate<T> condition, Duration timeout) {
+        log.info("Ожидание: '{}'. Таймаут: {} секунд.", description, timeout.toSeconds());
+        return buildWaitCondition(description, timeout)
+                .until(valueSupplier, condition);
     }
 
     /**
-     * Создает фабрику условий с промежуточным таймаутом.
+     * Ожидает, пока условное выражение ({@code Callable<Boolean>}) не вернет {@code true}.
+     * Использует таймаут по умолчанию (TIMEOUT_MEDIUM).
      *
-     * @return {@link ConditionFactory} для настройки ожидания
+     * @param description        Описание ожидания.
+     * @param conditionEvaluator {@link Callable}, возвращающий {@code boolean}. Ожидание завершится, когда вернется {@code true}.
+     * @throws ConditionTimeoutException если таймаут истек, а условие не стало истинным.
      */
-    public static ConditionFactory doWaitMedium() {
-        return doWait(INTERVAL.multipliedBy(3), TIMEOUT_MEDIUM);
+    public static void waitUntilCondition(String description, Callable<Boolean> conditionEvaluator) {
+        waitUntilCondition(description, conditionEvaluator, TIMEOUT_MEDIUM);
     }
 
     /**
-     * Создает фабрику условий с более длинным промежуточным таймаутом.
+     * Ожидает, пока условное выражение ({@code Callable<Boolean>}) не вернет {@code true}, используя заданный таймаут.
      *
-     * @return {@link ConditionFactory} для настройки ожидания
+     * @param description        Описание ожидания.
+     * @param conditionEvaluator {@link Callable}, возвращающий {@code boolean}.
+     * @param timeout            Максимальное время ожидания.
+     * @throws ConditionTimeoutException если таймаут истек, а условие не стало истинным.
      */
-    public static ConditionFactory doWaitMediumLong() {
-        return doWait(INTERVAL.multipliedBy(5), TIMEOUT_MEDIUM.multipliedBy(3));
+    public static void waitUntilCondition(String description, Callable<Boolean> conditionEvaluator, Duration timeout) {
+        log.info("Ожидание условия: '{}'. Таймаут: {} секунд.", description, timeout.toSeconds());
+        buildWaitCondition(description, timeout).until(conditionEvaluator);
     }
 
     /**
-     * Создает фабрику условий с длинным таймаутом.
+     * Ожидает, пока блок кода с ассерциями (проверками) не будет выполнен без исключений.
+     * Использует таймаут по умолчанию (TIMEOUT_MEDIUM).
      *
-     * @return {@link ConditionFactory} для настройки ожидания
+     * @param description Описание группы проверок.
+     * @param assertions  {@link ThrowingRunnable} блок кода, содержащий одну или несколько проверок (например, Hamcrest, AssertJ).
+     * @throws ConditionTimeoutException если таймаут истек, а блок кода все еще выбрасывает исключение {@link AssertionError}.
      */
-    public static ConditionFactory doWaitLong() {
-        return doWait(INTERVAL.multipliedBy(10), TIMEOUT_LONG);
+    public static void waitUntilAsserted(String description, ThrowingRunnable assertions) {
+        waitUntilAsserted(description, assertions, TIMEOUT_MEDIUM);
     }
 
     /**
-     * Выполняет условие ожидания и проверяет его успешность.
+     * Ожидает, пока блок кода с ассерциями (проверками) не будет выполнен без исключений, используя заданный таймаут.
      *
-     * @param condition условие для проверки
-     * @return {@code true}, если условие выполнено успешно, иначе {@code false}
+     * @param description Описание группы проверок.
+     * @param assertions  {@link ThrowingRunnable} блок кода, содержащий одну или несколько проверок.
+     * @param timeout     Максимальное время ожидания.
+     * @throws ConditionTimeoutException если таймаут истек, а блок кода все еще выбрасывает исключение.
      */
-    public static boolean waitAssertCondition(ThrowingRunnable condition) {
-        return waitAssertCondition(condition, TIMEOUT_MEDIUM);
+    public static void waitUntilAsserted(String description, ThrowingRunnable assertions, Duration timeout) {
+        log.info("Ожидание выполнения ассерта: '{}'. Таймаут: {} секунд.", description, timeout.toSeconds());
+        buildWaitCondition(description, timeout).untilAsserted(assertions);
     }
 
     /**
-     * Выполняет условие ожидания с заданным таймаутом и проверяет его успешность.
+     * Проверяет, выполняется ли условие в течение заданного таймаута, но НЕ пробрасывает исключение в случае неудачи.
+     * <p>
+     * <b>Внимание:</b> Этот метод следует использовать только тогда, когда падение теста не является желаемым результатом,
+     * а требуется лишь булев флаг для дальнейшей логики в тесте. В большинстве случаев предпочтительнее
+     * использовать {@link #waitUntilAsserted(String, ThrowingRunnable)}.
      *
-     * @param condition условие для проверки
-     * @param timeout   длительность таймаута
-     * @return {@code true}, если условие выполнено успешно, иначе {@code false}
+     * @param description Описание проверяемого условия.
+     * @param condition   Условие для проверки.
+     * @param timeout     Длительность таймаута.
+     * @return {@code true}, если условие было выполнено успешно в течение таймаута, иначе {@code false}.
      */
-    public static boolean waitAssertCondition(ThrowingRunnable condition, Duration timeout) {
-        var result = true;
-        Duration interval = getAdjustedInterval(timeout);
+    public static boolean checkConditionWithoutException(String description, ThrowingRunnable condition, Duration timeout) {
         try {
-            doWait(interval, timeout).untilAsserted(condition);
+            waitUntilAsserted(description, condition, timeout);
+            return true;
         } catch (ConditionTimeoutException e) {
-            result = false;
-            log.debug("Таймаут условия через {} мс: {}", timeout.toMillis(), e.getMessage());
+            log.warn("Условие '{}' не было выполнено за {} мс. Подавление исключения.", description, timeout.toMillis());
+            return false;
         }
-        return result;
     }
 
-    public static <T> T repeatAction(Callable<T> action) {
-        return repeatAction(action, Objects::nonNull);
+    /**
+     * Перегруженная версия {@link #checkConditionWithoutException(String, ThrowingRunnable, Duration)} с таймаутом по умолчанию (TIMEOUT_MEDIUM).
+     */
+    public static boolean checkConditionWithoutException(String description, ThrowingRunnable condition) {
+        return checkConditionWithoutException(description, condition, TIMEOUT_MEDIUM);
     }
 
+    /**
+     * Повторяет выполнение действия до тех пор, пока его результат не будет удовлетворять предикату.
+     * В случае таймаута, возвращает последнее полученное значение.
+     * <p>
+     * <b>Внимание:</b> Этот метод может вернуть невалидный результат, если условие так и не будет выполнено.
+     * Рекомендуется использовать {@link #waitUntilAndGet(String, Callable, Predicate)}, если требуется гарантированно
+     * получить валидный объект или уронить тест.
+     *
+     * @param action    {@link Callable} действие, которое нужно повторять.
+     * @param condition {@link Predicate} условие, которому должен соответствовать результат.
+     * @return Результат выполнения действия.
+     */
     @SneakyThrows
-    public static <T> T repeatAction(Callable<T> action, Predicate<T> condition) {
+    public static <T> T repeatActionUntil(Callable<T> action, Predicate<T> condition) {
         try {
-            return doWaitMedium().ignoreExceptions().until(action, condition::test);
+            return waitUntilAndGet("Повторение действия до выполнения условия", action, condition, TIMEOUT_MEDIUM);
         } catch (ConditionTimeoutException e) {
-            log.debug("Unable to reach condition due to '{}', repeat...", e.getMessage());
+            log.warn("Условие для repeatAction не выполнилось. Возвращается последний результат. Ошибка: {}", e.getMessage());
+            // Возвращаем последний результат, даже если он не соответствует условию
             return action.call();
         }
     }
 
     /**
-     * Создает фабрику условий с заданным интервалом и таймаутом.
+     * Создает и базово настраивает {@link ConditionFactory} для дальнейшего использования.
      *
-     * @param pollInterval интервал опроса
-     * @param timeout      длительность таймаута
-     * @return {@link ConditionFactory} для настройки ожидания
+     * @param description Описание, которое будет использовано в логах при таймауте.
+     * @param timeout     Максимальное время ожидания.
+     * @return Настроенный экземпляр {@link ConditionFactory}.
      */
-    public static ConditionFactory doWait(Duration pollInterval, Duration timeout) {
-        return await().ignoreException(ConnectException.class)
-                .pollInSameThread()
-                .conditionEvaluationListener(condition -> {
-                    if (!logDescription.equals(condition.getDescription())) {
-                        logDescription = condition.getDescription();
-                        log.trace(LOG_MESSAGE, condition.getDescription(),
-                                condition.getElapsedTimeInMS(), condition.getRemainingTimeInMS());
-                    } else {
-                        log.trace(LOG_MESSAGE_SHORT, condition.getRemainingTimeInMS());
-                    }
-                })
-                .atMost(timeout)
-                .pollInterval(pollInterval)
-                .pollDelay(ONE_SECOND); // пропуск ожидания на 1-й итерации
+    private static ConditionFactory buildWaitCondition(String description, Duration timeout) {
+        return buildWaitCondition(description, timeout, getAdjustedInterval(timeout), DEFAULT_POLL_DELAY);
     }
 
     /**
-     * Возвращает скорректированный интервал ожидания в зависимости от значения таймаута.
+     * Основной метод для создания и настройки {@link ConditionFactory}.
      *
-     * @param timeout длительность таймаута
-     * @return скорректированный интервал ожидания
+     * @param description  Описание для логов.
+     * @param timeout      Максимальное время ожидания.
+     * @param pollInterval Интервал между попытками.
+     * @param pollDelay    Начальная задержка перед первой попыткой.
+     * @return Настроенный экземпляр {@link ConditionFactory}.
+     */
+    private static ConditionFactory buildWaitCondition(String description, Duration timeout, Duration pollInterval, Duration pollDelay) {
+        return Awaitility.await()
+                .ignoreException(ConnectException.class) // Игнорируем частые сетевые проблемы
+                .atMost(timeout)
+                .pollDelay(pollDelay)
+                .pollInterval(pollInterval);
+    }
+
+    /**
+     * Рассчитывает интервал опроса на основе общего таймаута для оптимизации.
+     * Чем дольше ожидание, тем реже опросы, чтобы не перегружать систему.
+     *
+     * @param timeout Общая длительность таймаута.
+     * @return Рассчитанный интервал опроса.
      */
     private static Duration getAdjustedInterval(Duration timeout) {
-        long minutes = timeout.toMinutes();
-        if (minutes <= 1) {
-            return INTERVAL.multipliedBy(3);
-        } else if (minutes <= 3) {
-            return INTERVAL.multipliedBy(5);
+        long seconds = timeout.toSeconds();
+        if (seconds <= 15) {
+            return DEFAULT_POLL_INTERVAL; // 1 секунда
+        } else if (seconds <= 60) {
+            return Duration.of(2, ChronoUnit.SECONDS); // 2 секунды
         } else {
-            return INTERVAL.multipliedBy(10);
+            return Duration.of(5, ChronoUnit.SECONDS); // 5 секунд
         }
     }
 }

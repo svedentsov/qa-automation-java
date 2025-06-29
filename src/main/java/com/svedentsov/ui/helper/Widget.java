@@ -5,6 +5,7 @@ import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.SelenideElement;
 import com.codeborne.selenide.WebDriverRunner;
 import com.svedentsov.steps.manager.UiManager;
+import com.svedentsov.utils.WaitUtils;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.openqa.selenium.By;
@@ -18,7 +19,6 @@ import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.$;
 import static com.codeborne.selenide.Selenide.$$;
 import static com.svedentsov.utils.WaitUtils.TIMEOUT;
-import static com.svedentsov.utils.WaitUtils.doWait;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -195,8 +195,9 @@ public class Widget<T extends Widget<T>> {
      * @return текущий виджет
      */
     public T waitToAppear() {
-        doWait().untilAsserted(
-                () -> assertThat(isDisplayed()).as("Виджет не виден").isTrue());
+        String description = "Ожидание появления виджета: " + locator;
+        WaitUtils.waitUntilAsserted(description,
+                () -> assertThat(isDisplayed()).as("Виджет должен быть видим").isTrue());
         return (T) this;
     }
 
@@ -214,13 +215,7 @@ public class Widget<T extends Widget<T>> {
      * @return текущий виджет
      */
     public T waitAppear(int seconds) {
-        long originalTimeout = Configuration.timeout;
-        try {
-            Configuration.timeout = 1000L * seconds;
-            $(locator).should(appear);
-        } finally {
-            Configuration.timeout = originalTimeout;
-        }
+        $(locator).should(appear, Duration.ofSeconds(seconds));
         return (T) this;
     }
 
@@ -231,13 +226,7 @@ public class Widget<T extends Widget<T>> {
      * @return текущий виджет
      */
     public T waitDisappear(int seconds) {
-        long originalTimeout = Configuration.timeout;
-        try {
-            Configuration.timeout = 1000L * seconds;
-            $(locator).should(disappear);
-        } finally {
-            Configuration.timeout = originalTimeout;
-        }
+        $(locator).should(disappear, Duration.ofSeconds(seconds));
         return (T) this;
     }
 
@@ -357,8 +346,10 @@ public class Widget<T extends Widget<T>> {
      * @param timeout тайм-аут для ожидания
      */
     protected void waitToDisappear(Duration timeout) {
-        doWait().timeout(timeout).untilAsserted(
-                () -> assertThat(isDisplayed()).as("Виджет виден").isFalse());
+        String description = "Ожидание исчезновения виджета: " + locator;
+        WaitUtils.waitUntilAsserted(description,
+                () -> assertThat(isDisplayed()).as("Виджет должен был исчезнуть, но все еще виден").isFalse(),
+                timeout);
     }
 
     /**
