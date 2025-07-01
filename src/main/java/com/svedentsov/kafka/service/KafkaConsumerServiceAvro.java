@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.service;
 
-import com.svedentsov.kafka.config.KafkaListenerConfig;
+import com.svedentsov.kafka.factory.ConsumerFactory;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
 import com.svedentsov.kafka.processor.RecordProcessorAvro;
@@ -16,82 +16,78 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация сервиса потребителя Kafka для данных в формате Avro.
- * Использует KafkaListenerManager для управления listener-ами.
+ * Реализация {@link KafkaConsumerService} для работы с записями в формате AVRO.
+ * Этот сервис управляет жизненным циклом слушателей для AVRO-топиков и предоставляет
+ * доступ к полученным записям, преобразуя их полезную нагрузку в JSON-строку
+ * для удобства валидации и обработки в тестах.
  */
 @Slf4j
 public class KafkaConsumerServiceAvro implements KafkaConsumerService {
 
     private final KafkaListenerManager listenerManager;
+    private final KafkaRecordsManager recordsManager;
+    private final ConsumerFactory consumerFactory;
 
     /**
-     * Конструктор, создаёт собственный KafkaListenerManager на базе переданного конфига.
+     * Создает экземпляр сервиса для AVRO сообщений.
      *
-     * @param config конфигурация listener-ов, не null
-     * @throws IllegalArgumentException если config == null
+     * @param consumerFactory Фабрика для создания низкоуровневых Kafka Consumers.
+     * @param listenerManager Менеджер жизненного цикла слушателей. Не может быть {@code null}.
+     * @param recordsManager  Менеджер для хранения полученных записей. Не может быть {@code null}.
      */
-    public KafkaConsumerServiceAvro(KafkaListenerConfig config) {
-        requireNonNull(config, "KafkaListenerConfig не может быть null.");
-        this.listenerManager = new KafkaListenerManager(config);
+    public KafkaConsumerServiceAvro(ConsumerFactory consumerFactory, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
+        this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null.");
+        this.listenerManager = requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
+        this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");
     }
 
-    /**
-     * Альтернативный конструктор: если менеджер создаётся или управляется извне.
-     *
-     * @param listenerManager готовый менеджер, не null
-     * @throws IllegalArgumentException если listenerManager == null
-     */
-    public KafkaConsumerServiceAvro(KafkaListenerManager listenerManager) {
-        requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
-        this.listenerManager = listenerManager;
-    }
-
-    /**
-     * Запускает прослушивание указанного топика для данных в формате Avro.
-     *
-     * @param topic   название топика, не null/пустое
-     * @param timeout таймаут polling'а
-     */
     @Override
     public void startListening(String topic, Duration timeout) {
-        listenerManager.startListening(topic, timeout, true);
-        log.info("Начато прослушивание AVRO-топика '{}'", topic);
+        log.info("Запрос на запуск прослушивания AVRO-топика '{}'...", topic);
+        listenerManager.startListening(topic, timeout, true, this.recordsManager);
     }
 
-    /**
-     * Останавливает прослушивание указанного топика.
-     *
-     * @param topic название топика, не null/пустое
-     */
     @Override
     public void stopListening(String topic) {
-        listenerManager.stopListening(topic);
-        log.info("Завершено прослушивание AVRO-топика '{}'", topic);
+        log.info("Запрос на остановку прослушивания AVRO-топика '{}'...", topic);
+        if (listenerManager.stopListening(topic)) {
+            log.info("Прослушивание AVRO-топика '{}' успешно остановлено.", topic);
+        } else {
+            log.warn("Не удалось остановить прослушивание AVRO-топика '{}', возможно, он не был запущен.", topic);
+        }
+    }
+
+    @Override
+    public List<ConsumerRecord<String, String>> getAllRecords(String topic) {
+        return recordsManager.getRecords(topic).stream()
+                .map(this::convertAvroRecordToJsonRecord)
+                .collect(Collectors.toList());
     }
 
     /**
-     * Получает все уникальные записи из указанного топика и преобразует их в строки.
+     * Преобразует запись с {@link GenericRecord} в запись со строковым JSON.
      *
-     * @param topic название топика, не null/пустое
-     * @return список строковых представлений Avro-записей; пустой список, если записей нет
+     * @param avroRecord Исходная запись.
+     * @return Новая запись {@link ConsumerRecord} с JSON-строкой в качестве значения.
      */
-    @SuppressWarnings("unchecked")
-    @Override
-    public List<ConsumerRecord<String, String>> getAllRecords(String topic) {
-        // Преобразуем GenericRecord → JSON с помощью Avro JSON encoder
-        return KafkaRecordsManager.getRecords(topic).stream()
-                .map(record -> {
-                    Object val = record.value();
-                    if (!(val instanceof GenericRecord)) {
-                        log.error("Ожидался GenericRecord, но получен {} для топика {}", val == null ? "null" : val.getClass().getName(), topic);
-                        throw new IllegalArgumentException("Неверный тип записи для Avro-потребителя");
-                    }
-                    GenericRecord gr = (GenericRecord) val;
-                    String json = RecordProcessorAvro.genericRecordToJson(gr, gr.getSchema());
-                    String keyStr = record.key() != null ? record.key().toString() : null;
-                    return new ConsumerRecord<>(record.topic(), record.partition(), record.offset(), keyStr, json);
-                })
-                .collect(Collectors.toList());
+    private ConsumerRecord<String, String> convertAvroRecordToJsonRecord(ConsumerRecord<?, ?> avroRecord) {
+        Object value = avroRecord.value();
+        if (!(value instanceof GenericRecord)) {
+            log.error("Ожидался GenericRecord, но получен {} для топика {}", value == null ? "null" : value.getClass().getName(), avroRecord.topic());
+            throw new IllegalArgumentException("Неверный тип записи для Avro-потребителя: " + value.getClass().getName());
+        }
+
+        GenericRecord genericRecord = (GenericRecord) value;
+        String jsonValue = RecordProcessorAvro.genericRecordToJson(genericRecord, genericRecord.getSchema());
+        String key = (avroRecord.key() instanceof String) ? (String) avroRecord.key() : null;
+
+        return new ConsumerRecord<>(
+                avroRecord.topic(),
+                avroRecord.partition(),
+                avroRecord.offset(),
+                key,
+                jsonValue
+        );
     }
 
     @Override

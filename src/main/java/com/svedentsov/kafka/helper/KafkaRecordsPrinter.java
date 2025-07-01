@@ -1,6 +1,7 @@
 package com.svedentsov.kafka.helper;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.common.header.Header;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -10,62 +11,102 @@ import java.util.Map;
  * Утилитарный класс для печати записей, полученных из Kafka.
  * Этот класс предоставляет методы для вывода на экран всех записей из всех топиков или из конкретного топика.
  */
-public class KafkaRecordsPrinter {
+public final class KafkaRecordsPrinter {
+
+    // Приватный конструктор, чтобы предотвратить создание экземпляров утилитного класса.
+    private KafkaRecordsPrinter() {
+    }
 
     /**
-     * Печатает все уникальные записи для всех топиков.
-     * Для каждого топика отображается его название, а затем печатаются все уникальные записи.
+     * Выводит в консоль все записи из всех топиков, содержащихся в предоставленном менеджере.
+     *
+     * @param recordsManager Экземпляр менеджера, содержащий записи для вывода.
      */
-    public static void printAllRecords() {
-        Map<String, List<ConsumerRecord<?, ?>>> allRecords = KafkaRecordsManager.getAllRecords();
+    public static void printAllRecords(KafkaRecordsManager recordsManager) {
+        if (recordsManager == null) {
+            System.out.println("KafkaRecordsManager не предоставлен (null).");
+            return;
+        }
+        Map<String, List<ConsumerRecord<?, ?>>> allRecords = recordsManager.getAllRecords();
+        if (allRecords.isEmpty()) {
+            System.out.println("В менеджере нет записей для вывода.");
+            return;
+        }
         allRecords.forEach((topic, recordsList) -> {
-            System.out.println("Топик: " + topic);
+            System.out.println("==================================================");
+            System.out.printf("Топик: %s (найдено %d записей)%n", topic, recordsList.size());
+            System.out.println("--------------------------------------------------");
             printRecords(recordsList);
         });
     }
 
     /**
-     * Печатает все уникальные записи для указанного топика.
-     * Если для указанного топика нет записей, выводится соответствующее сообщение.
+     * Выводит в консоль все записи для конкретного топика из предоставленного менеджера.
      *
-     * @param topic название топика, записи для которого нужно напечатать
+     * @param topic          Имя топика, записи которого нужно вывести.
+     * @param recordsManager Экземпляр менеджера, содержащий записи.
      */
-    public static void printAllRecords(String topic) {
-        List<ConsumerRecord<?, ?>> recordsList = KafkaRecordsManager.getRecords(topic);
+    public static void printAllRecords(String topic, KafkaRecordsManager recordsManager) {
+        if (recordsManager == null) {
+            System.out.printf("KafkaRecordsManager не предоставлен (null) для топика: %s%n", topic);
+            return;
+        }
+        List<ConsumerRecord<?, ?>> recordsList = recordsManager.getRecords(topic);
         if (recordsList.isEmpty()) {
-            System.out.println("Нет записей для топика: " + topic);
+            System.out.printf("Нет записей для топика: %s%n", topic);
         } else {
-            System.out.println("Топик: " + topic);
+            System.out.println("==================================================");
+            System.out.printf("Топик: %s (найдено %d записей)%n", topic, recordsList.size());
+            System.out.println("--------------------------------------------------");
             printRecords(recordsList);
         }
     }
 
     /**
-     * Печатает записи из списка уникальных записей.
-     * Для каждой записи отображаются заголовки, смещение, ключ и значение.
+     * Выводит в консоль содержимое предоставленного списка записей.
      *
-     * @param recordsList список уникальных записей, которые нужно напечатать
+     * @param recordsList Список записей для вывода.
      */
-    private static void printRecords(List<ConsumerRecord<?, ?>> recordsList) {
-        recordsList.forEach(KafkaRecordsPrinter::printRecord);
+    public static void printRecords(List<ConsumerRecord<?, ?>> recordsList) {
+        if (recordsList == null || recordsList.isEmpty()) {
+            System.out.println("Список записей пуст или не предоставлен.");
+            return;
+        }
+        for (int i = 0; i < recordsList.size(); i++) {
+            System.out.printf("--- Запись #%d ---\n", i + 1);
+            printRecord(recordsList.get(i));
+        }
     }
 
     /**
-     * Печатает информацию об одной записи.
-     * Отображаются заголовки, смещение, ключ и значение записи.
+     * Форматирует и выводит в консоль одну запись Kafka.
      *
-     * @param record запись, информацию о которой нужно напечатать
+     * @param record Запись для вывода.
      */
-    private static void printRecord(ConsumerRecord<?, ?> record) {
+    public static void printRecord(ConsumerRecord<?, ?> record) {
+        if (record == null) {
+            System.out.println("  Запись: null");
+            return;
+        }
         try {
-            System.out.println("Заголовки:");
-            record.headers().forEach(header ->
-                    System.out.println(header.key() + ": " + new String(header.value(), StandardCharsets.UTF_8))
-            );
-            System.out.printf("Смещение: %d, ключ: %s, значение: %s%n", record.offset(), record.key(), record.value());
+            System.out.printf("  Партиция: %d\n", record.partition());
+            System.out.printf("  Смещение: %d\n", record.offset());
+            System.out.printf("  Ключ: %s\n", record.key());
+            System.out.printf("  Значение: %s\n", record.value());
+
+            if (record.headers() != null) {
+                System.out.println("  Заголовки:");
+                boolean hasHeaders = false;
+                for (Header header : record.headers()) {
+                    hasHeaders = true;
+                    System.out.printf("    - %s: %s\n", header.key(), new String(header.value(), StandardCharsets.UTF_8));
+                }
+                if (!hasHeaders) {
+                    System.out.println("    (пусто)");
+                }
+            }
         } catch (Exception e) {
             System.err.println("Ошибка при печати записи: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }

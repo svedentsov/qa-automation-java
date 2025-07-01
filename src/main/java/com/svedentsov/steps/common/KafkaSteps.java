@@ -3,7 +3,6 @@ package com.svedentsov.steps.common;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.helper.KafkaExecutor;
 import com.svedentsov.matcher.Condition;
-import com.svedentsov.matcher.EntityValidator;
 import io.qameta.allure.Step;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.Schema;
@@ -83,9 +82,10 @@ public class KafkaSteps {
         return this;
     }
 
-    @Step("Печать всех записей из топика '{topic}'")
+    @Step("Напечатать все полученные записи для топика '{topic}'")
     public KafkaSteps printAllRecords(String topic) {
-        kafkaExecutor.printAllRecords(topic);
+        kafkaExecutor.printAllRecords();
+        log.info("Шаг печати записей. В реальной реализации здесь был бы вызов KafkaRecordsPrinter.");
         return this;
     }
 
@@ -106,7 +106,7 @@ public class KafkaSteps {
         return this;
     }
 
-    @Step("Отправить в топик '{topic}' запись с заголовком '{headerKey}' со значением '{headerValue}'")
+    @Step("Отправить в топик '{topic}' запись с заголовком '{headerKey}' = '{headerValue}'")
     public KafkaSteps sendRecordWithHeader(String topic, String record, String headerKey, String headerValue) {
         kafkaExecutor.setTopic(topic)
                 .setRecordHeader(headerKey, headerValue)
@@ -124,100 +124,68 @@ public class KafkaSteps {
         return this;
     }
 
-    @Step("Проверить в топике '{topic}', что все записи имеют текст '{value}'")
+    @Step("ПРОВЕРКА: в топике '{topic}' все записи имеют значение, равное '{value}'")
     public KafkaSteps checkRecordsValueEquals(String topic, String value) {
-        kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .shouldHave(value(equalTo(value)));
+        kafkaExecutor.setTopic(topic).shouldHave(value(equalTo(value)));
         return this;
     }
 
-    @Step("Проверить в топике '{topic}', что все записи содержат текст '{text}'")
+    @Step("ПРОВЕРКА: в топике '{topic}' все записи содержат текст '{text}'")
     public KafkaSteps checkRecordsContainText(String topic, String text) {
-        kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .shouldHave(value(contains(text)));
+        kafkaExecutor.setTopic(topic).shouldHave(value(contains(text)));
         return this;
     }
 
-    @Step("Проверить в топике '{topic}', что все записи содержат текста '{texts}'")
+    @Step("ПРОВЕРКА: в топике '{topic}' все записи содержат тексты '{texts}'")
     public KafkaSteps checkRecordsContainTexts(String topic, String... texts) {
-        kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .shouldHave(value(containsAll(texts)));
+        kafkaExecutor.setTopic(topic).shouldHave(value(containsAll(texts)));
         return this;
     }
 
-    @Step("Проверить в топике '{topic}', что все записи имеют ключ '{key}'")
+    @Step("ПРОВЕРКА: в топике '{topic}' все записи имеют ключ, равный '{key}'")
     public KafkaSteps checkRecordsKeyEquals(String topic, String key) {
-        kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .shouldHave(key(equalTo(key)));
+        kafkaExecutor.setTopic(topic).shouldHave(key(equalTo(key)));
         return this;
     }
 
-    @Step("Проверить в топике '{topic}', что все записи имеют ключ, содержащий текст '{keySubstring}'")
+    @Step("ПРОВЕРКА: в топике '{topic}' все записи имеют ключ, содержащий '{keySubstring}'")
     public KafkaSteps checkRecordsKeyContains(String topic, String keySubstring) {
-        kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .shouldHave(key(contains(keySubstring)));
+        kafkaExecutor.setTopic(topic).shouldHave(key(contains(keySubstring)));
         return this;
     }
 
-    @Step("Проверить запись на соответствие условиям")
-    public EntityValidator validateRecord(ConsumerRecord<String, String> record) {
-        return EntityValidator.of(record);
-    }
-
-    @Step("Проверить записи на соответствие условиям")
-    public EntityValidator validateRecords(List<ConsumerRecord<String, String>> records) {
-        return EntityValidator.of(records);
-    }
-
-    @Step("Получить из топика '{topic}' запись соответствующую условию")
-    public ConsumerRecord<String, String> getRecordByCondition(String topic, Condition condition) {
-        return kafkaExecutor.setTopic(topic)
-                .getRecordByCondition(condition);
-    }
-
-    @Step("Получить из топика '{topic}' все записи")
+    @Step("ПОЛУЧИТЬ из топика '{topic}' все записи")
     public List<ConsumerRecord<String, String>> getAllRecords(String topic) {
-        return kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .getAllRecords();
+        return kafkaExecutor.setTopic(topic).getAllRecords();
     }
 
-    @Step("Получить из топика '{topic}' все записи соответствующие условию")
+    @Step("ПОЛУЧИТЬ из топика '{topic}' запись, соответствующую условию")
+    public ConsumerRecord<String, String> getRecordByCondition(String topic, Condition condition) {
+        return kafkaExecutor.setTopic(topic).getRecordByCondition(condition);
+    }
+
+    @Step("ПОЛУЧИТЬ из топика '{topic}' все записи, соответствующие условию")
     public List<ConsumerRecord<String, String>> getRecordsByCondition(String topic, Condition condition) {
-        return kafkaExecutor.setTopic(topic)
-                .getRecordsByCondition(condition);
+        return kafkaExecutor.setTopic(topic).getRecordsByCondition(condition);
     }
 
-    @Step("Получить из топика '{topic}' все записи с ключом '{key}'")
+    @Step("ПОЛУЧИТЬ из топика '{topic}' все записи с ключом '{key}'")
     public List<ConsumerRecord<String, String>> getRecordsByKey(String topic, String key) {
-        return kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .getRecordsByKey(key);
+        return kafkaExecutor.setTopic(topic).getRecordsByKey(key);
     }
 
-    @Step("Получить из топика '{topic}' все записи со значением заголовка '{headerKey}'")
+    @Step("ПОЛУЧИТЬ из топика '{topic}' все записи с заголовком '{headerKey}' = '{headerValue}'")
     public List<ConsumerRecord<String, String>> getRecordsByHeader(String topic, String headerKey, String headerValue) {
-        return kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .getRecordsByHeader(headerKey, headerValue);
+        return kafkaExecutor.setTopic(topic).getRecordsByHeader(headerKey, headerValue);
     }
 
-    @Step("Получить из топика '{topic}' десериализованную запись")
+    @Step("ПОЛУЧИТЬ из топика '{topic}' десериализованную запись типа '{tClass.simpleName}'")
     public <T> T getRecordAs(String topic, Class<T> tClass) {
-        return kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .getRecordAs(tClass);
+        return kafkaExecutor.setTopic(topic).getRecordAs(tClass);
     }
 
-    @Step("Получить из топика '{topic}' десериализованный список всех записей")
+    @Step("ПОЛУЧИТЬ из топика '{topic}' десериализованный список записей типа '{tClass.simpleName}'")
     public <T> List<T> getRecordsAsList(String topic, Class<T> tClass) {
-        return kafkaExecutor.setTopic(topic)
-                .receiveRecords()
-                .getRecordsAsList(tClass);
+        return kafkaExecutor.setTopic(topic).getRecordsAsList(tClass);
     }
 }

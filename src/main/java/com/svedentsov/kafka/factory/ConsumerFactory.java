@@ -2,31 +2,37 @@ package com.svedentsov.kafka.factory;
 
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 
+import java.io.Closeable;
+
 /**
- * Фабрика для создания KafkaConsumer.
- * Позволяет заменять реализацию для тестов.
+ * Фабрика для создания экземпляров {@link KafkaConsumer}.
+ * В отличие от {@link ProducerFactory}, данная фабрика <b>не кэширует</b> создаваемые
+ * экземпляры, так как {@link KafkaConsumer} не является потокобезопасным. Каждый вызов
+ * create-метода должен возвращать новый экземпляр, жизненным циклом которого управляет
+ * вызывающий код.
  */
-public interface ConsumerFactory {
+public interface ConsumerFactory extends Closeable {
 
     /**
-     * Создаёт KafkaConsumer для строкового формата.
+     * Создаёт <b>новый</b> экземпляр {@link KafkaConsumer} для строкового формата.
      *
-     * @param topicName имя топика
-     * @return KafkaConsumer<String, String>
+     * @param topicName имя топика (может использоваться для получения специфичной конфигурации).
+     * @return новый экземпляр {@link KafkaConsumer<String, String>}.
      */
     KafkaConsumer<String, String> createStringConsumer(String topicName);
 
     /**
-     * Создаёт KafkaConsumer для Avro-формата.
+     * Создаёт <b>новый</b> экземпляр {@link KafkaConsumer} для Avro-формата.
      *
-     * @param topicName имя топика
-     * @return KafkaConsumer<String, Object>
+     * @param topicName имя топика (может использоваться для получения специфичной конфигурации).
+     * @return новый экземпляр {@link KafkaConsumer<String, Object>}.
      */
     KafkaConsumer<String, Object> createAvroConsumer(String topicName);
 
     /**
-     * Явно закрывает все ресурсы консьюмеров, созданных данной фабрикой.
-     * Вызывать при завершении работы.
+     * Закрывает ресурсы, принадлежащие самой фабрике.
+     * В реализации по умолчанию этот метод пуст, так как фабрика не владеет созданными консьюмерами.
      */
-    void closeAll();
+    @Override
+    void close();
 }

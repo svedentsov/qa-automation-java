@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.service;
 
-import com.svedentsov.kafka.config.KafkaListenerConfig;
+import com.svedentsov.kafka.factory.ConsumerFactory;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
 import lombok.extern.slf4j.Slf4j;
@@ -14,34 +14,28 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация сервиса потребителя Kafka для строковых данных.
- * Использует {@link KafkaListenerManager} для управления подпиской и получением записей.
+ * Реализация {@link KafkaConsumerService} для работы с записями в строковом формате.
+ * Этот сервис управляет жизненным циклом слушателей для топиков со строковыми данными
+ * и предоставляет доступ к полученным записям через {@link KafkaRecordsManager}.
  */
 @Slf4j
 public class KafkaConsumerServiceString implements KafkaConsumerService {
 
     private final KafkaListenerManager listenerManager;
+    private final KafkaRecordsManager recordsManager;
+    private final ConsumerFactory consumerFactory;
 
     /**
-     * Конструктор, создающий менеджер KafkaListener на основе переданной конфигурации.
+     * Создает экземпляр сервиса для строковых сообщений.
      *
-     * @param config конфигурация KafkaListener'а (не null)
-     * @throws IllegalArgumentException если {@code config} равен {@code null}
+     * @param consumerFactory Фабрика для создания низкоуровневых Kafka Consumers.
+     * @param listenerManager Менеджер жизненного цикла слушателей. Не может быть {@code null}.
+     * @param recordsManager  Менеджер для хранения полученных записей. Не может быть {@code null}.
      */
-    public KafkaConsumerServiceString(KafkaListenerConfig config) {
-        requireNonNull(config, "KafkaListenerConfig не может быть null.");
-        this.listenerManager = new KafkaListenerManager(config);
-    }
-
-    /**
-     * Конструктор, принимающий готовый {@link KafkaListenerManager}.
-     *
-     * @param listenerManager менеджер KafkaListener'а (не null)
-     * @throws IllegalArgumentException если {@code listenerManager} равен {@code null}
-     */
-    public KafkaConsumerServiceString(KafkaListenerManager listenerManager) {
-        requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
-        this.listenerManager = listenerManager;
+    public KafkaConsumerServiceString(ConsumerFactory consumerFactory, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
+        this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null.");
+        this.listenerManager = requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
+        this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");
     }
 
     /**
@@ -52,8 +46,8 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
      */
     @Override
     public void startListening(String topic, Duration timeout) {
-        listenerManager.startListening(topic, timeout, false);
-        log.info("Начато прослушивание строкового топика '{}'", topic);
+        log.info("Запрос на запуск прослушивания строкового топика '{}'...", topic);
+        listenerManager.startListening(topic, timeout, false, this.recordsManager);
     }
 
     /**
@@ -63,8 +57,12 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
      */
     @Override
     public void stopListening(String topic) {
-        listenerManager.stopListening(topic);
-        log.info("Завершено прослушивание строкового топика '{}'", topic);
+        log.info("Запрос на остановку прослушивания строкового топика '{}'...", topic);
+        if (listenerManager.stopListening(topic)) {
+            log.info("Прослушивание строкового топика '{}' успешно остановлено.", topic);
+        } else {
+            log.warn("Не удалось остановить прослушивание строкового топика '{}', возможно, он не был запущен.", topic);
+        }
     }
 
     /**
@@ -73,10 +71,10 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
      * @param topic название Kafka-топика
      * @return список записей {@link ConsumerRecord} с ключами и значениями в виде строк
      */
-    @SuppressWarnings("unchecked")
     @Override
+    @SuppressWarnings("unchecked")
     public List<ConsumerRecord<String, String>> getAllRecords(String topic) {
-        return KafkaRecordsManager.getRecords(topic).stream()
+        return recordsManager.getRecords(topic).stream()
                 .map(record -> (ConsumerRecord<String, String>) record)
                 .collect(Collectors.toList());
     }

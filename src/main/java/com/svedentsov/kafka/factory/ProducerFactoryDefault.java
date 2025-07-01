@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.factory;
 
-import com.svedentsov.kafka.config.DefaultKafkaConfigProvider; // Импортируем новый провайдер
+import com.svedentsov.kafka.config.DefaultKafkaConfigProvider;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.generic.GenericRecord;
@@ -16,9 +16,9 @@ import static java.util.Objects.requireNonNull;
 /**
  * Потокобезопасная реализация {@link ProducerFactory} по умолчанию.
  * Кэширует созданные экземпляры {@link KafkaProducer} (по одному на каждый тип сериализатора)
- * для повторного использования. Это стандартная практика, позволяющая избежать
+ * для повторного использования. Это является стандартной практикой, так как {@link KafkaProducer}
+ * потокобезопасен и его создание является ресурсоемкой операцией. Такой подход позволяет избежать
  * накладных расходов на создание новых TCP-соединений с брокерами Kafka при каждой отправке.
- * Использует DefaultKafkaConfigProvider для получения базовых конфигураций.
  */
 @Slf4j
 public class ProducerFactoryDefault implements ProducerFactory {
@@ -56,8 +56,7 @@ public class ProducerFactoryDefault implements ProducerFactory {
      * @return новый экземпляр {@link KafkaProducer}.
      */
     private <K, V> KafkaProducer<K, V> createProducerInternal(Class<?> keySerializerClass, Class<?> valueSerializerClass) {
-        log.info("Создание нового экземпляра KafkaProducer [KeySerializer: {}, ValueSerializer: {}]",
-                keySerializerClass.getSimpleName(), valueSerializerClass.getSimpleName());
+        log.info("Создание нового экземпляра KafkaProducer [KeySerializer: {}, ValueSerializer: {}]", keySerializerClass.getSimpleName(), valueSerializerClass.getSimpleName());
         Properties props = configProvider.getProducerConfig(null);
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, keySerializerClass.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, valueSerializerClass.getName());
@@ -66,7 +65,7 @@ public class ProducerFactoryDefault implements ProducerFactory {
 
     @Override
     public void close() {
-        log.info("Начало закрытия всех кэшированных продюсеров...");
+        log.info("Инициировано закрытие всех кэшированных продюсеров...");
         closeProducer(stringProducerRef.getAndSet(null), "String");
         closeProducer(avroProducerRef.getAndSet(null), "Avro");
         log.info("Все кэшированные продюсеры были закрыты.");

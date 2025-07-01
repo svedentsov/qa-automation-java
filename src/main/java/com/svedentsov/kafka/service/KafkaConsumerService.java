@@ -7,40 +7,45 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Сервис потребителя Kafka для тестов.
+ * Определяет контракт для сервиса-потребителя (consumer) сообщений из Kafka.
+ * Сервис предоставляет высокоуровневые методы для управления прослушиванием топиков
+ * и получения обработанных данных.
  */
 public interface KafkaConsumerService {
 
     /**
-     * Запускает прослушивание topic.
+     * Запускает прослушивание указанного топика.
+     * Метод должен быть неблокирующим и запускать прослушивание в фоновом режиме.
      *
-     * @param topic   имя топика
-     * @param timeout poll timeout
+     * @param topic   Имя топика для прослушивания.
+     * @param timeout Таймаут для операции опроса (poll) брокера Kafka.
      */
     void startListening(String topic, Duration timeout);
 
     /**
-     * Останавливает прослушивание.
+     * Останавливает прослушивание указанного топика.
      *
-     * @param topic имя топика
+     * @param topic Имя топика, прослушивание которого нужно прекратить.
      */
     void stopListening(String topic);
 
     /**
-     * Возвращает все сохранённые ConsumerRecord<String, String> (строка).
+     * Возвращает все полученные и сохраненные записи из указанного топика.
+     * <b>Важно:</b> Для Avro-сообщений значение (value) записи будет представлено в виде JSON-строки.
      *
-     * @param topic имя
-     * @return список
+     * @param topic Имя топика.
+     * @return Список записей {@link ConsumerRecord} с ключом и значением в виде строки.
      */
     List<ConsumerRecord<String, String>> getAllRecords(String topic);
 
     /**
-     * Для Avro: преобразует GenericRecord → String или POJO.
+     * Возвращает все полученные записи из топика, преобразуя их значения
+     * в заданный тип с помощью предоставленной функции-маппера.
      *
-     * @param topic   имя
-     * @param mapper  функция преобразования строки JSON → T
-     * @param <T>     тип
-     * @return список T
+     * @param topic  Имя топика.
+     * @param mapper Функция для преобразования строкового значения записи в объект типа {@code T}.
+     * @param <T>    Целевой тип данных.
+     * @return Список объектов типа {@code T}.
      */
     <T> List<T> getAllRecordsAs(String topic, Function<String, T> mapper);
 }
