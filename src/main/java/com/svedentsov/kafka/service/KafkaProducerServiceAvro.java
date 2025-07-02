@@ -8,6 +8,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Реализация {@link KafkaProducerService} для отправки сообщений в формате Avro ({@link GenericRecord}).
+ * Является конкретной реализацией шаблонного метода, определенного в {@link KafkaProducerServiceAbstract}.
  */
 public class KafkaProducerServiceAvro extends KafkaProducerServiceAbstract<GenericRecord> {
 
@@ -30,10 +31,10 @@ public class KafkaProducerServiceAvro extends KafkaProducerServiceAbstract<Gener
     protected void validateRecord(Record record) {
         super.validateRecord(record);
         Object avroValue = record.getAvroValue();
-        requireNonNull(avroValue, "Поле Avro-value в записи не может быть null.");
+        requireNonNull(avroValue, "Avro-значение (avroValue) в записи не может быть null.");
 
         if (!(avroValue instanceof GenericRecord)) {
-            throw new IllegalArgumentException("Неверный тип Avro-value: ожидался GenericRecord, но получен "
+            throw new IllegalArgumentException("Неверный тип Avro-значения: ожидался GenericRecord, но получен "
                     + avroValue.getClass().getName());
         }
     }

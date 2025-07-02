@@ -10,12 +10,12 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Конфигурация для KafkaListenerManager.
- * Содержит настройки таймаутов, поведение при ошибках, пул потоков и метрики.
- * Класс является неизменяемым (immutable) и рекомендуется для создания через Lombok @Builder.
+ * Неизменяемый (immutable) класс конфигурации для {@code KafkaListenerManager}.
+ * Содержит настройки таймаутов, поведение при ошибках и пул потоков.
+ * Рекомендуется создавать экземпляры с помощью паттерна "Строитель" (Builder), который генерируется Lombok.
  */
 @Value
-@Builder(toBuilder = true) // Для удобства создания из существующего объекта
+@Builder(toBuilder = true)
 public class KafkaListenerConfig {
 
     private static final Duration DEFAULT_SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);

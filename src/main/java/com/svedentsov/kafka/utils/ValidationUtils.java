@@ -9,7 +9,7 @@ import java.time.Duration;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Утилитарные методы для валидации аргументов.
+ * Утилитарный класс для общих методов валидации.
  */
 @Slf4j
 @UtilityClass
@@ -19,16 +19,25 @@ public final class ValidationUtils {
     /**
      * Проверяет, что строка не является null и не состоит из пробельных символов.
      *
-     * @param str     строка для проверки (не может быть {@code null})
-     * @param message сообщение для исключения, если проверка не пройдена
-     * @return исходная строка {@code str}, если она валидна
-     * @throws IllegalArgumentException если str является {@code null} или пустой/состоит из пробелов
+     * @param str     строка для проверки.
+     * @param message сообщение для исключения, если проверка не пройдена.
+     * @return исходная непустая строка.
+     * @throws IllegalArgumentException если str является {@code null} или пустой/состоит из пробелов.
      */
     public static String requireNonBlank(@NonNull String str, String message) {
-        if (str.isBlank()) throw new IllegalArgumentException(message);
+        if (str.isBlank()) {
+            throw new IllegalArgumentException(message);
+        }
         return str;
     }
 
+    /**
+     * Валидирует и нормализует таймаут для операции poll.
+     * Если таймаут null, отрицательный или нулевой, возвращает минимально допустимое значение.
+     *
+     * @param pollTimeout Таймаут для проверки.
+     * @return Валидный таймаут.
+     */
     public static Duration validatePollTimeout(Duration pollTimeout) {
         requireNonNull(pollTimeout, "Poll timeout не может быть null.");
         if (pollTimeout.isNegative() || pollTimeout.isZero()) {

@@ -7,6 +7,7 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Реализация {@link KafkaProducerService} для отправки сообщений, где значением является {@link String}.
+ * Является конкретной реализацией шаблонного метода, определенного в {@link KafkaProducerServiceAbstract}.
  */
 public class KafkaProducerServiceString extends KafkaProducerServiceAbstract<String> {
 
@@ -27,7 +28,7 @@ public class KafkaProducerServiceString extends KafkaProducerServiceAbstract<Str
     @Override
     protected void validateRecord(Record record) {
         super.validateRecord(record);
-        requireNonNull(record.getValue(), "Поле String-value в записи не может быть null.");
+        requireNonNull(record.getValue(), "Строковое значение (value) в записи не может быть null.");
     }
 
     /**

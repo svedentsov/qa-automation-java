@@ -1,12 +1,14 @@
 package com.svedentsov.kafka.config;
 
 import org.aeonbits.owner.Config;
+import org.aeonbits.owner.Config.Sources;
 
 /**
  * Интерфейс для загрузки конфигурации Kafka с использованием библиотеки Owner.
- * Конфигурационные параметры загружаются из файла kafka.properties.
+ * Позволяет декларативно описать конфигурационные параметры и привязать их
+ * к источнику (например, .properties файлу), предоставляя типизированный доступ к свойствам.
  */
-@Config.Sources("file:resources/kafka.properties")
+@Sources({"classpath:kafka.properties", "file:./kafka.properties"})
 public interface KafkaConfig extends Config {
 
     /**
