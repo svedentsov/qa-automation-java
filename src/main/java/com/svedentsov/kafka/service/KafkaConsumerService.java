@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.service;
 
-import com.svedentsov.kafka.helper.KafkaTopicListener.ConsumerStartStrategy;
+import com.svedentsov.kafka.helper.KafkaListenerManager.KafkaStartStrategyType; // Импортируем новое перечисление
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Duration;
@@ -19,22 +19,23 @@ public interface KafkaConsumerService {
      * Метод должен быть неблокирующим и запускать прослушивание в фоновом режиме.
      *
      * @param topic            Имя топика для прослушивания.
-     * @param timeout          Таймаут для операции опроса (poll) брокера Kafka.
+     * @param pollTimeout      Таймаут для операции опроса (poll) брокера Kafka.
      * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
      * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
-     *                         если startStrategy - {@link ConsumerStartStrategy#FROM_TIMESTAMP}.
-     *                         Может быть null для других стратегий.
+     * если startStrategy - {@link KafkaStartStrategyType#FROM_TIMESTAMP}.
+     * Может быть null для других стратегий.
      */
-    void startListening(String topic, Duration timeout, ConsumerStartStrategy startStrategy, Duration lookBackDuration);
+    void startListening(String topic, Duration pollTimeout, KafkaStartStrategyType startStrategy, Duration lookBackDuration);
 
     /**
-     * Запускает прослушивание указанного топика с стратегией по умолчанию (FROM_TIMESTAMP).
+     * Запускает прослушивание указанного топика с стратегией по умолчанию (FROM_TIMESTAMP)
+     * и продолжительностью "оглядки" назад в 2 минуты.
      *
-     * @param topic   Имя топика для прослушивания.
-     * @param timeout Таймаут для операции опроса (poll) брокера Kafka.
+     * @param topic     Имя топика для прослушивания.
+     * @param pollTimeout Таймаут для операции опроса (poll) брокера Kafka.
      */
-    default void startListening(String topic, Duration timeout) {
-        startListening(topic, timeout, ConsumerStartStrategy.FROM_TIMESTAMP, Duration.ofMinutes(2));
+    default void startListening(String topic, Duration pollTimeout) {
+        startListening(topic, pollTimeout, KafkaStartStrategyType.FROM_TIMESTAMP, Duration.ofMinutes(2));
     }
 
     /**

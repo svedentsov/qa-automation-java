@@ -8,6 +8,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
  * @param <V> Тип значения (value) в записи Kafka.
  */
 public interface RecordProcessor<V> {
+
     /**
      * Обрабатывает пачку записей из Kafka.
      *

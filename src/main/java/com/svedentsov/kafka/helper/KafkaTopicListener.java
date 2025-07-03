@@ -3,21 +3,18 @@ package com.svedentsov.kafka.helper;
 import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.exception.KafkaListenerException;
 import com.svedentsov.kafka.factory.ConsumerFactory;
+import com.svedentsov.kafka.helper.strategy.ConsumerStartStrategy;
 import com.svedentsov.kafka.processor.RecordProcessor;
 import com.svedentsov.kafka.processor.RecordProcessorAvro;
 import com.svedentsov.kafka.processor.RecordProcessorString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndTimestamp;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -28,63 +25,44 @@ import static com.svedentsov.kafka.utils.ValidationUtils.validatePollTimeout;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализует логику прослушивания одного топика Kafka в отдельном потоке.
- * Этот класс отвечает за создание консьюмера, подписку на топик,
- * получение и обработку сообщений с помощью соответствующего {@link RecordProcessor}.
- * Он управляет своим жизненным циклом (запуск, остановка) и обеспечивает
- * корректное освобождение ресурсов.
+ * {@code KafkaTopicListener} отвечает за прослушивание одного Kafka топика.
+ * Он управляет жизненным циклом KafkaConsumer, обработкой записей и применением
+ * стратегий запуска.
  */
 @Slf4j
 public class KafkaTopicListener implements AutoCloseable {
 
     private static final Duration INITIAL_POLL_TIMEOUT = Duration.ofMillis(100);
+
     private final String topicName;
     private final Duration pollTimeout;
     private final boolean isAvro;
     private final KafkaListenerConfig config;
     private final ConsumerFactory consumerFactory;
     private final RecordProcessor<?> recordProcessor;
+    private final ConsumerStartStrategy startStrategy; // Используем интерфейс стратегии
+
     private final AtomicBoolean isRunning = new AtomicBoolean(false);
     private final AtomicBoolean shutdownRequested = new AtomicBoolean(false);
+
     private volatile KafkaConsumer<String, ?> consumer;
     private volatile CompletableFuture<Void> listeningTask;
-    private final ConsumerStartStrategy startStrategy;
-    private final Duration lookBackDuration;
 
     /**
-     * Стратегии запуска консьюмера.
-     */
-    public enum ConsumerStartStrategy {
-        /**
-         * Начинать читать только новые записи (текущее поведение seekToEnd).
-         */
-        LATEST,
-        /**
-         * Начинать читать с самого начала топика.
-         */
-        EARLIEST,
-        /**
-         * Начинать читать с определенной временной метки (или ближайшего смещения).
-         */
-        FROM_TIMESTAMP
-    }
-
-    /**
-     * Создает экземпляр слушателя топика.
+     * Создает новый экземпляр {@code KafkaTopicListener}.
      *
-     * @param topicName        Имя топика для прослушивания.
-     * @param pollTimeout      Таймаут для операции poll.
-     * @param isAvro           {@code true}, если контент в формате Avro.
-     * @param config           Общая конфигурация слушателей.
-     * @param consumerFactory  Фабрика для создания Kafka Consumer.
-     * @param recordsManager   Менеджер для сохранения полученных записей.
-     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
-     * @param lookBackDuration Если startStrategy - {@link ConsumerStartStrategy#FROM_TIMESTAMP}, то это продолжительность,
-     *                         на которую нужно "оглянуться" назад от текущего момента. Может быть {@code null} для других стратегий.
-     * @throws IllegalArgumentException если {@code topicName} пустой, {@code config} или {@code consumerFactory} равны {@code null},
-     *                                  или {@code startStrategy} равен {@link ConsumerStartStrategy#FROM_TIMESTAMP}, но {@code lookBackDuration} равен {@code null}.
+     * @param topicName       Имя Kafka топика для прослушивания. Не может быть null или пустым.
+     * @param pollTimeout     Таймаут для операции {@code consumer.poll()}. Не может быть null и должен быть положительным.
+     * @param isAvro          Флаг, указывающий, являются ли сообщения в топике Avro или строковыми.
+     * @param config          Конфигурация слушателя Kafka. Не может быть null.
+     * @param consumerFactory Фабрика для создания экземпляров KafkaConsumer. Не может быть null.
+     * @param recordsManager  Менеджер для обработки и хранения полученных записей. Не может быть null.
+     * @param startStrategy   Стратегия, определяющая начальное смещение для потребителя. Не может быть null.
+     * @throws IllegalArgumentException если {@code topicName} пуст, {@code pollTimeout} недействителен,
+     *                                  или если {@code startStrategy} требует дополнительных параметров,
+     *                                  которые не были предоставлены или были предоставлены некорректно.
      */
-    public KafkaTopicListener(String topicName, Duration pollTimeout, boolean isAvro, KafkaListenerConfig config, ConsumerFactory consumerFactory, KafkaRecordsManager recordsManager, ConsumerStartStrategy startStrategy, Duration lookBackDuration) {
+    public KafkaTopicListener(String topicName, Duration pollTimeout, boolean isAvro, KafkaListenerConfig config, ConsumerFactory consumerFactory, KafkaRecordsManager recordsManager, ConsumerStartStrategy startStrategy) {
         this.topicName = requireNonBlank(topicName, "Название топика не может быть null или пустым.");
         this.pollTimeout = validatePollTimeout(pollTimeout);
         this.isAvro = isAvro;
@@ -92,23 +70,18 @@ public class KafkaTopicListener implements AutoCloseable {
         this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null.");
         this.recordProcessor = createRecordProcessor(requireNonNull(recordsManager, "KafkaRecordsManager не может быть null."));
         this.startStrategy = requireNonNull(startStrategy, "Стратегия запуска не может быть null.");
-        this.lookBackDuration = lookBackDuration;
-
-        if (startStrategy == ConsumerStartStrategy.FROM_TIMESTAMP && lookBackDuration == null) {
-            throw new IllegalArgumentException("lookBackDuration не может быть null, если startStrategy - FROM_TIMESTAMP.");
-        }
-        if (startStrategy != ConsumerStartStrategy.FROM_TIMESTAMP && lookBackDuration != null) {
-            log.warn("lookBackDuration указан, но не будет использован, так как startStrategy не FROM_TIMESTAMP.");
-        }
     }
 
     /**
-     * Запускает процесс прослушивания в отдельном потоке, управляемом предоставленным ExecutorService.
+     * Запускает прослушивание топика в асинхронном режиме.
+     * Этот метод инициирует цикл прослушивания в отдельном потоке, предоставляемом {@code executor}.
+     * Если слушатель уже запущен, будет выброшено исключение {@link IllegalStateException}.
      *
-     * @param executor Сервис для выполнения задачи прослушивания.
+     * @param executor Сервис-исполнитель (ExecutorService) для запуска задачи прослушивания. Не может быть null.
      * @throws IllegalStateException если слушатель уже запущен.
      */
     public void start(ExecutorService executor) {
+        requireNonNull(executor, "ExecutorService не может быть null.");
         if (isRunning.compareAndSet(false, true)) {
             log.info("Запуск слушателя для топика '{}'...", topicName);
             listeningTask = CompletableFuture.runAsync(this::runListeningLoop, executor)
@@ -120,14 +93,25 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Основной метод, выполняющий цикл прослушивания Kafka.
-     * Включает создание и подписку на консьюмера, применение стратегии старта
-     * и непрерывную обработку сообщений до запроса на остановку или возникновения критической ошибки.
+     * Основной цикл прослушивания Kafka.
+     * Этот метод выполняется в отдельном потоке и содержит логику получения и обработки сообщений.
+     * Он автоматически создает и подписывает KafkaConsumer, применяет стратегию запуска,
+     * а затем непрерывно опрашивает брокер на наличие новых записей, пока не будет запрошено завершение работы.
+     *
+     * @throws KafkaListenerException.LifecycleException если происходит критическая ошибка в жизненном цикле слушателя.
      */
     private void runListeningLoop() {
         try (KafkaConsumer<String, ?> consumer = createAndSubscribeConsumer()) {
             this.consumer = consumer; // Делаем консьюмер доступным для метода shutdown()
-            applyStartStrategy(); // Применяем стратегию запуска после подписки и назначения партиций
+
+            // Применяем стратегию запуска после того, как партиции будут назначены консьюмеру
+            Set<TopicPartition> assignedPartitions = consumer.assignment();
+            if (assignedPartitions.isEmpty()) {
+                log.warn("Для топика '{}' не назначено ни одной партиции. Невозможно применить стратегию смещения.", topicName);
+            } else {
+                startStrategy.apply(consumer, assignedPartitions, topicName);
+            }
+
             log.info("Начало цикла прослушивания для топика '{}'", topicName);
             while (shouldContinueProcessing()) {
                 processMessages();
@@ -143,11 +127,12 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Выполняет операцию poll для получения сообщений из Kafka и их последующую обработку.
-     * В случае ошибок обработки, логирует их и, при необходимости, приостанавливает работу
-     * в зависимости от конфигурации.
+     * Обрабатывает полученные сообщения из Kafka.
+     * Вызывает {@code consumer.poll()} для получения записей и передает их в {@code RecordProcessor}.
+     * В случае ошибки обработки, логирует её и либо останавливает работу (если настроено), либо ожидает.
      *
-     * @throws WakeupException если был вызван {@code wakeup()} на консьюмере.
+     * @throws WakeupException                            если consumer был "разбужен" вызовом {@code wakeup()}.
+     * @throws KafkaListenerException.ProcessingException если возникает ошибка обработки и {@code shouldStopOnError} установлен в true.
      */
     @SuppressWarnings("unchecked")
     private void processMessages() {
@@ -169,9 +154,10 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Инициирует остановку слушателя.
-     * Метод является идемпотентным, то есть повторные вызовы не приведут к дополнительным эффектам.
-     * Пытается корректно завершить работу консьюмера и ожидающей задачи.
+     * Инициирует процесс остановки слушателя.
+     * Метод безопасно прерывает цикл прослушивания, вызывая {@code consumer.wakeup()}
+     * и ожидает завершения асинхронной задачи прослушивания.
+     * Если задача не завершается в течение заданного таймаута, она принудительно отменяется.
      */
     public void shutdown() {
         if (shutdownRequested.compareAndSet(false, true)) {
@@ -193,8 +179,8 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Закрывает слушатель, вызывая метод {@link #shutdown()}.
-     * Позволяет использовать {@code KafkaTopicListener} в конструкции try-with-resources.
+     * Реализация метода {@code AutoCloseable.close()}, вызывающая {@code shutdown()}.
+     * Позволяет использовать {@code KafkaTopicListener} в try-with-resources блоках.
      */
     @Override
     public void close() {
@@ -202,10 +188,11 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Создает новый экземпляр {@link KafkaConsumer} и подписывается на указанный топик.
-     * Выполняет начальный опрос для назначения партиций консьюмеру.
+     * Создает и подписывает новый KafkaConsumer на указанный топик.
+     * Выполняет начальный {@code poll} для принудительного назначения партиций,
+     * что важно перед применением стратегий смещения.
      *
-     * @return Настроенный и подписанный {@link KafkaConsumer}.
+     * @return Настроенный и подписанный экземпляр {@link KafkaConsumer}.
      */
     private KafkaConsumer<String, ?> createAndSubscribeConsumer() {
         KafkaConsumer<String, ?> newConsumer = isAvro
@@ -218,61 +205,8 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Применяет выбранную стратегию запуска консьюмера ({@link ConsumerStartStrategy}).
-     * В зависимости от стратегии, консьюмер будет смещен на начало, конец или на определенную временную метку.
-     * Если партиции не назначены, выводит предупреждение.
-     */
-    private void applyStartStrategy() {
-        var partitions = consumer.assignment();
-        if (partitions.isEmpty()) {
-            log.warn("Для топика '{}' не назначено ни одной партиции. Невозможно применить стратегию смещения.", topicName);
-            return;
-        }
-
-        switch (startStrategy) {
-            case LATEST:
-                consumer.seekToEnd(partitions);
-                log.info("Consumer для топика '{}' смещен в конец всех {} партиций (LATEST).", topicName, partitions.size());
-                break;
-            case EARLIEST:
-                consumer.seekToBeginning(partitions);
-                log.info("Consumer для топика '{}' смещен в начало всех {} партиций (EARLIEST).", topicName, partitions.size());
-                break;
-            case FROM_TIMESTAMP:
-                // Вычисляем целевую временную метку для поиска смещений
-                long targetTimestamp = Instant.now().minus(lookBackDuration).toEpochMilli();
-                Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
-                for (TopicPartition partition : partitions) {
-                    timestampsToSearch.put(partition, targetTimestamp);
-                }
-
-                // Запрашиваем смещения по временным меткам
-                Map<TopicPartition, OffsetAndTimestamp> offsets = consumer.offsetsForTimes(timestampsToSearch);
-                for (TopicPartition partition : partitions) {
-                    OffsetAndTimestamp offsetAndTimestamp = offsets.get(partition);
-                    if (offsetAndTimestamp != null) {
-                        consumer.seek(partition, offsetAndTimestamp.offset());
-                        log.info("Consumer для топика '{}', партиция {} смещен на смещение {} (timestamp: {}).",
-                                topicName, partition.partition(), offsetAndTimestamp.offset(), offsetAndTimestamp.timestamp());
-                    } else {
-                        // Если для timestamp не найдено смещения (например, timestamp раньше самой первой записи),
-                        // смещаемся в начало, чтобы не пропустить возможные старые записи.
-                        consumer.seekToBeginning(Collections.singleton(partition));
-                        log.warn("Для топика '{}', партиция {} не найдено смещения по timestamp {}. Смещен в начало.",
-                                topicName, partition.partition(), targetTimestamp);
-                    }
-                }
-                break;
-            default:
-                log.warn("Неизвестная стратегия запуска консьюмера: {}. Используется стратегия LATEST.", startStrategy);
-                consumer.seekToEnd(partitions);
-                break;
-        }
-    }
-
-    /**
      * Выполняет очистку ресурсов после завершения цикла прослушивания.
-     * Устанавливает флаг {@code isRunning} в {@code false} и обнуляет ссылку на консьюмера.
+     * Сбрасывает флаги состояния и обнуляет ссылку на consumer.
      */
     private void cleanupAfterLoop() {
         isRunning.set(false);
@@ -281,11 +215,11 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Обрабатывает критические неперехваченные ошибки, возникшие в задаче прослушивания.
-     * Логирует ошибку, устанавливает флаги остановки и возвращает {@code null} для завершения {@link CompletableFuture}.
+     * Обрабатывает критические ошибки, которые возникают в асинхронной задаче прослушивания.
+     * Логирует ошибку, сбрасывает флаги состояния, чтобы сигнализировать о завершении работы.
      *
      * @param throwable Исключение, которое привело к критической ошибке.
-     * @return Всегда {@code null}.
+     * @return null, так как этот метод используется в {@code CompletableFuture.exceptionally}.
      */
     private Void handleCriticalError(Throwable throwable) {
         log.error("Критическая неперехваченная ошибка в задаче прослушивания для топика '{}'", topicName, throwable);
@@ -295,9 +229,9 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Создает соответствующий {@link RecordProcessor} (Avro или String) на основе флага {@code isAvro}.
+     * Создает соответствующий процессор записей на основе типа сообщений (Avro или String).
      *
-     * @param recordsManager Менеджер для сохранения полученных записей.
+     * @param recordsManager Менеджер записей, используемый процессором.
      * @return Экземпляр {@link RecordProcessor}.
      */
     private RecordProcessor<?> createRecordProcessor(KafkaRecordsManager recordsManager) {
@@ -307,8 +241,9 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Приостанавливает выполнение потока слушателя на заданное время после возникновения ошибки.
-     * Это помогает избежать "спама" ошибками и снизить нагрузку при временных проблемах.
+     * Приостанавливает выполнение потока на заданный таймаут после возникновения ошибки.
+     * Это предотвращает "спам" ошибками в логе и быстрый цикл при непрерывных сбоях.
+     * Обрабатывает прерывание потока во время ожидания.
      */
     private void sleepOnError() {
         try {
@@ -322,26 +257,26 @@ public class KafkaTopicListener implements AutoCloseable {
     }
 
     /**
-     * Проверяет, следует ли продолжать обработку сообщений.
-     * Возвращает {@code true}, если слушатель запущен, остановка не запрошена и поток не прерван.
+     * Проверяет, должен ли цикл прослушивания продолжать работу.
+     * Учитывает флаги {@code isRunning}, {@code shutdownRequested} и статус прерывания потока.
      *
-     * @return {@code true}, если цикл прослушивания должен продолжаться; иначе {@code false}.
+     * @return true, если цикл должен продолжаться; false в противном случае.
      */
     private boolean shouldContinueProcessing() {
         return isRunning.get() && !shutdownRequested.get() && !Thread.currentThread().isInterrupted();
     }
 
     /**
-     * Проверяет, активен ли слушатель в данный момент.
+     * Проверяет, активен ли в данный момент слушатель.
      *
-     * @return {@code true}, если слушатель запущен и не находится в процессе остановки; иначе {@code false}.
+     * @return true, если слушатель запущен и не запрошена его остановка; false в противном случае.
      */
     public boolean isRunning() {
         return isRunning.get() && !shutdownRequested.get();
     }
 
     /**
-     * Возвращает имя топика, который прослушивается.
+     * Возвращает имя топика, который прослушивает данный слушатель.
      *
      * @return Имя топика.
      */

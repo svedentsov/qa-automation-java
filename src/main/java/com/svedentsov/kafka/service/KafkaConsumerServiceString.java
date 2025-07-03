@@ -1,8 +1,8 @@
 package com.svedentsov.kafka.service;
 
 import com.svedentsov.kafka.helper.KafkaListenerManager;
+import com.svedentsov.kafka.helper.KafkaListenerManager.KafkaStartStrategyType;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
-import com.svedentsov.kafka.helper.KafkaTopicListener.ConsumerStartStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -14,9 +14,10 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация {@link KafkaConsumerService} для работы с записями в строковом формате.
- * Этот сервис управляет жизненным циклом слушателей для топиков со строковыми данными
- * и предоставляет доступ к полученным записям через {@link KafkaRecordsManager}.
+ * Реализация {@link KafkaConsumerService} для работы с Kafka топиками,
+ * содержащими сообщения в строковом формате.
+ * Предоставляет методы для запуска/остановки прослушивания и получения
+ * строковых сообщений.
  */
 @Slf4j
 public class KafkaConsumerServiceString implements KafkaConsumerService {
@@ -25,10 +26,10 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     private final KafkaRecordsManager recordsManager;
 
     /**
-     * Создает экземпляр сервиса для строковых сообщений.
+     * Создает новый экземпляр {@code KafkaConsumerServiceString}.
      *
-     * @param listenerManager Менеджер жизненного цикла слушателей. Не может быть {@code null}.
-     * @param recordsManager  Менеджер для хранения полученных записей. Не может быть {@code null}.
+     * @param listenerManager Менеджер слушателей Kafka. Не может быть null.
+     * @param recordsManager  Менеджер для хранения и доступа к полученным записям. Не может быть null.
      */
     public KafkaConsumerServiceString(KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
         this.listenerManager = requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
@@ -36,21 +37,25 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     }
 
     /**
-     * Запускает прослушивание указанного топика для строковых данных.
+     * Запускает прослушивание указанного строкового топика.
      *
-     * @param topic   название Kafka-топика
-     * @param timeout таймаут ожидания записи (poll timeout)
+     * @param topic            Имя топика для прослушивания.
+     * @param pollTimeout      Таймаут для операции опроса (poll) брокера Kafka.
+     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
+     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
+     *                         если startStrategy - {@link KafkaStartStrategyType#FROM_TIMESTAMP}.
+     *                         Может быть null для других стратегий.
      */
     @Override
-    public void startListening(String topic, Duration timeout, ConsumerStartStrategy startStrategy, Duration lookBackDuration) {
+    public void startListening(String topic, Duration pollTimeout, KafkaStartStrategyType startStrategy, Duration lookBackDuration) {
         log.info("Запрос на запуск прослушивания строкового топика '{}' со стратегией {}...", topic, startStrategy);
-        listenerManager.startListening(topic, timeout, false, this.recordsManager, startStrategy, lookBackDuration);
+        listenerManager.startListening(topic, pollTimeout, false, this.recordsManager, startStrategy, lookBackDuration);
     }
 
     /**
-     * Останавливает прослушивание указанного топика.
+     * Останавливает прослушивание указанного строкового топика.
      *
-     * @param topic название Kafka-топика
+     * @param topic Имя топика, прослушивание которого нужно прекратить.
      */
     @Override
     public void stopListening(String topic) {
@@ -63,10 +68,10 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     }
 
     /**
-     * Получает все записи из указанного топика.
+     * Возвращает все полученные и сохраненные записи из указанного строкового топика.
      *
-     * @param topic название Kafka-топика
-     * @return список записей {@link ConsumerRecord} с ключами и значениями в виде строк
+     * @param topic Имя топика.
+     * @return Список записей {@link ConsumerRecord} с ключом и значением в виде строки.
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -77,12 +82,13 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     }
 
     /**
-     * Получает все значения записей из топика и преобразует их через указанный маппер.
+     * Возвращает все полученные записи из строкового топика, преобразуя их значения
+     * в заданный тип с помощью предоставленной функции-маппера.
      *
-     * @param topic  название Kafka-топика
-     * @param mapper функция преобразования строки в объект типа {@code T}
-     * @param <T>    тип возвращаемых объектов
-     * @return список объектов, полученных из значений записей
+     * @param topic  Имя топика.
+     * @param mapper Функция для преобразования строкового значения записи в объект типа {@code T}.
+     * @param <T>    Целевой тип данных.
+     * @return Список объектов типа {@code T}.
      */
     @Override
     public <T> List<T> getAllRecordsAs(String topic, Function<String, T> mapper) {

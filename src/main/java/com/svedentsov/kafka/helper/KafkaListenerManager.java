@@ -3,7 +3,10 @@ package com.svedentsov.kafka.helper;
 import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.exception.KafkaListenerException.LifecycleException;
 import com.svedentsov.kafka.factory.ConsumerFactory;
-import com.svedentsov.kafka.helper.KafkaTopicListener.ConsumerStartStrategy;
+import com.svedentsov.kafka.helper.strategy.ConsumerStartStrategy;
+import com.svedentsov.kafka.helper.strategy.EarliestStartStrategy;
+import com.svedentsov.kafka.helper.strategy.FromTimestampStartStrategy;
+import com.svedentsov.kafka.helper.strategy.LatestStartStrategy;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
@@ -15,10 +18,9 @@ import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Управляет жизненным циклом слушателей топиков Kafka ({@link KafkaTopicListener}).
- * Этот класс отвечает за асинхронный запуск, остановку и мониторинг активных слушателей.
- * Он обеспечивает корректное завершение работы (graceful shutdown) при остановке JVM
- * или при вызове метода {@link #shutdown()}.
+ * {@code KafkaListenerManager} управляет жизненным циклом нескольких {@link KafkaTopicListener}s.
+ * Он предоставляет методы для запуска и остановки прослушивания топиков Kafka,
+ * а также для корректного завершения работы всех активных слушателей.
  */
 @Slf4j
 public class KafkaListenerManager implements AutoCloseable {
@@ -30,10 +32,12 @@ public class KafkaListenerManager implements AutoCloseable {
     private final ExecutorService executorService;
 
     /**
-     * Создает экземпляр менеджера слушателей.
+     * Создает новый экземпляр {@code KafkaListenerManager}.
+     * Инициализирует внутренние компоненты и регистрирует хук завершения работы JVM
+     * для корректного останова всех слушателей при выключении приложения.
      *
-     * @param config          Конфигурация для слушателей. Не может быть {@code null}.
-     * @param consumerFactory Фабрика для создания Kafka Consumers. Не может быть {@code null}.
+     * @param config          Конфигурация слушателей Kafka. Не может быть null.
+     * @param consumerFactory Фабрика для создания экземпляров KafkaConsumer. Не может быть null.
      */
     public KafkaListenerManager(KafkaListenerConfig config, ConsumerFactory consumerFactory) {
         this.config = requireNonNull(config, "KafkaListenerConfig не может быть null");
@@ -44,31 +48,34 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Асинхронно запускает прослушивание указанного топика с заданной стратегией старта.
+     * Асинхронно запускает прослушивание указанного топика Kafka с заданной стратегией.
+     * Если слушатель для данного топика уже существует, он не будет перезапущен.
+     * Возвращает {@link CompletableFuture}, который завершится, когда слушатель будет запущен,
+     * или с ошибкой, если запуск не удастся.
      *
-     * @param topic            Имя топика. Не может быть пустым.
-     * @param pollTimeout      Таймаут для опроса Kafka.
-     * @param isAvro           {@code true}, если используется формат Avro, иначе {@code false}.
-     * @param recordsManager   Экземпляр менеджера для хранения полученных записей.
-     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
-     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
-     *                         если {@code startStrategy} - {@link ConsumerStartStrategy#FROM_TIMESTAMP}.
-     *                         Может быть {@code null} для других стратегий.
-     * @return {@link CompletableFuture<Void>}, который завершается, когда слушатель успешно запущен.
-     * @throws IllegalStateException    если менеджер находится в процессе завершения работы.
-     * @throws IllegalArgumentException если {@code topic} пустой, {@code recordsManager} равен {@code null},
-     *                                  или {@code startStrategy} равен {@link ConsumerStartStrategy#FROM_TIMESTAMP}, но {@code lookBackDuration} равен {@code null}.
+     * @param topic             Имя топика Kafka для прослушивания. Не может быть null или пустым.
+     * @param pollTimeout       Таймаут для операции {@code consumer.poll()}.
+     * @param isAvro            Флаг, указывающий, являются ли сообщения в топике Avro или строковыми.
+     * @param recordsManager    Менеджер для обработки и хранения полученных записей.
+     * @param startStrategyEnum Перечисление стратегии запуска (LATEST, EARLIEST, FROM_TIMESTAMP).
+     * @param lookBackDuration  Продолжительность, на которую нужно "оглянуться" назад,
+     *                          если {@code startStrategyEnum} - {@code FROM_TIMESTAMP}.
+     *                          Может быть null для других стратегий.
+     * @return {@link CompletableFuture}, представляющий асинхронную операцию запуска.
+     * @throws IllegalArgumentException если {@code topic} пуст или {@code recordsManager} null.
+     * @throws IllegalStateException    если менеджер уже находится в состоянии завершения работы.
+     * @throws LifecycleException       если происходит ошибка при запуске слушателя.
      */
-    public CompletableFuture<Void> startListeningAsync(String topic, Duration pollTimeout, boolean isAvro, KafkaRecordsManager recordsManager, ConsumerStartStrategy startStrategy, Duration lookBackDuration) {
+    public CompletableFuture<Void> startListeningAsync(String topic, Duration pollTimeout, boolean isAvro, KafkaRecordsManager recordsManager, KafkaStartStrategyType startStrategyEnum, Duration lookBackDuration) {
         requireNonBlank(topic, "Имя топика не может быть null или пустым.");
         requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");
         ensureNotShutdown(); // Проверяем, не был ли менеджер уже остановлен
 
         return CompletableFuture.runAsync(() -> {
-            // Используем computeIfAbsent для атомарного создания и запуска слушателя, если его еще нет
             listeners.computeIfAbsent(topic, t -> {
-                log.info("Создание и запуск нового слушателя для топика '{}' со стратегией: {}.", t, startStrategy);
-                KafkaTopicListener newListener = new KafkaTopicListener(t, pollTimeout, isAvro, config, consumerFactory, recordsManager, startStrategy, lookBackDuration);
+                log.info("Создание и запуск нового слушателя для топика '{}' со стратегией: {}.", t, startStrategyEnum);
+                ConsumerStartStrategy strategy = createConsumerStartStrategy(startStrategyEnum, lookBackDuration);
+                KafkaTopicListener newListener = new KafkaTopicListener(t, pollTimeout, isAvro, config, consumerFactory, recordsManager, strategy);
                 newListener.start(executorService); // Запускаем слушатель
                 return newListener;
             });
@@ -80,20 +87,22 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Блокирует выполнение до тех пор, пока прослушивание указанного топика не будет запущено
-     * с заданной стратегией. Это синхронный обертка над {@link #startListeningAsync}.
+     * Синхронно запускает прослушивание указанного топика Kafka с заданной стратегией.
+     * Этот метод блокируется до тех пор, пока слушатель не будет запущен или не произойдет ошибка.
      *
-     * @param topic            Имя топика.
-     * @param pollTimeout      Таймаут для опроса.
-     * @param isAvro           Используется ли Avro.
-     * @param recordsManager   Менеджер записей.
-     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
-     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад.
-     * @throws RuntimeException если при запуске слушателя возникает какая-либо ошибка.
+     * @param topic             Имя топика Kafka для прослушивания.
+     * @param pollTimeout       Таймаут для операции {@code consumer.poll()}.
+     * @param isAvro            Флаг, указывающий, являются ли сообщения в топике Avro или строковыми.
+     * @param recordsManager    Менеджер для обработки и хранения полученных записей.
+     * @param startStrategyEnum Перечисление стратегии запуска (LATEST, EARLIEST, FROM_TIMESTAMP).
+     * @param lookBackDuration  Продолжительность, на которую нужно "оглянуться" назад,
+     *                          если {@code startStrategyEnum} - {@code FROM_TIMESTAMP}.
+     *                          Может быть null для других стратегий.
+     * @throws RuntimeException если при запуске слушателя происходит ошибка.
      */
-    public void startListening(String topic, Duration pollTimeout, boolean isAvro, KafkaRecordsManager recordsManager, ConsumerStartStrategy startStrategy, Duration lookBackDuration) {
+    public void startListening(String topic, Duration pollTimeout, boolean isAvro, KafkaRecordsManager recordsManager, KafkaStartStrategyType startStrategyEnum, Duration lookBackDuration) {
         try {
-            startListeningAsync(topic, pollTimeout, isAvro, recordsManager, startStrategy, lookBackDuration).join();
+            startListeningAsync(topic, pollTimeout, isAvro, recordsManager, startStrategyEnum, lookBackDuration).join();
         } catch (CompletionException e) {
             // Разворачиваем CompletionException, чтобы выбросить оригинальное исключение
             if (e.getCause() instanceof RuntimeException) {
@@ -104,12 +113,11 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Останавливает прослушивание указанного топика.
-     * Если слушатель для данного топика найден, он будет корректно остановлен и удален из менеджера.
+     * Останавливает прослушивание указанного топика Kafka.
+     * Метод удаляет слушателя из менеджера и инициирует его корректное завершение работы.
      *
-     * @param topic Имя топика.
-     * @return {@code true}, если слушатель был найден и успешно остановлен; иначе {@code false}.
-     * @throws IllegalArgumentException если {@code topic} пустой.
+     * @param topic Имя топика, прослушивание которого нужно прекратить. Не может быть null или пустым.
+     * @return true, если слушатель был найден и успешно инициирована его остановка; false в противном случае.
      */
     public boolean stopListening(String topic) {
         requireNonBlank(topic, "Имя топика не может быть null или пустым.");
@@ -130,9 +138,9 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Инициирует процесс завершения работы всех активных слушателей и базового ExecutorService.
-     * Метод является идемпотентным, то есть повторные вызовы не приведут к дополнительным эффектам.
-     * Вызывается автоматически при завершении работы JVM через хук завершения работы.
+     * Инициирует корректное завершение работы всего {@code KafkaListenerManager} и всех управляемых им слушателей.
+     * Этот метод должен быть вызван при завершении работы приложения для освобождения всех ресурсов.
+     * Гарантирует однократное выполнение.
      */
     public void shutdown() {
         if (shutdownInitiated.compareAndSet(false, true)) { // Гарантируем однократное выполнение
@@ -147,8 +155,9 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Завершает работу внутреннего {@link ExecutorService}, используемого для запуска слушателей.
-     * Ожидает завершения всех задач в течение заданного таймаута, после чего принудительно останавливает их.
+     * Завершает работу внутреннего {@link ExecutorService}.
+     * Пытается корректно остановить все задачи, ожидая их завершения.
+     * Если задачи не завершаются в течение таймаута, принудительно останавливает их.
      */
     private void shutdownExecutorService() {
         executorService.shutdown(); // Инициируем корректное завершение работы
@@ -166,8 +175,8 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Закрывает менеджер слушателей, вызывая метод {@link #shutdown()}.
-     * Позволяет использовать {@code KafkaListenerManager} в конструкции try-with-resources.
+     * Реализация метода {@code AutoCloseable.close()}, вызывающая {@code shutdown()}.
+     * Позволяет использовать {@code KafkaListenerManager} в try-with-resources блоках.
      */
     @Override
     public void close() {
@@ -175,9 +184,9 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Проверяет, не находится ли менеджер в процессе завершения работы.
+     * Проверяет, не был ли менеджер уже остановлен.
      *
-     * @throws IllegalStateException если менеджер уже инициировал процесс завершения работы.
+     * @throws IllegalStateException если менеджер уже находится в состоянии завершения работы.
      */
     private void ensureNotShutdown() {
         if (shutdownInitiated.get()) {
@@ -186,10 +195,10 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Проверяет, активен ли слушатель для указанного топика.
+     * Проверяет, прослушивает ли менеджер указанный топик и активен ли соответствующий слушатель.
      *
-     * @param topic Имя топика.
-     * @return {@code true}, если слушатель для данного топика существует и активен; иначе {@code false}.
+     * @param topic Имя топика для проверки.
+     * @return true, если слушатель для топика активен; false в противном случае.
      */
     public boolean isListening(String topic) {
         KafkaTopicListener listener = listeners.get(topic);
@@ -197,12 +206,54 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Возвращает количество активных слушателей, управляемых этим менеджером.
-     * Активным считается слушатель, который запущен и не находится в процессе остановки.
+     * Возвращает количество активных в данный момент слушателей.
      *
      * @return Количество активных слушателей.
      */
     public int getActiveCount() {
         return (int) listeners.values().stream().filter(KafkaTopicListener::isRunning).count();
+    }
+
+    /**
+     * Фабричный метод для создания экземпляров {@link ConsumerStartStrategy}
+     * на основе типа стратегии и опциональной продолжительности "оглядки" назад.
+     *
+     * @param strategyType     Тип стратегии запуска.
+     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад (для FROM_TIMESTAMP). Может быть null для других стратегий.
+     * @return Реализация {@link ConsumerStartStrategy}.
+     * @throws IllegalArgumentException если {@code strategyType} требует {@code lookBackDuration}, а он null,
+     *                                  или если {@code strategyType} неизвестен.
+     */
+    private ConsumerStartStrategy createConsumerStartStrategy(KafkaStartStrategyType strategyType, Duration lookBackDuration) {
+        requireNonNull(strategyType, "Тип стратегии запуска не может быть null.");
+        return switch (strategyType) {
+            case LATEST -> new LatestStartStrategy();
+            case EARLIEST -> new EarliestStartStrategy();
+            case FROM_TIMESTAMP -> {
+                if (lookBackDuration == null) {
+                    throw new IllegalArgumentException("lookBackDuration не может быть null, если startStrategy - FROM_TIMESTAMP.");
+                }
+                yield new FromTimestampStartStrategy(lookBackDuration);
+            }
+        };
+    }
+
+    /**
+     * Перечисление, определяющее доступные типы стратегий запуска Kafka Consumer.
+     * Используется для выбора конкретной реализации {@link ConsumerStartStrategy}.
+     */
+    public enum KafkaStartStrategyType {
+        /**
+         * Начинать читать только новые записи (аналог seekToEnd).
+         */
+        LATEST,
+        /**
+         * Начинать читать с самого начала топика (аналог seekToBeginning).
+         */
+        EARLIEST,
+        /**
+         * Начинать читать с определенной временной метки (или ближайшего смещения).
+         */
+        FROM_TIMESTAMP
     }
 }
