@@ -62,14 +62,7 @@ public class KafkaListenerConfig {
     ExecutorService executorService;
 
     @Builder
-    private KafkaListenerConfig(
-            Duration shutdownTimeout,
-            Duration consumerCloseTimeout,
-            Duration errorRetryDelay,
-            boolean stopOnError,
-            int maxRetries,
-            boolean enableMetrics,
-            ExecutorService executorService) {
+    private KafkaListenerConfig(Duration shutdownTimeout, Duration consumerCloseTimeout, Duration errorRetryDelay, boolean stopOnError, int maxRetries, boolean enableMetrics, ExecutorService executorService) {
         this.shutdownTimeout = shutdownTimeout != null ? shutdownTimeout : DEFAULT_SHUTDOWN_TIMEOUT;
         this.consumerCloseTimeout = consumerCloseTimeout != null ? consumerCloseTimeout : DEFAULT_CONSUMER_CLOSE_TIMEOUT;
         this.errorRetryDelay = errorRetryDelay != null ? errorRetryDelay : DEFAULT_ERROR_RETRY_DELAY;

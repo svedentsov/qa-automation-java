@@ -3,6 +3,7 @@ package com.svedentsov.kafka.helper;
 import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.exception.KafkaListenerException.LifecycleException;
 import com.svedentsov.kafka.factory.ConsumerFactory;
+import com.svedentsov.kafka.helper.KafkaTopicListener.ConsumerStartStrategy;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
@@ -38,50 +39,63 @@ public class KafkaListenerManager implements AutoCloseable {
         this.config = requireNonNull(config, "KafkaListenerConfig не может быть null");
         this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null");
         this.executorService = config.getExecutorService(); // Используем ExecutorService из конфига
+        // Добавляем хук завершения работы JVM для корректного останова всех слушателей
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "kafka-listener-shutdown-hook"));
     }
 
     /**
-     * Асинхронно запускает прослушивание указанного топика.
+     * Асинхронно запускает прослушивание указанного топика с заданной стратегией старта.
      *
-     * @param topic          Имя топика. Не может быть пустым.
-     * @param pollTimeout    Тайм-аут для опроса Kafka.
-     * @param isAvro         {@code true}, если используется формат Avro, иначе {@code false}.
-     * @param recordsManager Экземпляр менеджера для хранения полученных записей.
+     * @param topic            Имя топика. Не может быть пустым.
+     * @param pollTimeout      Таймаут для опроса Kafka.
+     * @param isAvro           {@code true}, если используется формат Avro, иначе {@code false}.
+     * @param recordsManager   Экземпляр менеджера для хранения полученных записей.
+     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
+     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
+     *                         если {@code startStrategy} - {@link ConsumerStartStrategy#FROM_TIMESTAMP}.
+     *                         Может быть {@code null} для других стратегий.
      * @return {@link CompletableFuture<Void>}, который завершается, когда слушатель успешно запущен.
-     * @throws IllegalStateException если менеджер находится в процессе завершения работы.
+     * @throws IllegalStateException    если менеджер находится в процессе завершения работы.
+     * @throws IllegalArgumentException если {@code topic} пустой, {@code recordsManager} равен {@code null},
+     *                                  или {@code startStrategy} равен {@link ConsumerStartStrategy#FROM_TIMESTAMP}, но {@code lookBackDuration} равен {@code null}.
      */
-    public CompletableFuture<Void> startListeningAsync(String topic, Duration pollTimeout, boolean isAvro, KafkaRecordsManager recordsManager) {
+    public CompletableFuture<Void> startListeningAsync(String topic, Duration pollTimeout, boolean isAvro, KafkaRecordsManager recordsManager, ConsumerStartStrategy startStrategy, Duration lookBackDuration) {
         requireNonBlank(topic, "Имя топика не может быть null или пустым.");
         requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");
-        ensureNotShutdown();
+        ensureNotShutdown(); // Проверяем, не был ли менеджер уже остановлен
 
         return CompletableFuture.runAsync(() -> {
+            // Используем computeIfAbsent для атомарного создания и запуска слушателя, если его еще нет
             listeners.computeIfAbsent(topic, t -> {
-                log.info("Создание и запуск нового слушателя для топика '{}'.", t);
-                KafkaTopicListener newListener = new KafkaTopicListener(t, pollTimeout, isAvro, config, consumerFactory, recordsManager);
-                newListener.start(executorService);
+                log.info("Создание и запуск нового слушателя для топика '{}' со стратегией: {}.", t, startStrategy);
+                KafkaTopicListener newListener = new KafkaTopicListener(t, pollTimeout, isAvro, config, consumerFactory, recordsManager, startStrategy, lookBackDuration);
+                newListener.start(executorService); // Запускаем слушатель
                 return newListener;
             });
         }, executorService).exceptionally(ex -> {
             log.error("Не удалось запустить слушатель для топика '{}'", topic, ex);
-            listeners.remove(topic); // Удаляем в случае ошибки запуска
+            listeners.remove(topic); // Удаляем слушателя из карты в случае ошибки запуска
             throw new LifecycleException("Ошибка при асинхронном запуске слушателя для " + topic, ex);
         });
     }
 
     /**
-     * Блокируется до тех пор, пока прослушивание не будет запущено.
+     * Блокирует выполнение до тех пор, пока прослушивание указанного топика не будет запущено
+     * с заданной стратегией. Это синхронный обертка над {@link #startListeningAsync}.
      *
-     * @param topic          Имя топика.
-     * @param pollTimeout    Тайм-аут для опроса.
-     * @param isAvro         Используется ли Avro.
-     * @param recordsManager Менеджер записей.
+     * @param topic            Имя топика.
+     * @param pollTimeout      Таймаут для опроса.
+     * @param isAvro           Используется ли Avro.
+     * @param recordsManager   Менеджер записей.
+     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
+     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад.
+     * @throws RuntimeException если при запуске слушателя возникает какая-либо ошибка.
      */
-    public void startListening(String topic, Duration pollTimeout, boolean isAvro, KafkaRecordsManager recordsManager) {
+    public void startListening(String topic, Duration pollTimeout, boolean isAvro, KafkaRecordsManager recordsManager, ConsumerStartStrategy startStrategy, Duration lookBackDuration) {
         try {
-            startListeningAsync(topic, pollTimeout, isAvro, recordsManager).join();
+            startListeningAsync(topic, pollTimeout, isAvro, recordsManager, startStrategy, lookBackDuration).join();
         } catch (CompletionException e) {
+            // Разворачиваем CompletionException, чтобы выбросить оригинальное исключение
             if (e.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) e.getCause();
             }
@@ -91,20 +105,22 @@ public class KafkaListenerManager implements AutoCloseable {
 
     /**
      * Останавливает прослушивание указанного топика.
+     * Если слушатель для данного топика найден, он будет корректно остановлен и удален из менеджера.
      *
      * @param topic Имя топика.
-     * @return {@code true}, если слушатель был найден и остановлен, иначе {@code false}.
+     * @return {@code true}, если слушатель был найден и успешно остановлен; иначе {@code false}.
+     * @throws IllegalArgumentException если {@code topic} пустой.
      */
     public boolean stopListening(String topic) {
         requireNonBlank(topic, "Имя топика не может быть null или пустым.");
-        KafkaTopicListener listener = listeners.remove(topic);
+        KafkaTopicListener listener = listeners.remove(topic); // Удаляем слушатель из карты
         if (listener == null) {
             log.warn("Слушатель для топика '{}' не найден или уже был остановлен.", topic);
             return false;
         }
         try {
             log.info("Остановка слушателя для топика '{}'...", topic);
-            listener.shutdown();
+            listener.shutdown(); // Вызываем метод остановки слушателя
             log.info("Слушатель для топика '{}' успешно остановлен.", topic);
             return true;
         } catch (Exception e) {
@@ -114,39 +130,55 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Инициирует процесс завершения работы всех активных слушателей и ExecutorService.
-     * Метод является идемпотентным.
+     * Инициирует процесс завершения работы всех активных слушателей и базового ExecutorService.
+     * Метод является идемпотентным, то есть повторные вызовы не приведут к дополнительным эффектам.
+     * Вызывается автоматически при завершении работы JVM через хук завершения работы.
      */
     public void shutdown() {
-        if (shutdownInitiated.compareAndSet(false, true)) {
+        if (shutdownInitiated.compareAndSet(false, true)) { // Гарантируем однократное выполнение
             log.info("Начало процесса завершения работы KafkaListenerManager. Активных слушателей: {}", listeners.size());
-            for (String topic : Set.copyOf(listeners.keySet())) {
+            // Останавливаем всех активных слушателей
+            for (String topic : Set.copyOf(listeners.keySet())) { // Создаем копию ключей, чтобы избежать ConcurrentModificationException
                 stopListening(topic);
             }
-            shutdownExecutorService();
+            shutdownExecutorService(); // Завершаем работу ExecutorService
             log.info("KafkaListenerManager и все его ресурсы были успешно освобождены.");
         }
     }
 
+    /**
+     * Завершает работу внутреннего {@link ExecutorService}, используемого для запуска слушателей.
+     * Ожидает завершения всех задач в течение заданного таймаута, после чего принудительно останавливает их.
+     */
     private void shutdownExecutorService() {
-        executorService.shutdown();
+        executorService.shutdown(); // Инициируем корректное завершение работы
         try {
+            // Ожидаем завершения задач
             if (!executorService.awaitTermination(config.getShutdownTimeout().toMillis(), TimeUnit.MILLISECONDS)) {
                 log.warn("Тайм-аут ожидания завершения задач в ExecutorService. Принудительная остановка.");
-                executorService.shutdownNow();
+                executorService.shutdownNow(); // Принудительно останавливаем невыполненные задачи
             }
         } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            Thread.currentThread().interrupt(); // Восстанавливаем флаг прерывания
             log.error("Процесс ожидания завершения ExecutorService был прерван.", e);
-            executorService.shutdownNow();
+            executorService.shutdownNow(); // Принудительно останавливаем в случае прерывания
         }
     }
 
+    /**
+     * Закрывает менеджер слушателей, вызывая метод {@link #shutdown()}.
+     * Позволяет использовать {@code KafkaListenerManager} в конструкции try-with-resources.
+     */
     @Override
     public void close() {
         shutdown();
     }
 
+    /**
+     * Проверяет, не находится ли менеджер в процессе завершения работы.
+     *
+     * @throws IllegalStateException если менеджер уже инициировал процесс завершения работы.
+     */
     private void ensureNotShutdown() {
         if (shutdownInitiated.get()) {
             throw new IllegalStateException("Менеджер уже в состоянии shutdown. Невозможно запустить новые слушатели.");
@@ -157,7 +189,7 @@ public class KafkaListenerManager implements AutoCloseable {
      * Проверяет, активен ли слушатель для указанного топика.
      *
      * @param topic Имя топика.
-     * @return {@code true}, если слушатель активен.
+     * @return {@code true}, если слушатель для данного топика существует и активен; иначе {@code false}.
      */
     public boolean isListening(String topic) {
         KafkaTopicListener listener = listeners.get(topic);
@@ -165,7 +197,8 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Возвращает количество активных слушателей.
+     * Возвращает количество активных слушателей, управляемых этим менеджером.
+     * Активным считается слушатель, который запущен и не находится в процессе остановки.
      *
      * @return Количество активных слушателей.
      */

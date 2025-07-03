@@ -1,8 +1,8 @@
 package com.svedentsov.kafka.service;
 
-import com.svedentsov.kafka.factory.ConsumerFactory;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
+import com.svedentsov.kafka.helper.KafkaTopicListener;
 import com.svedentsov.kafka.processor.RecordProcessorAvro;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.generic.GenericRecord;
@@ -26,25 +26,22 @@ public class KafkaConsumerServiceAvro implements KafkaConsumerService {
 
     private final KafkaListenerManager listenerManager;
     private final KafkaRecordsManager recordsManager;
-    private final ConsumerFactory consumerFactory;
 
     /**
      * Создает экземпляр сервиса для AVRO сообщений.
      *
-     * @param consumerFactory Фабрика для создания низкоуровневых Kafka Consumers.
      * @param listenerManager Менеджер жизненного цикла слушателей. Не может быть {@code null}.
      * @param recordsManager  Менеджер для хранения полученных записей. Не может быть {@code null}.
      */
-    public KafkaConsumerServiceAvro(ConsumerFactory consumerFactory, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
-        this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null.");
+    public KafkaConsumerServiceAvro(KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
         this.listenerManager = requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
         this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");
     }
 
     @Override
-    public void startListening(String topic, Duration timeout) {
-        log.info("Запрос на запуск прослушивания AVRO-топика '{}'...", topic);
-        listenerManager.startListening(topic, timeout, true, this.recordsManager);
+    public void startListening(String topic, Duration timeout, KafkaTopicListener.ConsumerStartStrategy startStrategy, Duration lookBackDuration) {
+        log.info("Запрос на запуск прослушивания AVRO-топика '{}' со стратегией {}...", topic, startStrategy);
+        listenerManager.startListening(topic, timeout, true, this.recordsManager, startStrategy, lookBackDuration);
     }
 
     @Override

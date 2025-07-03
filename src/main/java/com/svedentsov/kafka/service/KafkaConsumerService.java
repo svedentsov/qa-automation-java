@@ -1,5 +1,6 @@
 package com.svedentsov.kafka.service;
 
+import com.svedentsov.kafka.helper.KafkaTopicListener.ConsumerStartStrategy;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Duration;
@@ -14,13 +15,27 @@ import java.util.function.Function;
 public interface KafkaConsumerService {
 
     /**
-     * Запускает прослушивание указанного топика.
+     * Запускает прослушивание указанного топика с заданной стратегией старта.
      * Метод должен быть неблокирующим и запускать прослушивание в фоновом режиме.
+     *
+     * @param topic            Имя топика для прослушивания.
+     * @param timeout          Таймаут для операции опроса (poll) брокера Kafka.
+     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
+     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
+     *                         если startStrategy - {@link ConsumerStartStrategy#FROM_TIMESTAMP}.
+     *                         Может быть null для других стратегий.
+     */
+    void startListening(String topic, Duration timeout, ConsumerStartStrategy startStrategy, Duration lookBackDuration);
+
+    /**
+     * Запускает прослушивание указанного топика с стратегией по умолчанию (FROM_TIMESTAMP).
      *
      * @param topic   Имя топика для прослушивания.
      * @param timeout Таймаут для операции опроса (poll) брокера Kafka.
      */
-    void startListening(String topic, Duration timeout);
+    default void startListening(String topic, Duration timeout) {
+        startListening(topic, timeout, ConsumerStartStrategy.FROM_TIMESTAMP, Duration.ofMinutes(2));
+    }
 
     /**
      * Останавливает прослушивание указанного топика.

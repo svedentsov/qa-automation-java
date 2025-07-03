@@ -17,17 +17,14 @@ import static java.util.Objects.requireNonNull;
 public class KafkaServiceFactory {
 
     private final ProducerFactory producerFactory;
-    private final ConsumerFactory consumerFactory;
 
     /**
      * Создает экземпляр фабрики сервисов Kafka.
      *
      * @param producerFactory Фабрика для создания Kafka Producers. Не может быть {@code null}.
-     * @param consumerFactory Фабрика для создания Kafka Consumers. Не может быть {@code null}.
      */
-    public KafkaServiceFactory(ProducerFactory producerFactory, ConsumerFactory consumerFactory) {
+    public KafkaServiceFactory(ProducerFactory producerFactory) {
         this.producerFactory = requireNonNull(producerFactory, "ProducerFactory не может быть null");
-        this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null");
     }
 
     /**
@@ -61,8 +58,8 @@ public class KafkaServiceFactory {
         requireNonNull(listenerManager, "KafkaListenerManager не может быть null");
         requireNonNull(recordsManager, "KafkaRecordsManager не может быть null");
         return switch (type) {
-            case STRING_FORMAT -> new KafkaConsumerServiceString(consumerFactory, listenerManager, recordsManager);
-            case AVRO_FORMAT -> new KafkaConsumerServiceAvro(consumerFactory, listenerManager, recordsManager);
+            case STRING_FORMAT -> new KafkaConsumerServiceString(listenerManager, recordsManager);
+            case AVRO_FORMAT -> new KafkaConsumerServiceAvro(listenerManager, recordsManager);
         };
     }
 }

@@ -86,7 +86,7 @@ public class KafkaExecutor implements AutoCloseable {
         var producerFactory = new ProducerFactoryDefault(configProvider);
         var consumerFactory = new ConsumerFactoryDefault(configProvider);
 
-        this.serviceFactory = new KafkaServiceFactory(producerFactory, consumerFactory);
+        this.serviceFactory = new KafkaServiceFactory(producerFactory);
         this.listenerManager = new KafkaListenerManager(testing(), consumerFactory);
         this.recordsManager = new KafkaRecordsManager();
     }
@@ -385,7 +385,7 @@ public class KafkaExecutor implements AutoCloseable {
         validateConsumerAndTopic();
         return filterRecordsBy(record -> {
             try {
-                condition.check(this.record);
+                condition.check(record);
                 return true;
             } catch (AssertionError e) {
                 return false;

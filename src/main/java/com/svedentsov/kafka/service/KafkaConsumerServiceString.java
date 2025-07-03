@@ -1,8 +1,8 @@
 package com.svedentsov.kafka.service;
 
-import com.svedentsov.kafka.factory.ConsumerFactory;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
+import com.svedentsov.kafka.helper.KafkaTopicListener.ConsumerStartStrategy;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -23,17 +23,14 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
 
     private final KafkaListenerManager listenerManager;
     private final KafkaRecordsManager recordsManager;
-    private final ConsumerFactory consumerFactory;
 
     /**
      * Создает экземпляр сервиса для строковых сообщений.
      *
-     * @param consumerFactory Фабрика для создания низкоуровневых Kafka Consumers.
      * @param listenerManager Менеджер жизненного цикла слушателей. Не может быть {@code null}.
      * @param recordsManager  Менеджер для хранения полученных записей. Не может быть {@code null}.
      */
-    public KafkaConsumerServiceString(ConsumerFactory consumerFactory, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
-        this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null.");
+    public KafkaConsumerServiceString(KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
         this.listenerManager = requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
         this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");
     }
@@ -45,9 +42,9 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
      * @param timeout таймаут ожидания записи (poll timeout)
      */
     @Override
-    public void startListening(String topic, Duration timeout) {
-        log.info("Запрос на запуск прослушивания строкового топика '{}'...", topic);
-        listenerManager.startListening(topic, timeout, false, this.recordsManager);
+    public void startListening(String topic, Duration timeout, ConsumerStartStrategy startStrategy, Duration lookBackDuration) {
+        log.info("Запрос на запуск прослушивания строкового топика '{}' со стратегией {}...", topic, startStrategy);
+        listenerManager.startListening(topic, timeout, false, this.recordsManager, startStrategy, lookBackDuration);
     }
 
     /**

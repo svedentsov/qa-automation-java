@@ -8,6 +8,7 @@ package com.svedentsov.kafka.exception;
  * Исходное исключение (причина) всегда сохраняется в поле {@code cause} для дальнейшего анализа.
  */
 public class KafkaSendingException extends RuntimeException {
+
     /**
      * Конструктор для создания исключения с сообщением и исходной причиной.
      *

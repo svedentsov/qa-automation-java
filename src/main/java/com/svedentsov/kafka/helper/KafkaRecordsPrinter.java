@@ -1,5 +1,6 @@
 package com.svedentsov.kafka.helper;
 
+import lombok.experimental.UtilityClass;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
@@ -11,11 +12,8 @@ import java.util.Map;
  * Утилитарный класс для печати записей, полученных из Kafka.
  * Этот класс предоставляет методы для вывода на экран всех записей из всех топиков или из конкретного топика.
  */
+@UtilityClass
 public final class KafkaRecordsPrinter {
-
-    // Приватный конструктор, чтобы предотвратить создание экземпляров утилитного класса.
-    private KafkaRecordsPrinter() {
-    }
 
     /**
      * Выводит в консоль все записи из всех топиков, содержащихся в предоставленном менеджере.
