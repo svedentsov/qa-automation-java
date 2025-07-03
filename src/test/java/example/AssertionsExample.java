@@ -18,6 +18,7 @@ import static com.svedentsov.matcher.assertions.BooleanAssertions.isTrue;
 import static com.svedentsov.matcher.assertions.CollectionAssertions.*;
 import static com.svedentsov.matcher.assertions.InstantAssertions.*;
 import static com.svedentsov.matcher.assertions.ListAssertions.*;
+import static com.svedentsov.matcher.assertions.LocalDateAssertions.*;
 import static com.svedentsov.matcher.assertions.LocalDateTimeAssertions.*;
 import static com.svedentsov.matcher.assertions.NumberAssertions.*;
 import static com.svedentsov.matcher.assertions.PropertyAssertions.*;
@@ -177,7 +178,8 @@ public class AssertionsExample {
                 value(MyEntity::sentence, endsWithPunctuation()), // Строка заканчивается точкой, восклицательным или вопросительным знаком
                 value(MyEntity::distinctCharsString, hasDistinctCharacterCount(5)), // Содержит 5 различных символов
                 value(MyEntity::complexPasswordString, hasMultipleCharacterSetsCounts(new String[]{"abc", "123", "!@#"}, new int[]{3, 2, 1})), // Содержит 3 символа из "abc", 2 из "123" и 1 из "!@#"
-                value(MyEntity::fixedPatternString, hasFixedLengthAndMatchesPattern(6, "\\d{3}[A-Z]{3}"))); // Строка имеет длину 6 и соответствует шаблону "3 цифры + 3 заглавные буквы"
+                value(MyEntity::fixedPatternString, hasFixedLengthAndMatchesPattern(6, "\\d{3}[A-Z]{3}")) // Строка имеет длину 6 и соответствует шаблону "3 цифры + 3 заглавные буквы"
+        );
     }
 
     /**
@@ -278,7 +280,8 @@ public class AssertionsExample {
                 value(MyEntity::age, numberEqualTo(25.0)), // возраст равен 25.0
                 value(MyEntity::age, numberNotEqualTo(26.0)), // возраст не равен 26.0
                 value(MyEntity::age, numberInRange(20.0, 30.0)), // возраст в диапазоне [20.0, 30.0]
-                value(MyEntity::age, numberBetweenExclusive(20.0, 30.0))); // возраст в диапазоне (20.0, 30.0)
+                value(MyEntity::age, numberBetweenExclusive(20.0, 30.0)) // возраст в диапазоне (20.0, 30.0)
+        );
     }
 
     /**
@@ -381,7 +384,83 @@ public class AssertionsExample {
                 value(MyEntity::createdAt, instantIsWithinLastHours(1)), // createdAt в пределах последних 1 часа
                 value(MyEntity::futureEventTime, instantIsWithinNextHours(1)), // futureEventTime в пределах следующих 1 часа
                 value(MyEntity::createdAt, instantIsWithinLastDays(1)), // createdAt в пределах последних 1 дня
-                value(MyEntity::futureEventTime, instantIsWithinNextDays(1))); // futureEventTime в пределах следующих 1 дня
+                value(MyEntity::futureEventTime, instantIsWithinNextDays(1)) // futureEventTime в пределах следующих 1 дня
+        );
+    }
+
+    /**
+     * Валидация LocalDateAssertions.
+     */
+    public void validateLocalDateAssertions(MyEntity entity) {
+        LocalDate today = LocalDate.now();
+        LocalDate tomorrow = today.plusDays(1);
+        LocalDate yesterday = today.minusDays(1);
+        LocalDate dateInFuture = today.plusYears(1).plusMonths(2).plusDays(3);
+        LocalDate dateInPast = today.minusYears(1).minusMonths(2).minusDays(3);
+        LocalDate leapYearDate = LocalDate.of(2024, 2, 29);
+        LocalDate nonLeapYearDate = LocalDate.of(2023, 2, 28);
+        LocalDate firstDayOfMonth = LocalDate.of(2025, 1, 1);
+        LocalDate lastDayOfMonth = LocalDate.of(2025, 1, 31);
+        LocalDate firstDayOfYear = LocalDate.of(2025, 1, 1);
+        LocalDate lastDayOfYear = LocalDate.of(2025, 12, 31);
+        LocalDate firstTuesdayInMonth = LocalDate.of(2025, 7, 1); // 1 июля 2025 - вторник
+        LocalDate lastMondayInMonth = LocalDate.of(2025, 7, 28); // 28 июля 2025 - последний понедельник
+        LocalDate dateInQ1 = LocalDate.of(2025, 2, 15);
+        LocalDate dateInQ4 = LocalDate.of(2025, 11, 10);
+        LocalDate dateFirstHalf = LocalDate.of(2025, 7, 10);
+        LocalDate dateSecondHalf = LocalDate.of(2025, 7, 20);
+        LocalDate dateWith31Days = LocalDate.of(2025, 1, 15);
+        LocalDate dateWith30Days = LocalDate.of(2025, 4, 15);
+        LocalDate isoEraDate = LocalDate.of(2025, 7, 3);
+        LocalDate formattedDate = LocalDate.of(2025, 10, 26);
+
+        EntityValidator.of(entity).shouldHave(
+                // Базовые сравнения
+                value(MyEntity::eventDate, dateBefore(tomorrow)),
+                value(MyEntity::eventDate, dateAfter(yesterday)),
+                value(MyEntity::eventDate, dateIsInFuture()), // Предполагается, что eventDate в будущем
+                value(MyEntity::eventDate, dateIsInPast()),   // Предполагается, что eventDate в прошлом
+                value(MyEntity::eventDate, dateEquals(today)),
+                value(MyEntity::eventDate, dateIsToday()),
+                value(MyEntity::eventDate, dateIsYesterday()),
+                value(MyEntity::eventDate, dateIsTomorrow()),
+                value(MyEntity::eventDate, dateAfterOrEqual(today.minusDays(5))),
+                value(MyEntity::eventDate, dateBeforeOrEqual(today.plusDays(5))),
+                value(MyEntity::eventDate, dateIsBetween(today.minusDays(1), today.plusDays(1))),
+                // Проверки по частям даты
+                value(MyEntity::eventDate, dateHasYear(2025)),
+                value(MyEntity::eventDate, dateHasMonth(7)),
+                value(MyEntity::eventDate, dateHasMonth(Month.JULY)),
+                value(MyEntity::eventDate, dateHasDayOfMonth(3)),
+                value(MyEntity::eventDate, dateHasDayOfYear(184)), // Для 3 июля 2025 года (невисокосный)
+                value(MyEntity::eventDate, dateHasDayOfWeek(DayOfWeek.THURSDAY)),
+                // Календарные свойства
+                value(MyEntity::eventDate, dateIsLeapYear()), // Для 2024, 2028 и т.д.
+                value(MyEntity::eventDate, dateIsNotLeapYear()), // Для 2023, 2025 и т.д.
+                value(MyEntity::eventDate, dateIsWeekend()), // Для субботы или воскресенья
+                value(MyEntity::eventDate, dateIsWeekday()), // Для понедельника-пятницы
+                // Сравнения по периодам и частям
+                value(MyEntity::eventDate, dateWithin(today.plusDays(2), Period.ofDays(3))), // Разница 2 дня, допуск 3 дня
+                value(MyEntity::eventDate, dateDiffersByAtLeast(today.minusDays(5), Period.ofDays(4))), // Разница 5 дней, минимум 4 дня
+                value(MyEntity::eventDate, dateIsInSameMonthAs(today.minusDays(10))), // Месяц тот же, даже если дни разные
+                value(MyEntity::eventDate, dateIsInSameYearAs(today.plusMonths(3))), // Год тот же, даже если месяц и день разные
+                value(MyEntity::eventDate, dateIsInSameWeekAs(today.plusDays(2))), // Если в пределах одной ISO недели
+                value(MyEntity::eventDate, dateIsInSameWeekAs(today.plusDays(2), Locale.US)), // С учетом локали
+                // Проверки по границам периодов
+                value(MyEntity::eventDate, dateIsFirstDayOfMonth()),
+                value(MyEntity::eventDate, dateIsLastDayOfMonth()),
+                value(MyEntity::eventDate, dateIsFirstDayOfYear()),
+                value(MyEntity::eventDate, dateIsLastDayOfYear()),
+                value(MyEntity::eventDate, dateIsFirstInMonth(DayOfWeek.TUESDAY)), // Проверить, является ли eventDate первым вторником
+                value(MyEntity::eventDate, dateIsLastInMonth(DayOfWeek.MONDAY)), // Проверить, является ли eventDate последним понедельником
+                // Кварталы и половины месяца
+                value(MyEntity::eventDate, dateIsInQuarter(3)), // Текущая дата (июль) в 3-м квартале
+                value(MyEntity::eventDate, dateIsInFirstHalfOfMonth()),
+                value(MyEntity::eventDate, dateIsInSecondHalfOfMonth()),
+                // Дополнительные продвинутые проверки
+                value(MyEntity::eventDate, dateHasDaysInMonth(31)), // Для июля 31 день
+                value(MyEntity::eventDate, dateMatchesPattern("dd.MM.yyyy", "03.07.2025")) // Соответствие формату
+        );
     }
 
     /**
@@ -452,7 +531,8 @@ public class AssertionsExample {
                 // Упрощенные проверки на "в пределах N единиц"
                 value(MyEntity::localDateTimeUpdated, dateTimeIsWithinMinutesOf(now, 1)), // Разница с опорной датой не более 1 минуты
                 value(MyEntity::localDateTimeUpdated, dateTimeIsWithinHoursOf(now, 1)), // Разница с опорной датой не более 1 часа
-                value(MyEntity::localDateTimeUpdated, dateTimeIsWithinSecondsOf(now, 60))); // Разница с опорной датой не более 60 секунд
+                value(MyEntity::localDateTimeUpdated, dateTimeIsWithinSecondsOf(now, 60)) // Разница с опорной датой не более 60 секунд
+        );
     }
 
     /**
@@ -509,7 +589,8 @@ public class AssertionsExample {
                 value(MyEntity::status, propertyEqualsIgnoreCase("active")), // статус равен "active" без учета регистра
                 value(MyEntity::uniqueRoles, propertyCollectionHasUniqueElements()), // коллекция ролей содержит только уникальные элементы
                 value(MyEntity::name, propertyMatches(org.hamcrest.Matchers.containsString("Doe"))), // имя соответствует Hamcrest матчеру (содержит "Doe")
-                value(MyEntity::name, propertyDoesNotMatch(org.hamcrest.Matchers.equalTo("EDITOR")))); // имя не соответствует Hamcrest матчеру (не равно "EDITOR")
+                value(MyEntity::name, propertyDoesNotMatch(org.hamcrest.Matchers.equalTo("EDITOR"))) // имя не соответствует Hamcrest матчеру (не равно "EDITOR")
+        );
     }
 
     /**
@@ -550,7 +631,8 @@ public class AssertionsExample {
                 value(MyEntity::roleEntities, listSumEqual(Role::permissionCount, 15.0)), // сумма количества разрешений для всех ролей равна 15
                 value(MyEntity::roleEntities, listAverageEqual(Role::permissionCount, 5.0)), // среднее количество разрешений для роли равно 5
                 value(MyEntity::roleEntities, listValuesEqual(Role::tenantId, "TENANT-123")), // у всех ролей одинаковый tenantId
-                value(MyEntity::roleEntities, listGroupedBySize(Role::type, Map.of("EDITOR", 1, "USER", 2)))); // размеры групп ролей по типу: 1 админ, 2 пользователя
+                value(MyEntity::roleEntities, listGroupedBySize(Role::type, Map.of("EDITOR", 1, "USER", 2))) // размеры групп ролей по типу: 1 админ, 2 пользователя
+        );
     }
 
     /**
@@ -575,6 +657,7 @@ public class AssertionsExample {
                 value(MyEntity::roles, collectionLengthLessThanOrEqual(4)), // длина коллекции roles меньше или равна 4
                 value(MyEntity::roles, collectionHasSameSizeAs(Arrays.asList("A", "B", "C"))), // коллекция roles имеет тот же размер, что и список ["A", "B", "C"]
                 value(MyEntity::roles, collectionContainsAtLeast(1, "EDITOR")), // коллекция roles содержит "EDITOR" как минимум 1 раз
-                value(MyEntity::roles, collectionOccurrenceCountEquals("EDITOR", 1))); // элемент "EDITOR" встречается ровно 1 раз в коллекции roles
+                value(MyEntity::roles, collectionOccurrenceCountEquals("EDITOR", 1)) // элемент "EDITOR" встречается ровно 1 раз в коллекции roles
+        );
     }
 }

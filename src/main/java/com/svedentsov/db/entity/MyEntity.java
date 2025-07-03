@@ -7,6 +7,7 @@ import lombok.experimental.Accessors;
 import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -346,6 +347,7 @@ public class MyEntity {
      * Используется для проверок LocalDateTime.
      */
     private LocalDateTime localDateTimeCreated;
+    private LocalDate eventDate;
 
     /**
      * Дата и время последнего обновления сущности (LocalDateTime).
