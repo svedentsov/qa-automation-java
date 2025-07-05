@@ -1,8 +1,8 @@
 package com.svedentsov.kafka.service;
 
-import com.svedentsov.kafka.enums.StartStrategyType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
+import com.svedentsov.kafka.helper.strategy.StartStrategyOptions;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
@@ -36,17 +36,14 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     /**
      * Запускает прослушивание указанного строкового топика.
      *
-     * @param topic            Имя топика для прослушивания.
-     * @param pollTimeout      Таймаут для операции опроса (poll) брокера Kafka.
-     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
-     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
-     *                         если startStrategy - {@link StartStrategyType#FROM_TIMESTAMP}.
-     *                         Может быть null для других стратегий.
+     * @param topic           Имя топика для прослушивания.
+     * @param pollTimeout     Таймаут для операции опроса (poll) брокера Kafka.
+     * @param strategyOptions Объект, содержащий тип стратегии и её параметры.
      */
     @Override
-    public void startListening(String topic, Duration pollTimeout, StartStrategyType startStrategy, Duration lookBackDuration) {
-        log.info("Запрос на запуск прослушивания строкового топика '{}' со стратегией {}...", topic, startStrategy);
-        listenerManager.startListening(topic, pollTimeout, false, startStrategy, lookBackDuration);
+    public void startListening(String topic, Duration pollTimeout, StartStrategyOptions strategyOptions) {
+        log.info("Запрос на запуск прослушивания строкового топика '{}' со стратегией {}...", topic, strategyOptions.getStrategyType());
+        listenerManager.startListening(topic, pollTimeout, false, strategyOptions);
     }
 
     /**

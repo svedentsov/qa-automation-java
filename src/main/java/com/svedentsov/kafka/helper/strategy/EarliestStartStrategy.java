@@ -7,22 +7,15 @@ import org.apache.kafka.common.TopicPartition;
 import java.util.Collection;
 
 /**
- * Реализация {@link ConsumerStartStrategy}, которая смещает Kafka Consumer
- * в начало всех назначенных партиций, начиная чтение с самых старых сообщений.
+ * Стратегия, устанавливающая смещение на самое первое доступное сообщение в каждой назначенной партиции.
+ * Полезна для сценариев, когда необходимо гарантированно прочитать и обработать все сообщения в топике с самого начала.
  */
 @Slf4j
 public class EarliestStartStrategy implements ConsumerStartStrategy {
 
-    /**
-     * Применяет стратегию смещения в начало (seekToBeginning) для всех назначенных партиций.
-     *
-     * @param consumer   Экземпляр {@link KafkaConsumer}.
-     * @param partitions Набор {@link TopicPartition}, назначенных потребителю.
-     * @param topicName  Имя топика, для которого применяется стратегия.
-     */
     @Override
     public void apply(KafkaConsumer<String, ?> consumer, Collection<TopicPartition> partitions, String topicName) {
-        log.info("Применение стратегии EARLIEST для топика '{}'. Смещение в начало {} партиций.", topicName, partitions.size());
+        log.info("Применение стратегии EARLIEST для топика '{}'. Смещение в начало для {} партиций.", topicName, partitions.size());
         consumer.seekToBeginning(partitions);
     }
 }

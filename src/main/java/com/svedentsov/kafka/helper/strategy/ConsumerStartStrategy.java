@@ -6,19 +6,19 @@ import org.apache.kafka.common.TopicPartition;
 import java.util.Collection;
 
 /**
- * Интерфейс стратегии, определяющий начальную позицию (смещение) для Kafka-консьюмера
- * после назначения ему партиций.
+ * Функциональный интерфейс, определяющий стратегию установки начального смещения (offset)
+ * для Kafka-консьюмера при назначении ему новых партиций.
+ * Это позволяет гибко управлять тем, с какого момента в топике начинать чтение сообщений.
  */
 @FunctionalInterface
 public interface ConsumerStartStrategy {
 
     /**
-     * Применяет логику смещения к консьюмеру для указанных партиций.
-     * Этот метод вызывается каждый раз, когда консьюмеру назначаются партиции.
+     * Применяет стратегию к консьюмеру для указанных партиций.
      *
-     * @param consumer   Экземпляр Kafka-консьюмера.
-     * @param partitions Коллекция партиций, назначенных консьюмеру.
-     * @param topicName  Имя топика для логирования и контекста.
+     * @param consumer   Экземпляр KafkaConsumer, к которому применяется стратегия.
+     * @param partitions Коллекция партиций (TopicPartition), которые были назначены консьюмеру.
+     * @param topicName  Имя топика, для которого применяются настройки.
      */
     void apply(KafkaConsumer<String, ?> consumer, Collection<TopicPartition> partitions, String topicName);
 }

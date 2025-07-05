@@ -4,16 +4,14 @@ import com.svedentsov.kafka.config.KafkaListenerConfig;
 import com.svedentsov.kafka.enums.StartStrategyType;
 import com.svedentsov.kafka.exception.KafkaListenerException.LifecycleException;
 import com.svedentsov.kafka.factory.ConsumerFactory;
-import com.svedentsov.kafka.helper.strategy.ConsumerStartStrategy;
-import com.svedentsov.kafka.helper.strategy.EarliestStartStrategy;
-import com.svedentsov.kafka.helper.strategy.FromTimestampStartStrategy;
-import com.svedentsov.kafka.helper.strategy.LatestStartStrategy;
+import com.svedentsov.kafka.helper.strategy.*;
 import com.svedentsov.kafka.processor.RecordProcessor;
 import com.svedentsov.kafka.processor.RecordProcessorAvro;
 import com.svedentsov.kafka.processor.RecordProcessorString;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.Duration;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,12 +21,10 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Управляет жизненным циклом нескольких экземпляров {@link KafkaTopicListener}.
- * <p>
- * Этот класс является центральной точкой для запуска, остановки и мониторинга
+ * <p>Этот класс является центральной точкой для запуска, остановки и мониторинга
  * слушателей для различных топиков Kafka. Он управляет собственным пулом потоков
  * {@link ExecutorService} для асинхронной работы слушателей.
- * <p>
- * Реализует {@link AutoCloseable} для гарантированного освобождения всех ресурсов,
+ * <p>Реализует {@link AutoCloseable} для гарантированного освобождения всех ресурсов,
  * включая остановку всех активных слушателей и пула потоков. Также устанавливает
  * хук завершения работы (shutdown hook) для корректной остановки при завершении работы JVM.
  */
@@ -53,9 +49,7 @@ public class KafkaListenerManager implements AutoCloseable {
         this.config = requireNonNull(config, "KafkaListenerConfig не может быть null");
         this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null");
         this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null");
-        // Создаем собственный пул потоков для полного контроля над его жизненным циклом
         this.executorService = Executors.newCachedThreadPool();
-        // Добавляем хук завершения работы JVM для корректного останова всех слушателей
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown, "kafka-listener-shutdown-hook"));
     }
 
@@ -63,21 +57,22 @@ public class KafkaListenerManager implements AutoCloseable {
      * Асинхронно запускает прослушивание топика.
      * Если слушатель для данного топика уже существует, этот метод ничего не делает.
      *
-     * @param topic             Имя топика. Не может быть пустым или null.
-     * @param pollTimeout       Максимальное время блокировки в методе poll().
-     * @param isAvro            {@code true}, если топик содержит сообщения в формате Avro, иначе {@code false}.
-     * @param startStrategyEnum Тип стратегии начального смещения.
-     * @param lookBackDuration  Период времени для поиска сообщений, если используется стратегия {@code FROM_TIMESTAMP}.
+     * @param topic           Имя топика. Не может быть пустым или null.
+     * @param pollTimeout     Максимальное время блокировки в методе poll().
+     * @param isAvro          {@code true}, если топик содержит сообщения в формате Avro, иначе {@code false}.
+     * @param strategyOptions Объект, содержащий тип стратегии и её параметры. Не может быть null.
      * @return {@link CompletableFuture}, который завершается, когда слушатель успешно создан и запущен.
      */
-    public CompletableFuture<Void> startListeningAsync(String topic, Duration pollTimeout, boolean isAvro, StartStrategyType startStrategyEnum, Duration lookBackDuration) {
+    public CompletableFuture<Void> startListeningAsync(String topic, Duration pollTimeout, boolean isAvro, StartStrategyOptions strategyOptions) {
         requireNonBlank(topic, "Имя топика не может быть null или пустым.");
+        requireNonNull(strategyOptions, "StartStrategyOptions не может быть null.");
         ensureNotShutdown();
+        strategyOptions.validate();
 
         return CompletableFuture.runAsync(() -> {
             listeners.computeIfAbsent(topic, t -> {
-                log.info("Создание и запуск нового слушателя для топика '{}' со стратегией: {}. Avro: {}", t, startStrategyEnum, isAvro);
-                ConsumerStartStrategy strategy = createConsumerStartStrategy(startStrategyEnum, lookBackDuration);
+                log.info("Создание и запуск нового слушателя для топика '{}' со стратегией: {}. Avro: {}", t, strategyOptions.getStrategyType(), isAvro);
+                ConsumerStartStrategy strategy = createConsumerStartStrategy(strategyOptions);
 
                 KafkaTopicListener<?> newListener;
 
@@ -103,16 +98,15 @@ public class KafkaListenerManager implements AutoCloseable {
      * Синхронно запускает прослушивание топика.
      * Блокирует текущий поток до тех пор, пока слушатель не будет запущен.
      *
-     * @param topic             Имя топика.
-     * @param pollTimeout       Максимальное время блокировки в методе poll().
-     * @param isAvro            {@code true}, если топик Avro.
-     * @param startStrategyEnum Тип стратегии начального смещения.
-     * @param lookBackDuration  Период времени для стратегии {@code FROM_TIMESTAMP}.
+     * @param topic           Имя топика.
+     * @param pollTimeout     Максимальное время блокировки в методе poll().
+     * @param isAvro          {@code true}, если топик Avro.
+     * @param strategyOptions Объект, содержащий тип стратегии и её параметры.
      * @throws CompletionException если при запуске произошла ошибка.
      */
-    public void startListening(String topic, Duration pollTimeout, boolean isAvro, StartStrategyType startStrategyEnum, Duration lookBackDuration) {
+    public void startListening(String topic, Duration pollTimeout, boolean isAvro, StartStrategyOptions strategyOptions) {
         try {
-            startListeningAsync(topic, pollTimeout, isAvro, startStrategyEnum, lookBackDuration).join();
+            startListeningAsync(topic, pollTimeout, isAvro, strategyOptions).join();
         } catch (CompletionException e) {
             // Разворачиваем CompletionException, чтобы выбросить оригинальное исключение
             if (e.getCause() instanceof RuntimeException) {
@@ -142,8 +136,6 @@ public class KafkaListenerManager implements AutoCloseable {
             return true;
         } catch (Exception e) {
             log.error("Ошибка во время остановки слушателя для топика '{}'", topic, e);
-            // Возвращаем слушателя обратно в карту, если остановка не удалась,
-            // чтобы можно было попробовать снова.
             listeners.put(topic, listener);
             return false;
         }
@@ -224,22 +216,39 @@ public class KafkaListenerManager implements AutoCloseable {
     }
 
     /**
-     * Создает экземпляр стратегии начального смещения на основе переданного типа.
+     * Создает экземпляр стратегии начального смещения на основе переданного типа и параметров.
      *
-     * @param strategyType     Тип стратегии.
-     * @param lookBackDuration Длительность для стратегии {@code FROM_TIMESTAMP}.
+     * @param strategyOptions Объект, содержащий тип стратегии и её параметры.
      * @return Экземпляр {@link ConsumerStartStrategy}.
+     * @throws IllegalArgumentException если для выбранной стратегии отсутствуют или некорректны параметры.
      */
-    private ConsumerStartStrategy createConsumerStartStrategy(StartStrategyType strategyType, Duration lookBackDuration) {
+    private ConsumerStartStrategy createConsumerStartStrategy(StartStrategyOptions strategyOptions) {
+        StartStrategyType strategyType = strategyOptions.getStrategyType();
         requireNonNull(strategyType, "Тип стратегии запуска не может быть null.");
         return switch (strategyType) {
+            case DEFAULT -> new DefaultStartStrategy();
             case LATEST -> new LatestStartStrategy();
             case EARLIEST -> new EarliestStartStrategy();
             case FROM_TIMESTAMP -> {
+                Duration lookBackDuration = strategyOptions.getLookBackDuration();
                 if (lookBackDuration == null) {
                     throw new IllegalArgumentException("lookBackDuration не может быть null для стратегии FROM_TIMESTAMP.");
                 }
                 yield new FromTimestampStartStrategy(lookBackDuration);
+            }
+            case FROM_SPECIFIC_OFFSET -> {
+                Map<Integer, Long> partitionOffsets = strategyOptions.getPartitionOffsets();
+                if (partitionOffsets == null || partitionOffsets.isEmpty()) {
+                    throw new IllegalArgumentException("partitionOffsets не может быть null или пустым для стратегии FROM_SPECIFIC_OFFSET.");
+                }
+                yield new FromSpecificOffsetStartStrategy(partitionOffsets);
+            }
+            case RELATIVE_FROM_END -> {
+                Long offsetFromEnd = strategyOptions.getOffsetFromEnd();
+                if (offsetFromEnd == null) {
+                    throw new IllegalArgumentException("offsetFromEnd не может быть null для стратегии RELATIVE_FROM_END.");
+                }
+                yield new RelativeFromEndStartStrategy(offsetFromEnd);
             }
         };
     }

@@ -1,6 +1,7 @@
 package com.svedentsov.kafka.service;
 
 import com.svedentsov.kafka.enums.StartStrategyType;
+import com.svedentsov.kafka.helper.strategy.StartStrategyOptions;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Duration;
@@ -17,12 +18,11 @@ public interface KafkaConsumerService {
     /**
      * Запускает прослушивание топика с заданными параметрами.
      *
-     * @param topic            Название топика.
-     * @param pollTimeout      Максимальное время ожидания в poll-запросе.
-     * @param startStrategy    Стратегия, определяющая, с какого места начать чтение.
-     * @param lookBackDuration Длительность для поиска сообщений, если используется стратегия {@code FROM_TIMESTAMP}.
+     * @param topic           Название топика.
+     * @param pollTimeout     Максимальное время ожидания в poll-запросе.
+     * @param strategyOptions Объект, содержащий тип стратегии и её параметры.
      */
-    void startListening(String topic, Duration pollTimeout, StartStrategyType startStrategy, Duration lookBackDuration);
+    void startListening(String topic, Duration pollTimeout, StartStrategyOptions strategyOptions);
 
     /**
      * Запускает прослушивание топика с параметрами по умолчанию.
@@ -32,7 +32,10 @@ public interface KafkaConsumerService {
      * @param pollTimeout Максимальное время ожидания в poll-запросе.
      */
     default void startListening(String topic, Duration pollTimeout) {
-        startListening(topic, pollTimeout, StartStrategyType.FROM_TIMESTAMP, Duration.ofMinutes(2));
+        startListening(topic, pollTimeout, StartStrategyOptions.builder()
+                .strategyType(StartStrategyType.FROM_TIMESTAMP)
+                .lookBackDuration(Duration.ofMinutes(2))
+                .build());
     }
 
     /**

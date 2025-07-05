@@ -15,9 +15,9 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация {@link ConsumerStartStrategy}, которая смещает Kafka Consumer
- * к смещению, соответствующему определенной временной метке, отсчитываемой
- * назад от текущего момента на заданную продолжительность.
+ * Стратегия, устанавливающая смещение на первое сообщение, временная метка которого больше или равна указанной.
+ * Временная метка рассчитывается как (текущее время - lookBackDuration).
+ * Полезна для обработки сообщений за определенный недавний период времени (например, "за последний час").
  */
 @Slf4j
 public class FromTimestampStartStrategy implements ConsumerStartStrategy {
@@ -34,25 +34,16 @@ public class FromTimestampStartStrategy implements ConsumerStartStrategy {
         this.lookBackDuration = requireNonNull(lookBackDuration, "lookBackDuration не может быть null для FromTimestampStartStrategy.");
     }
 
-    /**
-     * Применяет стратегию смещения по временной метке для всех назначенных партиций.
-     * Ищет ближайшее смещение для каждой партиции, которое соответствует или превышает
-     * вычисленную временную метку. Если смещение не найдено (например, метка слишком старая),
-     * то потребитель смещается в начало партиции.
-     *
-     * @param consumer   Экземпляр {@link KafkaConsumer}.
-     * @param partitions Набор {@link TopicPartition}, назначенных потребителю.
-     * @param topicName  Имя топика, для которого применяется стратегия.
-     */
     @Override
     public void apply(KafkaConsumer<String, ?> consumer, Collection<TopicPartition> partitions, String topicName) {
         long targetTimestamp = Instant.now().minus(lookBackDuration).toEpochMilli();
-        log.info("Применение стратегии FROM_TIMESTAMP для топика '{}'. Целевая временная метка: {}", topicName, targetTimestamp);
+        log.info("Применение стратегии FROM_TIMESTAMP для топика '{}'. Целевая временная метка: {}. Поиск смещений...", topicName, targetTimestamp);
 
         Map<TopicPartition, Long> timestampsToSearch = partitions.stream()
                 .collect(Collectors.toMap(p -> p, p -> targetTimestamp));
 
         Map<TopicPartition, OffsetAndTimestamp> offsets = consumer.offsetsForTimes(timestampsToSearch);
+
         for (TopicPartition partition : partitions) {
             OffsetAndTimestamp offsetAndTimestamp = offsets.get(partition);
             if (offsetAndTimestamp != null) {
