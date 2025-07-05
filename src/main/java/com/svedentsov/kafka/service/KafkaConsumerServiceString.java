@@ -1,7 +1,7 @@
 package com.svedentsov.kafka.service;
 
+import com.svedentsov.kafka.enums.StartStrategyType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
-import com.svedentsov.kafka.helper.KafkaListenerManager.KafkaStartStrategyType;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -14,10 +14,7 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация {@link KafkaConsumerService} для работы с Kafka топиками,
- * содержащими сообщения в строковом формате.
- * Предоставляет методы для запуска/остановки прослушивания и получения
- * строковых сообщений.
+ * Реализация {@link KafkaConsumerService} для работы с топиками, содержащими строковые сообщения.
  */
 @Slf4j
 public class KafkaConsumerServiceString implements KafkaConsumerService {
@@ -43,13 +40,13 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
      * @param pollTimeout      Таймаут для операции опроса (poll) брокера Kafka.
      * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
      * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
-     *                         если startStrategy - {@link KafkaStartStrategyType#FROM_TIMESTAMP}.
+     *                         если startStrategy - {@link StartStrategyType#FROM_TIMESTAMP}.
      *                         Может быть null для других стратегий.
      */
     @Override
-    public void startListening(String topic, Duration pollTimeout, KafkaStartStrategyType startStrategy, Duration lookBackDuration) {
+    public void startListening(String topic, Duration pollTimeout, StartStrategyType startStrategy, Duration lookBackDuration) {
         log.info("Запрос на запуск прослушивания строкового топика '{}' со стратегией {}...", topic, startStrategy);
-        listenerManager.startListening(topic, pollTimeout, false, this.recordsManager, startStrategy, lookBackDuration);
+        listenerManager.startListening(topic, pollTimeout, false, startStrategy, lookBackDuration);
     }
 
     /**
@@ -77,6 +74,7 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     @SuppressWarnings("unchecked")
     public List<ConsumerRecord<String, String>> getAllRecords(String topic) {
         return recordsManager.getRecords(topic).stream()
+                .filter(record -> record.key() instanceof String && record.value() instanceof String)
                 .map(record -> (ConsumerRecord<String, String>) record)
                 .collect(Collectors.toList());
     }

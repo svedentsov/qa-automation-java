@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.factory;
 
-import com.svedentsov.kafka.config.DefaultKafkaConfigProvider;
+import com.svedentsov.kafka.config.KafkaConfigProvider;
 import io.confluent.kafka.serializers.KafkaAvroDeserializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
@@ -13,33 +13,41 @@ import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация {@link ConsumerFactory} по умолчанию.
- * <b>Важное архитектурное решение:</b> эта фабрика <b>не кэширует</b> созданные
- * экземпляры {@link KafkaConsumer}. {@link KafkaConsumer} не является потокобезопасным
- * и должен использоваться в одном потоке. Поэтому каждый вызов create-методов
- * возвращает новый, независимый экземпляр. Ответственность за его закрытие
- * (например, с помощью try-with-resources) лежит на вызывающем коде.
+ * Стандартная реализация {@link ConsumerFactory}, которая создает консьюмеры
+ * для строковых или Avro сообщений на основе конфигурации из {@link KafkaConfigProvider}.
  */
 @Slf4j
 public class ConsumerFactoryDefault implements ConsumerFactory {
 
-    private final DefaultKafkaConfigProvider configProvider;
+    private final KafkaConfigProvider configProvider;
 
     /**
      * Создает экземпляр ConsumerFactoryDefault с указанным провайдером конфигураций.
      *
      * @param configProvider провайдер конфигураций Kafka, не может быть null.
      */
-    public ConsumerFactoryDefault(DefaultKafkaConfigProvider configProvider) {
+    public ConsumerFactoryDefault(KafkaConfigProvider configProvider) {
         this.configProvider = requireNonNull(configProvider, "DefaultKafkaConfigProvider не может быть null.");
     }
 
+    /**
+     * Создает новый экземпляр {@link KafkaConsumer} для строковых сообщений.
+     *
+     * @param topicName Имя топика, для которого создается консьюмер.
+     * @return Новый экземпляр {@link KafkaConsumer} со строковыми ключами и значениями.
+     */
     @Override
     public KafkaConsumer<String, String> createStringConsumer(String topicName) {
         requireNonBlank(topicName, "Имя топика не может быть null или пустым.");
         return createConsumerInternal(topicName, StringDeserializer.class, StringDeserializer.class);
     }
 
+    /**
+     * Создает новый экземпляр {@link KafkaConsumer} для Avro сообщений.
+     *
+     * @param topicName Имя топика, для которого создается консьюмер.
+     * @return Новый экземпляр {@link KafkaConsumer} со строковыми ключами и Avro значениями.
+     */
     @Override
     public KafkaConsumer<String, Object> createAvroConsumer(String topicName) {
         requireNonBlank(topicName, "Имя топика не может быть null или пустым.");

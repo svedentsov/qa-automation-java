@@ -17,7 +17,7 @@ import static java.util.Objects.requireNonNull;
  * тестирование (позволяя легко подменять конфигурацию на mock-объекты) и соответствует принципам SOLID.
  */
 @Slf4j
-public class DefaultKafkaConfigProvider {
+public class KafkaConfigProvider {
 
     private final KafkaConfig config;
 
@@ -26,7 +26,7 @@ public class DefaultKafkaConfigProvider {
      *
      * @param config объект конфигурации, содержащий базовые настройки Kafka. Не может быть {@code null}.
      */
-    public DefaultKafkaConfigProvider(KafkaConfig config) {
+    public KafkaConfigProvider(KafkaConfig config) {
         this.config = requireNonNull(config, "KafkaConfig не может быть null.");
     }
 
@@ -59,7 +59,7 @@ public class DefaultKafkaConfigProvider {
      * @return {@link Properties} с полным набором настроек для консюмера.
      */
     public Properties getConsumerConfig(String topic) {
-        requireNonNull(topic, "Топик не может быть null.");
+        requireNonNull(topic, "Имя топика не может быть null для конфигурации консьюмера.");
         log.info("Создание конфигурации консюмера для топика: {}", topic);
         Properties props = createBaseConsumerConfig();
         applySslConfig(props);
@@ -68,6 +68,9 @@ public class DefaultKafkaConfigProvider {
         return props;
     }
 
+    /**
+     * Создает базовый набор свойств для продюсера.
+     */
     private Properties createBaseProducerConfig() {
         Properties props = new Properties();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers());
@@ -75,32 +78,42 @@ public class DefaultKafkaConfigProvider {
         return props;
     }
 
+    /**
+     * Создает базовый набор свойств для консьюмера.
+     */
     private Properties createBaseConsumerConfig() {
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, config.bootstrapServers());
         props.put(ConsumerConfig.GROUP_ID_CONFIG, config.groupId());
-        // Здесь можно добавить другие общие для всех консюмеров настройки
+        // Важная настройка: по умолчанию авто-коммит лучше выключать и управлять смещениями вручную для большей надежности.
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
+        // Определяет, с какого места начать чтение, если нет сохраненного смещения.
+        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "latest");
         return props;
     }
 
+    /**
+     * Применяет SSL-конфигурацию к переданному объекту Properties, если она задана.
+     */
     private void applySslConfig(Properties props) {
         if (config.sslTruststoreLocation() == null || config.sslTruststoreLocation().isBlank()) {
             log.debug("SSL конфигурация не будет применена, так как 'ssl.truststore.location' не задан.");
             return;
         }
-        log.debug("Применение SSL конфигурации.");
+        log.info("Применение SSL конфигурации.");
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, config.sslTruststoreLocation());
         props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, config.sslTruststorePassword());
-        props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.sslKeystoreLocation());
-        props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.sslKeystorePassword());
-        props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, config.sslKeyPassword());
+        if (config.sslKeystoreLocation() != null && !config.sslKeystoreLocation().isBlank()) {
+            props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, config.sslKeystoreLocation());
+            props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, config.sslKeystorePassword());
+            props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, config.sslKeyPassword());
+        }
         props.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, config.sslEndpointIdentificationAlgorithm());
     }
 
     /**
      * Применяет специфичные для топика настройки продюсера.
-     * Инкапсулирует логику кастомизации конфигурации.
      */
     private void applyTopicSpecificProducerConfig(Properties props, String topic) {
         if ("special-topic".equals(topic)) {

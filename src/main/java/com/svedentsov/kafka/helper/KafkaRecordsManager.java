@@ -12,10 +12,11 @@ import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Потокобезопасный менеджер для хранения и доступа к записям (records), полученным из Kafka.
- * В отличие от статической реализации, этот класс создает экземпляр для каждой сессии
- * прослушивания, что позволяет изолировать данные между разными тестами или потоками
- * и избежать проблем с глобальным состоянием.
+ * Потокобезопасный класс для хранения и управления записями (records), полученными из Kafka.
+ * Этот класс действует как in-memory хранилище для тестовых сценариев,
+ * позволяя накапливать сообщения из разных топиков и предоставляя
+ * API для их извлечения и анализа.
+ * Уникальность записей гарантируется использованием ключа {@link PartitionOffset}.
  */
 public final class KafkaRecordsManager {
 
@@ -24,23 +25,33 @@ public final class KafkaRecordsManager {
     private final ConcurrentMap<String, ConcurrentMap<PartitionOffset, ConsumerRecord<?, ?>>> recordsByTopic = new ConcurrentHashMap<>();
 
     /**
-     * Уникальный идентификатор записи в рамках топика, состоящий из партиции и смещения.
+     * Внутренний record для использования в качестве ключа в Map.
+     * Гарантирует уникальность записи по паре (партиция, смещение).
      */
-    private record PartitionOffset(int partition, long offset) {
+    private record PartitionOffset(int partition, long offset) implements Comparable<PartitionOffset> {
         public static PartitionOffset from(ConsumerRecord<?, ?> record) {
             return new PartitionOffset(record.partition(), record.offset());
+        }
+
+        @Override
+        public int compareTo(PartitionOffset other) {
+            int partitionCompare = Integer.compare(this.partition, other.partition);
+            if (partitionCompare == 0) {
+                return Long.compare(this.offset, other.offset);
+            }
+            return partitionCompare;
         }
     }
 
     /**
      * Добавляет одну запись в менеджер.
-     * Если запись с таким же {@code partition} и {@code offset} уже существует, она не будет перезаписана.
+     * Если запись с такой же партицией и смещением уже существует, она не будет добавлена.
      *
-     * @param topic  Топик, из которого пришла запись. Не может быть пустым.
-     * @param record Запись Kafka. Не может быть {@code null}.
+     * @param topic  Имя топика.
+     * @param record Запись для добавления.
      */
     public void addRecord(String topic, ConsumerRecord<?, ?> record) {
-        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        requireNonBlank(topic, "Имя топика не может быть null или пустым.");
         requireNonNull(record, "ConsumerRecord не должен быть null.");
         var topicRecords = recordsByTopic.computeIfAbsent(topic, t -> new ConcurrentHashMap<>());
         topicRecords.putIfAbsent(PartitionOffset.from(record), record);
@@ -49,11 +60,11 @@ public final class KafkaRecordsManager {
     /**
      * Добавляет пачку записей в менеджер.
      *
-     * @param topic   Топик, из которого пришли записи.
-     * @param records Коллекция записей Kafka.
+     * @param topic   Имя топика.
+     * @param records Пачка записей для добавления.
      */
     public void addRecords(String topic, ConsumerRecords<?, ?> records) {
-        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        requireNonBlank(topic, "Имя топика не может быть null или пустым.");
         requireNonNull(records, "ConsumerRecords не должен быть null.");
         if (records.isEmpty()) {
             return;
@@ -68,12 +79,13 @@ public final class KafkaRecordsManager {
 
     /**
      * Возвращает неизменяемый список всех записей для указанного топика.
+     * Порядок записей в списке не гарантирован.
      *
      * @param topic Имя топика.
      * @return Неизменяемый список записей или пустой список, если записей нет.
      */
     public List<ConsumerRecord<?, ?>> getRecords(String topic) {
-        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        requireNonBlank(topic, "Имя топика не может быть null или пустым.");
         var topicRecords = recordsByTopic.get(topic);
         if (topicRecords == null || topicRecords.isEmpty()) {
             return Collections.emptyList();
@@ -82,9 +94,21 @@ public final class KafkaRecordsManager {
     }
 
     /**
+     * Возвращает все записи, отсортированные по смещению (offset).
+     *
+     * @param topic Имя топика.
+     * @return Неизменяемый, отсортированный список записей.
+     */
+    public List<ConsumerRecord<?, ?>> getRecordsSortedByOffset(String topic) {
+        return getRecords(topic).stream()
+                .sorted(Comparator.comparingLong(ConsumerRecord::offset))
+                .collect(Collectors.toUnmodifiableList());
+    }
+
+    /**
      * Возвращает неизменяемую карту всех записей, сгруппированных по топикам.
      *
-     * @return Неизменяемая карта, где ключ - имя топика, а значение - список его записей.
+     * @return Неизменяемая карта, где ключ - имя топика, значение - список записей.
      */
     public Map<String, List<ConsumerRecord<?, ?>>> getAllRecords() {
         return recordsByTopic.entrySet().stream()
@@ -99,7 +123,7 @@ public final class KafkaRecordsManager {
      * @param topic Имя топика.
      */
     public void clearRecords(String topic) {
-        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        requireNonBlank(topic, "Имя топика не может быть null или пустым.");
         recordsByTopic.remove(topic);
     }
 
@@ -117,39 +141,9 @@ public final class KafkaRecordsManager {
      * @return Количество записей.
      */
     public int getRecordCount(String topic) {
-        requireNonBlank(topic, "Topic не может быть null или пустым.");
+        requireNonBlank(topic, "Имя топика не может быть null или пустым.");
         var topicRecords = recordsByTopic.get(topic);
         return (topicRecords != null) ? topicRecords.size() : 0;
-    }
-
-    /**
-     * Находит последнюю запись (с наибольшим offset) для указанного топика.
-     *
-     * @param topic Имя топика.
-     * @return {@link Optional} с последней записью или пустой Optional, если записей нет.
-     */
-    public Optional<ConsumerRecord<?, ?>> getLatestRecord(String topic) {
-        var topicRecords = recordsByTopic.get(topic);
-        if (topicRecords == null || topicRecords.isEmpty()) {
-            return Optional.empty();
-        }
-        return topicRecords.values().stream().max(Comparator.comparingLong(ConsumerRecord::offset));
-    }
-
-    /**
-     * Возвращает неизменяемый список записей для топика, отсортированный по смещению (offset).
-     *
-     * @param topic Имя топика.
-     * @return Отсортированный неизменяемый список записей.
-     */
-    public List<ConsumerRecord<?, ?>> getRecordsSortedByOffset(String topic) {
-        var records = getRecords(topic);
-        if (records.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return records.stream()
-                .sorted(Comparator.comparingLong(ConsumerRecord::offset))
-                .collect(Collectors.toUnmodifiableList());
     }
 
     /**
@@ -163,9 +157,9 @@ public final class KafkaRecordsManager {
     }
 
     /**
-     * Возвращает неизменяемое множество имен топиков, для которых есть записи.
+     * Возвращает неизменяемый набор имен топиков, для которых есть записи.
      *
-     * @return Неизменяемое множество имен топиков.
+     * @return Набор имен топиков.
      */
     public Set<String> getTopicsWithRecords() {
         return recordsByTopic.entrySet().stream()

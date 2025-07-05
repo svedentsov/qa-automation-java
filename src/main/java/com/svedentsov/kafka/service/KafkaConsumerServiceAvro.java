@@ -1,7 +1,7 @@
 package com.svedentsov.kafka.service;
 
+import com.svedentsov.kafka.enums.StartStrategyType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
-import com.svedentsov.kafka.helper.KafkaListenerManager.KafkaStartStrategyType;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
 import com.svedentsov.kafka.processor.RecordProcessorAvro;
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +16,8 @@ import java.util.stream.Collectors;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Реализация {@link KafkaConsumerService} для работы с Kafka топиками,
- * содержащими сообщения в формате Avro.
- * Предоставляет методы для запуска/остановки прослушивания и получения
- * Avro-сообщений, преобразованных в JSON-строки.
+ * Реализация {@link KafkaConsumerService} для работы с Avro-топиками.
+ * Автоматически преобразует Avro-сообщения в JSON-строки для удобства использования.
  */
 @Slf4j
 public class KafkaConsumerServiceAvro implements KafkaConsumerService {
@@ -45,13 +43,13 @@ public class KafkaConsumerServiceAvro implements KafkaConsumerService {
      * @param pollTimeout      Таймаут для операции опроса (poll) брокера Kafka.
      * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
      * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
-     *                         если startStrategy - {@link KafkaStartStrategyType#FROM_TIMESTAMP}.
+     *                         если startStrategy - {@link StartStrategyType#FROM_TIMESTAMP}.
      *                         Может быть null для других стратегий.
      */
     @Override
-    public void startListening(String topic, Duration pollTimeout, KafkaStartStrategyType startStrategy, Duration lookBackDuration) {
+    public void startListening(String topic, Duration pollTimeout, StartStrategyType startStrategy, Duration lookBackDuration) {
         log.info("Запрос на запуск прослушивания AVRO-топика '{}' со стратегией {}...", topic, startStrategy);
-        listenerManager.startListening(topic, pollTimeout, true, this.recordsManager, startStrategy, lookBackDuration);
+        listenerManager.startListening(topic, pollTimeout, true, startStrategy, lookBackDuration);
     }
 
     /**
@@ -79,25 +77,25 @@ public class KafkaConsumerServiceAvro implements KafkaConsumerService {
     @Override
     public List<ConsumerRecord<String, String>> getAllRecords(String topic) {
         return recordsManager.getRecords(topic).stream()
-                .map(this::convertAvroRecordToJsonRecord)
+                .map(KafkaConsumerServiceAvro::convertAvroRecordToJsonRecord)
                 .collect(Collectors.toList());
     }
 
     /**
-     * Преобразует {@link ConsumerRecord} с Avro-значением в {@link ConsumerRecord} со строковым JSON-значением.
+     * Преобразует {@link ConsumerRecord} с {@link GenericRecord} в значение
+     * в {@link ConsumerRecord} со значением в виде JSON-строки.
      *
-     * @param avroRecord Входная запись Kafka с Avro-значением.
-     * @return Новая запись Kafka с тем же ключом, но со значением в формате JSON-строки.
-     * @throws IllegalArgumentException если значение записи не является экземпляром {@link GenericRecord}.
+     * @param avroRecord Запись из Kafka с Avro-значением.
+     * @return Запись из Kafka со строковым JSON-значением.
      */
-    private ConsumerRecord<String, String> convertAvroRecordToJsonRecord(ConsumerRecord<?, ?> avroRecord) {
+    private static ConsumerRecord<String, String> convertAvroRecordToJsonRecord(ConsumerRecord<?, ?> avroRecord) {
         Object value = avroRecord.value();
-        if (!(value instanceof GenericRecord)) {
-            log.error("Ожидался GenericRecord, но получен {} для топика {}", value == null ? "null" : value.getClass().getName(), avroRecord.topic());
-            throw new IllegalArgumentException("Неверный тип записи для Avro-потребителя: " + value.getClass().getName());
+        if (!(value instanceof GenericRecord genericRecord)) {
+            String valueType = (value == null) ? "null" : value.getClass().getName();
+            log.error("Ожидался GenericRecord, но получен {} для топика {}", valueType, avroRecord.topic());
+            throw new IllegalArgumentException("Неверный тип записи для Avro-потребителя: " + valueType);
         }
 
-        GenericRecord genericRecord = (GenericRecord) value;
         String jsonValue = RecordProcessorAvro.genericRecordToJson(genericRecord, genericRecord.getSchema());
         String key = (avroRecord.key() instanceof String) ? (String) avroRecord.key() : null;
 
@@ -105,8 +103,14 @@ public class KafkaConsumerServiceAvro implements KafkaConsumerService {
                 avroRecord.topic(),
                 avroRecord.partition(),
                 avroRecord.offset(),
+                avroRecord.timestamp(),
+                avroRecord.timestampType(),
+                (long) ConsumerRecord.NULL_CHECKSUM, // deprecated field
+                (key != null) ? key.length() : 0,
+                jsonValue.length(),
                 key,
-                jsonValue
+                jsonValue,
+                avroRecord.headers()
         );
     }
 

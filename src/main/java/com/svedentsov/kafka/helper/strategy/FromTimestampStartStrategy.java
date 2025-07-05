@@ -7,10 +7,10 @@ import org.apache.kafka.common.TopicPartition;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.Objects.requireNonNull;
 
@@ -45,24 +45,25 @@ public class FromTimestampStartStrategy implements ConsumerStartStrategy {
      * @param topicName  Имя топика, для которого применяется стратегия.
      */
     @Override
-    public void apply(KafkaConsumer<String, ?> consumer, Set<TopicPartition> partitions, String topicName) {
+    public void apply(KafkaConsumer<String, ?> consumer, Collection<TopicPartition> partitions, String topicName) {
         long targetTimestamp = Instant.now().minus(lookBackDuration).toEpochMilli();
-        Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
-        for (TopicPartition partition : partitions) {
-            timestampsToSearch.put(partition, targetTimestamp);
-        }
+        log.info("Применение стратегии FROM_TIMESTAMP для топика '{}'. Целевая временная метка: {}", topicName, targetTimestamp);
+
+        Map<TopicPartition, Long> timestampsToSearch = partitions.stream()
+                .collect(Collectors.toMap(p -> p, p -> targetTimestamp));
 
         Map<TopicPartition, OffsetAndTimestamp> offsets = consumer.offsetsForTimes(timestampsToSearch);
         for (TopicPartition partition : partitions) {
             OffsetAndTimestamp offsetAndTimestamp = offsets.get(partition);
             if (offsetAndTimestamp != null) {
                 consumer.seek(partition, offsetAndTimestamp.offset());
-                log.info("Consumer для топика '{}', партиция {} смещен на смещение {} (timestamp: {}).",
-                        topicName, partition.partition(), offsetAndTimestamp.offset(), offsetAndTimestamp.timestamp());
+                log.info("Для топика '{}', партиция {} смещена на смещение {} (timestamp: {}).", topicName, partition.partition(), offsetAndTimestamp.offset(), offsetAndTimestamp.timestamp());
             } else {
-                consumer.seekToBeginning(Collections.singleton(partition));
-                log.warn("Для топика '{}', партиция {} не найдено смещения по timestamp {}. Смещен в начало.",
-                        topicName, partition.partition(), targetTimestamp);
+                // Если для временной метки нет смещения, это значит, что все сообщения в партиции старше.
+                // В этом случае, согласно документации Kafka, consumer.offsetsForTimes вернет null.
+                // Логичным поведением будет сместиться в конец, чтобы читать только новые сообщения.
+                consumer.seekToEnd(List.of(partition));
+                log.warn("Для топика '{}', партиция {} не найдено смещения по timestamp {}. Смещен в конец партиции.", topicName, partition.partition(), targetTimestamp);
             }
         }
     }

@@ -9,16 +9,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Утилитарный класс для печати записей, полученных из Kafka.
- * Этот класс предоставляет методы для вывода на экран всех записей из всех топиков или из конкретного топика.
+ * Утилитный класс для вывода записей Kafka в консоль в читаемом формате.
+ * Предназначен для отладки и анализа содержимого {@link KafkaRecordsManager}.
  */
 @UtilityClass
 public final class KafkaRecordsPrinter {
 
+    private static final String SEPARATOR = "==================================================";
+    private static final String SUB_SEPARATOR = "--------------------------------------------------";
+
     /**
-     * Выводит в консоль все записи из всех топиков, содержащихся в предоставленном менеджере.
+     * Печатает все записи из всех топиков, содержащихся в менеджере.
      *
-     * @param recordsManager Экземпляр менеджера, содержащий записи для вывода.
+     * @param recordsManager Менеджер записей.
      */
     public static void printAllRecords(KafkaRecordsManager recordsManager) {
         if (recordsManager == null) {
@@ -31,39 +34,39 @@ public final class KafkaRecordsPrinter {
             return;
         }
         allRecords.forEach((topic, recordsList) -> {
-            System.out.println("==================================================");
+            System.out.println(SEPARATOR);
             System.out.printf("Топик: %s (найдено %d записей)%n", topic, recordsList.size());
-            System.out.println("--------------------------------------------------");
+            System.out.println(SUB_SEPARATOR);
             printRecords(recordsList);
         });
     }
 
     /**
-     * Выводит в консоль все записи для конкретного топика из предоставленного менеджера.
+     * Печатает все записи для конкретного топика из менеджера.
      *
-     * @param topic          Имя топика, записи которого нужно вывести.
-     * @param recordsManager Экземпляр менеджера, содержащий записи.
+     * @param topic          Имя топика.
+     * @param recordsManager Менеджер записей.
      */
     public static void printAllRecords(String topic, KafkaRecordsManager recordsManager) {
         if (recordsManager == null) {
             System.out.printf("KafkaRecordsManager не предоставлен (null) для топика: %s%n", topic);
             return;
         }
-        List<ConsumerRecord<?, ?>> recordsList = recordsManager.getRecords(topic);
+        List<ConsumerRecord<?, ?>> recordsList = recordsManager.getRecordsSortedByOffset(topic);
         if (recordsList.isEmpty()) {
             System.out.printf("Нет записей для топика: %s%n", topic);
         } else {
-            System.out.println("==================================================");
+            System.out.println(SEPARATOR);
             System.out.printf("Топик: %s (найдено %d записей)%n", topic, recordsList.size());
-            System.out.println("--------------------------------------------------");
+            System.out.println(SUB_SEPARATOR);
             printRecords(recordsList);
         }
     }
 
     /**
-     * Выводит в консоль содержимое предоставленного списка записей.
+     * Печатает содержимое списка записей.
      *
-     * @param recordsList Список записей для вывода.
+     * @param recordsList Список записей для печати.
      */
     public static void printRecords(List<ConsumerRecord<?, ?>> recordsList) {
         if (recordsList == null || recordsList.isEmpty()) {
@@ -77,9 +80,9 @@ public final class KafkaRecordsPrinter {
     }
 
     /**
-     * Форматирует и выводит в консоль одну запись Kafka.
+     * Печатает детальную информацию об одной записи.
      *
-     * @param record Запись для вывода.
+     * @param record Запись для печати.
      */
     public static void printRecord(ConsumerRecord<?, ?> record) {
         if (record == null) {
@@ -87,17 +90,16 @@ public final class KafkaRecordsPrinter {
             return;
         }
         try {
-            System.out.printf("  Партиция: %d\n", record.partition());
-            System.out.printf("  Смещение: %d\n", record.offset());
-            System.out.printf("  Ключ: %s\n", record.key());
-            System.out.printf("  Значение: %s\n", record.value());
-
+            System.out.printf("  Партиция: %d%n", record.partition());
+            System.out.printf("  Смещение: %d%n", record.offset());
+            System.out.printf("  Ключ: %s%n", record.key());
+            System.out.printf("  Значение: %s%n", record.value());
             if (record.headers() != null) {
                 System.out.println("  Заголовки:");
                 boolean hasHeaders = false;
                 for (Header header : record.headers()) {
                     hasHeaders = true;
-                    System.out.printf("    - %s: %s\n", header.key(), new String(header.value(), StandardCharsets.UTF_8));
+                    System.out.printf("    - %s: %s%n", header.key(), new String(header.value(), StandardCharsets.UTF_8));
                 }
                 if (!hasHeaders) {
                     System.out.println("    (пусто)");

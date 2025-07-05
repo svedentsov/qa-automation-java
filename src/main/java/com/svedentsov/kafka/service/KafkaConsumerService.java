@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.service;
 
-import com.svedentsov.kafka.helper.KafkaListenerManager.KafkaStartStrategyType; // Импортируем новое перечисление
+import com.svedentsov.kafka.enums.StartStrategyType;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 
 import java.time.Duration;
@@ -8,58 +8,54 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Определяет контракт для сервиса-потребителя (consumer) сообщений из Kafka.
- * Сервис предоставляет высокоуровневые методы для управления прослушиванием топиков
- * и получения обработанных данных.
+ * Интерфейс, определяющий высокоуровневый сервис для работы с консьюмерами Kafka.
+ * Абстрагирует сложность управления слушателями и предоставляет простые методы
+ * для запуска, остановки и получения данных.
  */
 public interface KafkaConsumerService {
 
     /**
-     * Запускает прослушивание указанного топика с заданной стратегией старта.
-     * Метод должен быть неблокирующим и запускать прослушивание в фоновом режиме.
+     * Запускает прослушивание топика с заданными параметрами.
      *
-     * @param topic            Имя топика для прослушивания.
-     * @param pollTimeout      Таймаут для операции опроса (poll) брокера Kafka.
-     * @param startStrategy    Стратегия, определяющая, с какого смещения начать чтение.
-     * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад,
-     * если startStrategy - {@link KafkaStartStrategyType#FROM_TIMESTAMP}.
-     * Может быть null для других стратегий.
+     * @param topic            Название топика.
+     * @param pollTimeout      Максимальное время ожидания в poll-запросе.
+     * @param startStrategy    Стратегия, определяющая, с какого места начать чтение.
+     * @param lookBackDuration Длительность для поиска сообщений, если используется стратегия {@code FROM_TIMESTAMP}.
      */
-    void startListening(String topic, Duration pollTimeout, KafkaStartStrategyType startStrategy, Duration lookBackDuration);
+    void startListening(String topic, Duration pollTimeout, StartStrategyType startStrategy, Duration lookBackDuration);
 
     /**
-     * Запускает прослушивание указанного топика с стратегией по умолчанию (FROM_TIMESTAMP)
-     * и продолжительностью "оглядки" назад в 2 минуты.
+     * Запускает прослушивание топика с параметрами по умолчанию.
+     * Используется стратегия {@code FROM_TIMESTAMP} с периодом 2 минуты.
      *
-     * @param topic     Имя топика для прослушивания.
-     * @param pollTimeout Таймаут для операции опроса (poll) брокера Kafka.
+     * @param topic       Название топика.
+     * @param pollTimeout Максимальное время ожидания в poll-запросе.
      */
     default void startListening(String topic, Duration pollTimeout) {
-        startListening(topic, pollTimeout, KafkaStartStrategyType.FROM_TIMESTAMP, Duration.ofMinutes(2));
+        startListening(topic, pollTimeout, StartStrategyType.FROM_TIMESTAMP, Duration.ofMinutes(2));
     }
 
     /**
      * Останавливает прослушивание указанного топика.
      *
-     * @param topic Имя топика, прослушивание которого нужно прекратить.
+     * @param topic Название топика.
      */
     void stopListening(String topic);
 
     /**
-     * Возвращает все полученные и сохраненные записи из указанного топика.
-     * <b>Важно:</b> Для Avro-сообщений значение (value) записи будет представлено в виде JSON-строки.
+     * Возвращает все записи, полученные из топика с момента запуска слушателя.
+     * Для Avro-топиков значение записи (value) будет представлено в виде JSON-строки.
      *
-     * @param topic Имя топика.
-     * @return Список записей {@link ConsumerRecord} с ключом и значением в виде строки.
+     * @param topic Название топика.
+     * @return Список записей {@link ConsumerRecord}.
      */
     List<ConsumerRecord<String, String>> getAllRecords(String topic);
 
     /**
-     * Возвращает все полученные записи из топика, преобразуя их значения
-     * в заданный тип с помощью предоставленной функции-маппера.
+     * Возвращает все записи из топика, преобразуя их значения с помощью предоставленной функции.
      *
-     * @param topic  Имя топика.
-     * @param mapper Функция для преобразования строкового значения записи в объект типа {@code T}.
+     * @param topic  Название топика.
+     * @param mapper Функция для преобразования строкового значения записи в нужный тип {@code T}.
      * @param <T>    Целевой тип данных.
      * @return Список объектов типа {@code T}.
      */

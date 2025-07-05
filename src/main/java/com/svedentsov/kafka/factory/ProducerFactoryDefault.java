@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.factory;
 
-import com.svedentsov.kafka.config.DefaultKafkaConfigProvider;
+import com.svedentsov.kafka.config.KafkaConfigProvider;
 import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.avro.generic.GenericRecord;
@@ -25,14 +25,14 @@ public class ProducerFactoryDefault implements ProducerFactory {
 
     private final AtomicReference<KafkaProducer<String, String>> stringProducerRef = new AtomicReference<>();
     private final AtomicReference<KafkaProducer<String, GenericRecord>> avroProducerRef = new AtomicReference<>();
-    private final DefaultKafkaConfigProvider configProvider;
+    private final KafkaConfigProvider configProvider;
 
     /**
      * Создает экземпляр ProducerFactoryDefault с указанным провайдером конфигураций.
      *
      * @param configProvider провайдер конфигураций Kafka, не может быть null.
      */
-    public ProducerFactoryDefault(DefaultKafkaConfigProvider configProvider) {
+    public ProducerFactoryDefault(KafkaConfigProvider configProvider) {
         this.configProvider = requireNonNull(configProvider, "DefaultKafkaConfigProvider не может быть null.");
     }
 

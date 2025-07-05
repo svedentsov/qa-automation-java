@@ -4,7 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.TopicPartition;
 
-import java.util.Set;
+import java.util.Collection;
 
 /**
  * Реализация {@link ConsumerStartStrategy}, которая смещает Kafka Consumer
@@ -21,8 +21,8 @@ public class EarliestStartStrategy implements ConsumerStartStrategy {
      * @param topicName  Имя топика, для которого применяется стратегия.
      */
     @Override
-    public void apply(KafkaConsumer<String, ?> consumer, Set<TopicPartition> partitions, String topicName) {
+    public void apply(KafkaConsumer<String, ?> consumer, Collection<TopicPartition> partitions, String topicName) {
+        log.info("Применение стратегии EARLIEST для топика '{}'. Смещение в начало {} партиций.", topicName, partitions.size());
         consumer.seekToBeginning(partitions);
-        log.info("Consumer для топика '{}' смещен в начало всех {} партиций (EARLIEST).", topicName, partitions.size());
     }
 }

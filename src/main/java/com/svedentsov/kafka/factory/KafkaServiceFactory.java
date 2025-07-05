@@ -8,11 +8,7 @@ import com.svedentsov.kafka.service.*;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Фабрика-агрегатор для создания высокоуровневых сервисов Kafka (Producer и Consumer).
- * Эта фабрика инкапсулирует логику создания различных типов сервисов
- * для взаимодействия с Kafka, абстрагируясь от конкретных реализаций.
- * Она использует {@link ProducerFactory} и {@link ConsumerFactory} для делегирования
- * создания низкоуровневых клиентов, следуя принципу единой ответственности.
+ * Фабрика для создания высокоуровневых сервисов для работы с Kafka.
  */
 public class KafkaServiceFactory {
 
@@ -28,11 +24,10 @@ public class KafkaServiceFactory {
     }
 
     /**
-     * Создает сервис для отправки сообщений в Kafka (Producer).
+     * Создает сервис для отправки сообщений.
      *
-     * @param type Формат контента сообщений (например, STRING, AVRO). Не может быть {@code null}.
-     * @return Экземпляр {@link KafkaProducerService}, сконфигурированный для указанного типа контента.
-     * @throws NullPointerException если {@code type} равен {@code null}.
+     * @param type Тип контента (STRING или AVRO).
+     * @return Экземпляр {@link KafkaProducerService}.
      */
     public KafkaProducerService createProducer(ContentType type) {
         requireNonNull(type, "ContentType для Producer не может быть null");
@@ -43,15 +38,12 @@ public class KafkaServiceFactory {
     }
 
     /**
-     * Создает сервис для чтения сообщений из Kafka (Consumer).
-     * Этот метод является центральной точкой для сборки консьюмер-сервиса,
-     * передавая ему все необходимые зависимости для работы.
+     * Создает сервис для получения сообщений.
      *
-     * @param type            Формат контента сообщений (например, STRING, AVRO). Не может быть {@code null}.
-     * @param listenerManager Менеджер жизненного цикла слушателей Kafka. Не может быть {@code null}.
-     * @param recordsManager  Менеджер для хранения полученных записей. Не может быть {@code null}.
-     * @return Экземпляр {@link KafkaConsumerService}, готовый к работе.
-     * @throws NullPointerException если один из аргументов равен {@code null}.
+     * @param type            Тип контента (STRING или AVRO).
+     * @param listenerManager Менеджер слушателей для управления жизненным циклом консьюмеров.
+     * @param recordsManager  Менеджер для хранения полученных записей.
+     * @return Экземпляр {@link KafkaConsumerService}.
      */
     public KafkaConsumerService createConsumer(ContentType type, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
         requireNonNull(type, "ContentType для Consumer не может быть null");

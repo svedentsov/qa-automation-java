@@ -1,7 +1,7 @@
 package com.svedentsov.kafka.helper;
 
-import com.svedentsov.kafka.config.DefaultKafkaConfigProvider;
 import com.svedentsov.kafka.config.KafkaConfig;
+import com.svedentsov.kafka.config.KafkaConfigProvider;
 import com.svedentsov.kafka.enums.ContentType;
 import com.svedentsov.kafka.factory.ConsumerFactoryDefault;
 import com.svedentsov.kafka.factory.KafkaServiceFactory;
@@ -77,18 +77,17 @@ public class KafkaExecutor implements AutoCloseable {
     private Duration pollTimeout = Duration.ofMillis(1000);
 
     /**
-     * Создает новый экземпляр KafkaExecutor с конфигурацией по умолчанию.
-     * Инициализирует все необходимые фабрики и менеджеры для изолированной сессии.
+     * Создает экземпляр с конфигурацией по умолчанию.
      */
     public KafkaExecutor() {
-        var kafkaConfig = ConfigFactory.create(KafkaConfig.class, System.getProperties());
-        var configProvider = new DefaultKafkaConfigProvider(kafkaConfig);
-        var producerFactory = new ProducerFactoryDefault(configProvider);
-        var consumerFactory = new ConsumerFactoryDefault(configProvider);
+        KafkaConfig kafkaConfig = ConfigFactory.create(KafkaConfig.class, System.getProperties());
+        KafkaConfigProvider configProvider = new KafkaConfigProvider(kafkaConfig);
+        ProducerFactoryDefault producerFactory = new ProducerFactoryDefault(configProvider);
+        ConsumerFactoryDefault consumerFactory = new ConsumerFactoryDefault(configProvider);
 
         this.serviceFactory = new KafkaServiceFactory(producerFactory);
-        this.listenerManager = new KafkaListenerManager(testing(), consumerFactory);
         this.recordsManager = new KafkaRecordsManager();
+        this.listenerManager = new KafkaListenerManager(testing(), consumerFactory, this.recordsManager);
     }
 
     /**

@@ -5,33 +5,29 @@ import org.apache.kafka.clients.consumer.KafkaConsumer;
 import java.io.Closeable;
 
 /**
- * Фабрика для создания экземпляров {@link KafkaConsumer}.
- * В отличие от {@link ProducerFactory}, данная фабрика <b>не кэширует</b> создаваемые
- * экземпляры, так как {@link KafkaConsumer} не является потокобезопасным. Каждый вызов
- * create-метода должен возвращать новый экземпляр, жизненным циклом которого управляет
- * вызывающий код.
+ * Интерфейс фабрики для создания типизированных экземпляров {@link KafkaConsumer}.
+ * Позволяет абстрагироваться от конкретной реализации и конфигурации консьюмеров.
  */
 public interface ConsumerFactory extends Closeable {
 
     /**
-     * Создаёт <b>новый</b> экземпляр {@link KafkaConsumer} для строкового формата.
+     * Создает новый экземпляр {@link KafkaConsumer} для строковых сообщений.
      *
-     * @param topicName имя топика (может использоваться для получения специфичной конфигурации).
-     * @return новый экземпляр {@link KafkaConsumer<String, String>}.
+     * @param topicName Имя топика, для которого создается консьюмер.
+     * @return Новый экземпляр {@link KafkaConsumer} со строковыми ключами и значениями.
      */
     KafkaConsumer<String, String> createStringConsumer(String topicName);
 
     /**
-     * Создаёт <b>новый</b> экземпляр {@link KafkaConsumer} для Avro-формата.
+     * Создает новый экземпляр {@link KafkaConsumer} для Avro сообщений.
      *
-     * @param topicName имя топика (может использоваться для получения специфичной конфигурации).
-     * @return новый экземпляр {@link KafkaConsumer<String, Object>}.
+     * @param topicName Имя топика, для которого создается консьюмер.
+     * @return Новый экземпляр {@link KafkaConsumer} со строковыми ключами и Avro значениями.
      */
-    KafkaConsumer<String, Object> createAvroConsumer(String topicName);
+    KafkaConsumer<String, Object> createAvroConsumer(String topicName); // Object используется, так как GenericRecord - это тоже Object
 
     /**
-     * Закрывает ресурсы, принадлежащие самой фабрике.
-     * В реализации по умолчанию этот метод пуст, так как фабрика не владеет созданными консьюмерами.
+     * Освобождает ресурсы, связанные с фабрикой.
      */
     @Override
     void close();

@@ -3,16 +3,20 @@ package com.svedentsov.kafka.processor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 /**
- * Интерфейс для обработчиков записей, полученных из Kafka.
+ * Интерфейс для классов, отвечающих за обработку пачки записей (records),
+ * полученных из Kafka.
  *
  * @param <V> Тип значения (value) в записи Kafka.
  */
+@FunctionalInterface
 public interface RecordProcessor<V> {
 
     /**
-     * Обрабатывает пачку записей из Kafka.
+     * Обрабатывает пачку записей, полученных из Kafka.
+     * Реализации этого метода должны содержать логику по обработке,
+     * сохранению или анализу полученных сообщений.
      *
-     * @param records Записи, полученные от консьюмера.
+     * @param records Пачка записей для обработки. Не может быть null.
      */
     void processRecords(ConsumerRecords<String, V> records);
 }

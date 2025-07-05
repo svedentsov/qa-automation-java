@@ -12,28 +12,21 @@ import org.aeonbits.owner.Config.Sources;
 public interface KafkaConfig extends Config {
 
     /**
-     * Адреса Kafka брокеров для подключения, разделенные запятыми.
+     * Адреса Kafka брокеров для подключения (bootstrap servers).
      */
     @Key("kafka.bootstrap.servers")
     @DefaultValue("localhost:9092")
     String bootstrapServers();
 
     /**
-     * Идентификатор группы для консюмера Kafka.
+     * Идентификатор группы для потребителей (consumer group ID).
      */
     @Key("kafka.group.id")
     @DefaultValue("test-group")
     String groupId();
 
     /**
-     * Включена ли поддержка SSL-соединений.
-     */
-    @Key("kafka.ssl.enabled")
-    @DefaultValue("false")
-    boolean sslEnabled();
-
-    /**
-     * Путь к файлу truststore, содержащему доверенные сертификаты для SSL соединений.
+     * Путь к файлу truststore, содержащему доверенные сертификаты для SSL-соединений.
      */
     @Key("kafka.ssl.truststore.location")
     String sslTruststoreLocation();
@@ -45,7 +38,7 @@ public interface KafkaConfig extends Config {
     String sslTruststorePassword();
 
     /**
-     * Путь к файлу keystore, содержащему клиентские сертификаты и ключи для SSL соединений.
+     * Путь к файлу keystore, содержащему клиентский сертификат и ключ для SSL-соединений.
      */
     @Key("kafka.ssl.keystore.location")
     String sslKeystoreLocation();

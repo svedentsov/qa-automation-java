@@ -10,7 +10,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import static java.util.Objects.requireNonNull;
 
 /**
- * Обработчик, который сохраняет строковые записи Kafka с помощью {@link KafkaRecordsManager}.
+ * Реализация {@link RecordProcessor} для обработки записей со строковым значением (String).
+ * Основная задача - добавить полученные записи в {@link KafkaRecordsManager}.
  */
 @Slf4j
 public final class RecordProcessorString implements RecordProcessor<String> {
@@ -27,17 +28,15 @@ public final class RecordProcessorString implements RecordProcessor<String> {
      * @param recordsManager Менеджер для сохранения записей.
      */
     public RecordProcessorString(String topicName, KafkaListenerConfig config, KafkaRecordsManager recordsManager) {
-        this.topicName = topicName;
-        this.config = config;
-        this.recordsManager = recordsManager;
+        this.topicName = requireNonNull(topicName, "Имя топика не может быть null.");
+        this.config = requireNonNull(config, "KafkaListenerConfig не может быть null.");
+        this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");
     }
 
     @Override
     public void processRecords(ConsumerRecords<String, String> records) {
         requireNonNull(records, "ConsumerRecords не может быть null.");
-        if (config.isEnableMetrics()) {
-            log.debug("Обработка {} строковых записей для топика '{}'...", records.count(), topicName);
-        }
+        log.debug("Обработка {} строковых записей для топика '{}'...", records.count(), topicName);
         for (ConsumerRecord<String, String> record : records) {
             try {
                 recordsManager.addRecord(topicName, record);
