@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -317,6 +318,7 @@ public class MyEntity {
      * Используется для общих проверок Instant.
      */
     private Instant createdAt;
+    private LocalTime openingTime;
 
     /**
      * Момент времени последнего обновления записи (Instant).

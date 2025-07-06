@@ -20,6 +20,7 @@ import static com.svedentsov.matcher.assertions.InstantAssertions.*;
 import static com.svedentsov.matcher.assertions.ListAssertions.*;
 import static com.svedentsov.matcher.assertions.LocalDateAssertions.*;
 import static com.svedentsov.matcher.assertions.LocalDateTimeAssertions.*;
+import static com.svedentsov.matcher.assertions.LocalTimeAssertions.*;
 import static com.svedentsov.matcher.assertions.NumberAssertions.*;
 import static com.svedentsov.matcher.assertions.PropertyAssertions.*;
 import static com.svedentsov.matcher.assertions.StringAssertions.*;
@@ -389,6 +390,48 @@ public class AssertionsExample {
     }
 
     /**
+     * Валидация LocalTimeAssertions.
+     */
+    public void validateLocalTimeAssertions(MyEntity entity) {
+        EntityValidator.of(entity).shouldHave(
+                // Основные сравнения
+                value(MyEntity::openingTime, timeBefore(LocalTime.of(15, 0))), // Время события до 15:00
+                value(MyEntity::openingTime, timeAfter(LocalTime.of(14, 0))), // Время события после 14:00
+                value(MyEntity::openingTime, timeEquals(LocalTime.of(9, 0))), // Время открытия ровно 09:00
+                value(MyEntity::openingTime, timeAfterOrEqual(LocalTime.of(18, 0))), // Время закрытия в 18:00 или позже
+                value(MyEntity::openingTime, timeBeforeOrEqual(LocalTime.of(9, 0))), // Время открытия в 09:00 или раньше
+                // Диапазоны
+                value(MyEntity::openingTime, timeIsBetween(LocalTime.of(14, 0), LocalTime.of(15, 0))), // Время события между 14:00 и 15:00 (включительно)
+                value(MyEntity::openingTime, timeIsStrictlyBetween(LocalTime.of(14, 20), LocalTime.of(14, 40))), // Время события строго между 14:20 и 14:40
+                // Компоненты времени
+                value(MyEntity::openingTime, timeHasHour(14)), // Час времени события равен 14
+                value(MyEntity::openingTime, timeHasMinute(30)), // Минута времени события равна 30
+                value(MyEntity::openingTime, timeHasSecond(15)), // Секунда времени события равна 15
+                value(MyEntity::openingTime, timeHasNano(0)), // Наносекунды времени события равны 0
+                // Сравнения с игнорированием
+                value(MyEntity::openingTime, timeIsEqualToIgnoringNanos(LocalTime.of(9, 0, 0, 123))), // Равно 09:00, игнорируя наносекунды
+                value(MyEntity::openingTime, timeIsEqualToIgnoringSeconds(LocalTime.of(9, 0, 55))), // Равно 09:00, игнорируя секунды
+                // Периоды дня
+                value(MyEntity::openingTime, timeIsMorning()), // Время 10:45 - это утро
+                value(MyEntity::openingTime, timeIsAfternoon()), // Время 14:30 - это день
+                value(MyEntity::openingTime, timeIsEvening()), // Время 20:05 - это вечер
+                value(MyEntity::openingTime, timeIsNight()), // Время 23:00 - это ночь
+                // Конкретные случаи
+                value(MyEntity::openingTime, timeIsOfficeHours(LocalTime.of(9, 0), LocalTime.of(18, 0))), // Время события попадает в рабочие часы 09-18
+                value(MyEntity::openingTime, timeIsMidnight()), // Проверка на полночь
+                value(MyEntity::openingTime, timeIsNoon()), // Проверка на полдень
+                value(MyEntity::openingTime, timeIsAm()), // Время до полудня
+                value(MyEntity::openingTime, timeIsPm()), // Время после полудня
+                // Продвинутые проверки
+                value(MyEntity::openingTime, timeHasFieldValue(ChronoField.HOUR_OF_AMPM, 8)), // В 20:05 (PM) час в 12-часовом формате равен 8
+                value(MyEntity::openingTime, timeIsWithinHour(14)), // Время 14:30 находится внутри 14-го часа
+                value(MyEntity::openingTime, timeIsWithinMinute(14, 30)), // Время 14:30:15 находится внутри минуты 14:30
+                value(MyEntity::openingTime, timeIsTruncatedTo(ChronoUnit.HOURS)), // Время 09:00:00 усечено до часов (минуты, секунды, нано равны 0)
+                value(MyEntity::openingTime, timeIsTruncatedTo(ChronoUnit.MINUTES)) // Время 09:00:00 усечено до минут (секунды, нано равны 0)
+        );
+    }
+
+    /**
      * Валидация LocalDateAssertions.
      */
     public void validateLocalDateAssertions(MyEntity entity) {
@@ -516,7 +559,7 @@ public class AssertionsExample {
                 value(MyEntity::localDateTimeCreated, dateTimeIsAfterIgnoringSeconds(LocalDateTime.of(2025, 6, 8, 12, 29, 59))), // Время (без секунд) должно быть после 12:29
                 value(MyEntity::localDateTimeCreated, dateTimeIsBeforeIgnoringSeconds(LocalDateTime.of(2025, 6, 8, 12, 30, 1))), // Время (без секунд) должно быть до 12:30
                 // Проверки на свойства года/месяца
-                value(MyEntity::localDateTimeLeapYear, dateTimeIsLeapYear()), // Год должен быть високосным
+                value(MyEntity::localDateTimeCreated, dateTimeIsLeapYear()), // Год должен быть високосным
                 value(MyEntity::localDateTimeCreated, dateTimeIsFirstDayOfMonth()), // Дата должна быть первым днем месяца
                 value(MyEntity::localDateTimeCreated, dateTimeIsLastDayOfMonth()), // Дата должна быть последним днем месяца
                 value(MyEntity::localDateTimeCreated, dateTimeIsInFirstHalfOfMonth()), // Дата должна быть в первой половине месяца (1-15)
@@ -525,7 +568,7 @@ public class AssertionsExample {
                 value(MyEntity::localDateTimeCreated, dateTimeIsMorning()), // Время должно быть утром (06:00 - 12:00)
                 value(MyEntity::localDateTimeCreated, dateTimeIsAfternoon()), // Время должно быть днем (12:00 - 18:00)
                 value(MyEntity::localDateTimeCreated, dateTimeIsEvening()), // Время должно быть вечером (18:00 - 22:00)
-                value(MyEntity::localDateTimeEventEnd, dateTimeIsNight()), // Время должно быть ночью (22:00 - 06:00)
+                value(MyEntity::localDateTimeCreated, dateTimeIsNight()), // Время должно быть ночью (22:00 - 06:00)
                 // Проверка количества дней в месяце
                 value(MyEntity::localDateTimeCreated, dateTimeHasDaysInMonth(30)), // Месяц должен иметь 30 дней (июнь)
                 // Упрощенные проверки на "в пределах N единиц"
