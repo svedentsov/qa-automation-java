@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Класс для выполнения операций с базой данных с использованием Hibernate.
  * Предоставляет методы для выполнения CRUD операций, запросов и управления транзакциями.
@@ -75,8 +77,8 @@ public class DbExecutor<T> {
      * @param entityClass    класс сущности, с которой работает DbExecutor
      */
     public DbExecutor(SessionFactory sessionFactory, Class<T> entityClass) {
-        this.sessionFactory = Objects.requireNonNull(sessionFactory, "SessionFactory не должен быть null");
-        this.entityClass = Objects.requireNonNull(entityClass, "Класс сущности не должен быть null");
+        this.sessionFactory = requireNonNull(sessionFactory, "SessionFactory не должен быть null");
+        this.entityClass = requireNonNull(entityClass, "Класс сущности не должен быть null");
     }
 
     // Методы конфигурации для запроса
@@ -121,7 +123,7 @@ public class DbExecutor<T> {
      * @return текущий экземпляр DbExecutor для цепочки вызовов
      */
     public DbExecutor<T> setParameters(Map<String, Object> parameters) {
-        this.parameters.putAll(Objects.requireNonNull(parameters, "Параметры не должны быть null"));
+        this.parameters.putAll(requireNonNull(parameters, "Параметры не должны быть null"));
         return this;
     }
 
@@ -133,7 +135,7 @@ public class DbExecutor<T> {
      * @return текущий экземпляр DbExecutor для цепочки вызовов
      */
     public DbExecutor<T> addParameter(String name, Object value) {
-        this.parameters.put(Objects.requireNonNull(name, "Имя параметра не должно быть null"), value);
+        this.parameters.put(requireNonNull(name, "Имя параметра не должно быть null"), value);
         return this;
     }
 
@@ -243,7 +245,7 @@ public class DbExecutor<T> {
      * @return текущий экземпляр DbExecutor для цепочки вызовов
      */
     public DbExecutor<T> setHints(Map<String, Object> hints) {
-        this.hints.putAll(Objects.requireNonNull(hints, "Подсказки не должны быть null"));
+        this.hints.putAll(requireNonNull(hints, "Подсказки не должны быть null"));
         return this;
     }
 
@@ -255,7 +257,7 @@ public class DbExecutor<T> {
      * @return текущий экземпляр DbExecutor для цепочки вызовов
      */
     public DbExecutor<T> addHint(String name, Object value) {
-        this.hints.put(Objects.requireNonNull(name, "Имя подсказки не должно быть null"), value);
+        this.hints.put(requireNonNull(name, "Имя подсказки не должно быть null"), value);
         return this;
     }
 
@@ -290,7 +292,7 @@ public class DbExecutor<T> {
      */
     @Step("Сохранение сущности в базе данных")
     public T save(T entity) {
-        Objects.requireNonNull(entity, "Сущность не должна быть null");
+        requireNonNull(entity, "Сущность не должна быть null");
         return executeInTransaction(session -> {
             session.save(entity);
             log.info("Сущность успешно сохранена: {}", entity);
@@ -306,7 +308,7 @@ public class DbExecutor<T> {
      */
     @Step("Обновление сущности в базе данных")
     public T update(T entity) {
-        Objects.requireNonNull(entity, "Сущность не должна быть null");
+        requireNonNull(entity, "Сущность не должна быть null");
         return executeInTransaction(session -> {
             session.update(entity);
             log.info("Сущность успешно обновлена: {}", entity);
@@ -322,7 +324,7 @@ public class DbExecutor<T> {
      */
     @Step("Сохранение или обновление сущности в базе данных")
     public T saveOrUpdate(T entity) {
-        Objects.requireNonNull(entity, "Сущность не должна быть null");
+        requireNonNull(entity, "Сущность не должна быть null");
         return executeInTransaction(session -> {
             session.saveOrUpdate(entity);
             log.info("Сущность успешно сохранена или обновлена: {}", entity);
@@ -338,7 +340,7 @@ public class DbExecutor<T> {
      */
     @Step("Слияние сущности с базой данных")
     public T merge(T entity) {
-        Objects.requireNonNull(entity, "Сущность не должна быть null");
+        requireNonNull(entity, "Сущность не должна быть null");
         return executeInTransaction(session -> {
             T mergedEntity = (T) session.merge(entity);
             log.info("Сущность успешно слита: {}", mergedEntity);
@@ -354,7 +356,7 @@ public class DbExecutor<T> {
      */
     @Step("Получение сущности из базы данных по идентификатору")
     public Optional<T> getById(Object id) {
-        Objects.requireNonNull(id, "Идентификатор сущности не должен быть null");
+        requireNonNull(id, "Идентификатор сущности не должен быть null");
         return executeInTransaction(session -> {
             T entity = session.get(entityClass, (Serializable) id);
             applyOptionsToEntity(session, entity);
@@ -370,7 +372,7 @@ public class DbExecutor<T> {
      */
     @Step("Удаление сущности из базы данных")
     public void delete(T entity) {
-        Objects.requireNonNull(entity, "Сущность не должна быть null");
+        requireNonNull(entity, "Сущность не должна быть null");
         executeInTransaction(session -> {
             session.delete(entity);
             log.info("Сущность успешно удалена: {}", entity);
@@ -385,7 +387,7 @@ public class DbExecutor<T> {
      */
     @Step("Выполнение HQL запроса")
     public List<T> executeHqlQuery() {
-        Objects.requireNonNull(hqlQuery, "HQL запрос не должен быть null");
+        requireNonNull(hqlQuery, "HQL запрос не должен быть null");
         return executeInTransaction(session -> {
             Query<T> query = session.createQuery(hqlQuery, entityClass);
             applyQuerySettings(query);
@@ -402,7 +404,7 @@ public class DbExecutor<T> {
      */
     @Step("Выполнение SQL запроса")
     public List<T> executeSqlQuery() {
-        Objects.requireNonNull(sqlQuery, "SQL запрос не должен быть null");
+        requireNonNull(sqlQuery, "SQL запрос не должен быть null");
         return executeInTransaction(session -> {
             NativeQuery<T> query = session.createNativeQuery(sqlQuery, entityClass);
             applyQuerySettings(query);
@@ -419,7 +421,7 @@ public class DbExecutor<T> {
      */
     @Step("Выполнение именованного запроса")
     public List<T> executeNamedQuery() {
-        Objects.requireNonNull(namedQuery, "Именованный запрос не должен быть null");
+        requireNonNull(namedQuery, "Именованный запрос не должен быть null");
         return executeInTransaction(session -> {
             Query<T> query = session.createNamedQuery(namedQuery, entityClass);
             applyQuerySettings(query);
@@ -468,7 +470,7 @@ public class DbExecutor<T> {
      */
     @Step("Выполнение пакетной операции")
     public void executeBatchOperation(List<T> entities) {
-        Objects.requireNonNull(entities, "Список сущностей не должен быть null");
+        requireNonNull(entities, "Список сущностей не должен быть null");
         executeInTransaction(session -> {
             int i = 0;
             for (T entity : entities) {
@@ -491,7 +493,7 @@ public class DbExecutor<T> {
      */
     @Step("Выполнение обновления или удаления с помощью HQL запроса")
     public int executeUpdateOrDelete() {
-        Objects.requireNonNull(hqlQuery, "HQL запрос не должен быть null");
+        requireNonNull(hqlQuery, "HQL запрос не должен быть null");
         return executeInTransaction(session -> {
             Query<?> query = session.createQuery(hqlQuery);
             applyQuerySettings(query);

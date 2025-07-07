@@ -79,11 +79,11 @@
 
 ```java
 new KafkaSteps()
-    .setProducerType(ContentType.STRING_FORMAT)
+    .setProducerType(TopicType.STRING)
     .sendRecord("my-topic", "{\"user\":\"testUser\",\"action\":\"login\"}");
 
 new KafkaSteps()
-    .setConsumerType(ContentType.STRING_FORMAT)
+    .setConsumerType(TopicType.STRING)
     .startListening("my-topic")
     .checkRecordsPresence("my-topic")
     .checkRecordsContainText("my-topic", "testUser");
@@ -120,14 +120,14 @@ Schema avroSchema = new Schema.Parser().parse("{\n" +
     "}");
 
 new KafkaSteps()
-    .setProducerType(ContentType.AVRO_FORMAT)
+    .setProducerType(TopicType.AVRO)
     .setAvroSchema(avroSchema)
     .setTimeout(5000)
     // предположим, мы заранее подготовили Avro GenericRecord под этот schema
     .sendRecord("avro-topic", /* тут Avro Record, например genericRecord */ );
 
 new KafkaSteps()
-    .setConsumerType(ContentType.AVRO_FORMAT)
+    .setConsumerType(TopicType.AVRO)
     .startListening("avro-topic")
     .checkRecordsPresence("avro-topic");
 

@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.processor;
 
-import com.svedentsov.kafka.config.KafkaListenerConfig;
+import com.svedentsov.kafka.config.KafkaConfigListener;
 import com.svedentsov.kafka.exception.KafkaListenerException.ProcessingException;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import static java.util.Objects.requireNonNull;
 public final class RecordProcessorString implements RecordProcessor<String> {
 
     private final String topicName;
-    private final KafkaListenerConfig config;
+    private final KafkaConfigListener config;
     private final KafkaRecordsManager recordsManager;
 
     /**
@@ -27,7 +27,7 @@ public final class RecordProcessorString implements RecordProcessor<String> {
      * @param config         Конфигурация слушателя.
      * @param recordsManager Менеджер для сохранения записей.
      */
-    public RecordProcessorString(String topicName, KafkaListenerConfig config, KafkaRecordsManager recordsManager) {
+    public RecordProcessorString(String topicName, KafkaConfigListener config, KafkaRecordsManager recordsManager) {
         this.topicName = requireNonNull(topicName, "Имя топика не может быть null.");
         this.config = requireNonNull(config, "KafkaListenerConfig не может быть null.");
         this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");

@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.helper;
 
-import com.svedentsov.kafka.config.KafkaListenerConfig;
+import com.svedentsov.kafka.config.KafkaConfigListener;
 import com.svedentsov.kafka.enums.StartStrategyType;
 import com.svedentsov.kafka.exception.KafkaListenerException.LifecycleException;
 import com.svedentsov.kafka.factory.ConsumerFactory;
@@ -33,7 +33,7 @@ public class KafkaListenerManager implements AutoCloseable {
 
     private final ConcurrentMap<String, KafkaTopicListener<?>> listeners = new ConcurrentHashMap<>();
     private final AtomicBoolean shutdownInitiated = new AtomicBoolean(false);
-    private final KafkaListenerConfig config;
+    private final KafkaConfigListener config;
     private final ConsumerFactory consumerFactory;
     private final KafkaRecordsManager recordsManager;
     private final ExecutorService executorService;
@@ -45,7 +45,7 @@ public class KafkaListenerManager implements AutoCloseable {
      * @param consumerFactory Фабрика для создания консьюмеров. Не может быть null.
      * @param recordsManager  Менеджер для хранения полученных записей. Не может быть null.
      */
-    public KafkaListenerManager(KafkaListenerConfig config, ConsumerFactory consumerFactory, KafkaRecordsManager recordsManager) {
+    public KafkaListenerManager(KafkaConfigListener config, ConsumerFactory consumerFactory, KafkaRecordsManager recordsManager) {
         this.config = requireNonNull(config, "KafkaListenerConfig не может быть null");
         this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null");
         this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null");

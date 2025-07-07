@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.helper;
 
-import com.svedentsov.kafka.config.KafkaListenerConfig;
+import com.svedentsov.kafka.config.KafkaConfigListener;
 import com.svedentsov.kafka.exception.KafkaListenerException;
 import com.svedentsov.kafka.factory.ConsumerFactory;
 import com.svedentsov.kafka.helper.strategy.ConsumerStartStrategy;
@@ -25,14 +25,12 @@ import static java.util.Objects.requireNonNull;
 
 /**
  * Управляет жизненным циклом прослушивания одного топика Kafka.
- * <p>
- * Этот класс отвечает за создание Kafka-консьюмера, подписку на топик,
+ * <p>Этот класс отвечает за создание Kafka-консьюмера, подписку на топик,
  * получение сообщений в отдельном потоке и их обработку с помощью {@link RecordProcessor}.
  * Он также управляет корректным запуском и остановкой процесса прослушивания,
  * используя {@link CompletableFuture} для асинхронного выполнения и {@link ConsumerStartStrategy}
  * для определения начальной позиции чтения в топике.
- * <p>
- * Класс реализует {@link AutoCloseable}, что позволяет использовать его в try-with-resources блоках
+ * <p>Класс реализует {@link AutoCloseable}, что позволяет использовать его в try-with-resources блоках
  * для гарантированного освобождения ресурсов.
  *
  * @param <V> Тип значения сообщения в Kafka (например, {@code String} или {@code GenericRecord}).
@@ -42,7 +40,7 @@ public class KafkaTopicListener<V> implements AutoCloseable {
 
     private final String topicName;
     private final Duration pollTimeout;
-    private final KafkaListenerConfig config;
+    private final KafkaConfigListener config;
     private final ConsumerFactory consumerFactory;
     private final RecordProcessor<V> recordProcessor;
     private final ConsumerStartStrategy startStrategy;
@@ -63,7 +61,7 @@ public class KafkaTopicListener<V> implements AutoCloseable {
      * @param startStrategy   Стратегия для определения начального смещения при подключении к топику. Не может быть null.
      * @param isAvroTopic     {@code true}, если топик содержит сообщения в формате Avro, иначе {@code false}.
      */
-    public KafkaTopicListener(String topicName, Duration pollTimeout, KafkaListenerConfig config, ConsumerFactory consumerFactory, RecordProcessor<V> recordProcessor, ConsumerStartStrategy startStrategy, boolean isAvroTopic) {
+    public KafkaTopicListener(String topicName, Duration pollTimeout, KafkaConfigListener config, ConsumerFactory consumerFactory, RecordProcessor<V> recordProcessor, ConsumerStartStrategy startStrategy, boolean isAvroTopic) {
         this.topicName = requireNonBlank(topicName, "Название топика не может быть null или пустым.");
         this.pollTimeout = validatePollTimeout(pollTimeout);
         this.config = requireNonNull(config, "KafkaListenerConfig не может быть null.");

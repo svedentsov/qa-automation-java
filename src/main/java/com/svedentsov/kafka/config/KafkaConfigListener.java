@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Value
 @Builder(toBuilder = true)
-public class KafkaListenerConfig {
+public class KafkaConfigListener {
 
     private static final Duration DEFAULT_SHUTDOWN_TIMEOUT = Duration.ofSeconds(30);
     private static final Duration DEFAULT_CONSUMER_CLOSE_TIMEOUT = Duration.ofSeconds(10);
@@ -62,7 +62,7 @@ public class KafkaListenerConfig {
     ExecutorService executorService;
 
     @Builder
-    private KafkaListenerConfig(Duration shutdownTimeout, Duration consumerCloseTimeout, Duration errorRetryDelay, boolean stopOnError, int maxRetries, boolean enableMetrics, ExecutorService executorService) {
+    private KafkaConfigListener(Duration shutdownTimeout, Duration consumerCloseTimeout, Duration errorRetryDelay, boolean stopOnError, int maxRetries, boolean enableMetrics, ExecutorService executorService) {
         this.shutdownTimeout = shutdownTimeout != null ? shutdownTimeout : DEFAULT_SHUTDOWN_TIMEOUT;
         this.consumerCloseTimeout = consumerCloseTimeout != null ? consumerCloseTimeout : DEFAULT_CONSUMER_CLOSE_TIMEOUT;
         this.errorRetryDelay = errorRetryDelay != null ? errorRetryDelay : DEFAULT_ERROR_RETRY_DELAY;
@@ -92,28 +92,11 @@ public class KafkaListenerConfig {
          *
          * @return экземпляр KafkaListenerConfig для dev окружения.
          */
-        public static KafkaListenerConfig development() {
-            return KafkaListenerConfig.builder()
+        public static KafkaConfigListener development() {
+            return KafkaConfigListener.builder()
                     .shutdownTimeout(Duration.ofSeconds(10))
                     .errorRetryDelay(Duration.ofSeconds(2))
                     .stopOnError(false)
-                    .enableMetrics(true)
-                    .build();
-        }
-
-        /**
-         * Конфигурация для продакшена.
-         * Удлинённый shutdownTimeout, останавливаем при ошибках, больше maxRetries.
-         * Использует стандартный ExecutorService.
-         *
-         * @return экземпляр KafkaListenerConfig для prod окружения.
-         */
-        public static KafkaListenerConfig production() {
-            return KafkaListenerConfig.builder()
-                    .shutdownTimeout(Duration.ofSeconds(60))
-                    .errorRetryDelay(Duration.ofSeconds(10))
-                    .stopOnError(true)
-                    .maxRetries(5)
                     .enableMetrics(true)
                     .build();
         }
@@ -125,14 +108,31 @@ public class KafkaListenerConfig {
          *
          * @return экземпляр KafkaListenerConfig для тестового окружения.
          */
-        public static KafkaListenerConfig testing() {
-            return KafkaListenerConfig.builder()
+        public static KafkaConfigListener testing() {
+            return KafkaConfigListener.builder()
                     .shutdownTimeout(Duration.ofSeconds(5))
                     .consumerCloseTimeout(Duration.ofSeconds(2))
                     .errorRetryDelay(Duration.ofMillis(100))
                     .stopOnError(true)
                     .enableMetrics(false)
                     .executorService(KafkaExecutorServiceFactory.createFixedThreadPool(2))
+                    .build();
+        }
+
+        /**
+         * Конфигурация для продакшена.
+         * Удлинённый shutdownTimeout, останавливаем при ошибках, больше maxRetries.
+         * Использует стандартный ExecutorService.
+         *
+         * @return экземпляр KafkaListenerConfig для prod окружения.
+         */
+        public static KafkaConfigListener production() {
+            return KafkaConfigListener.builder()
+                    .shutdownTimeout(Duration.ofSeconds(60))
+                    .errorRetryDelay(Duration.ofSeconds(10))
+                    .stopOnError(true)
+                    .maxRetries(5)
+                    .enableMetrics(true)
                     .build();
         }
     }

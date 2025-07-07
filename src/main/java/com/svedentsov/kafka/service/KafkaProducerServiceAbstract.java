@@ -2,7 +2,6 @@ package com.svedentsov.kafka.service;
 
 import com.svedentsov.kafka.exception.KafkaSendingException;
 import com.svedentsov.kafka.model.Record;
-import com.svedentsov.kafka.utils.ValidationUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -32,7 +31,7 @@ public abstract class KafkaProducerServiceAbstract<V> implements KafkaProducerSe
     /**
      * Конструктор для внедрения зависимости {@link KafkaProducer}.
      *
-     * @param producer экземпляр Kafka продюсера, не может быть {@code null}.
+     * @param producer экземпляр Kafka продюсера.
      */
     protected KafkaProducerServiceAbstract(KafkaProducer<String, V> producer) {
         this.producer = requireNonNull(producer, "KafkaProducer не может быть null.");

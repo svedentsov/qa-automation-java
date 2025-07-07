@@ -2,7 +2,7 @@ package com.svedentsov.kafka.helper;
 
 import com.svedentsov.kafka.config.KafkaConfig;
 import com.svedentsov.kafka.config.KafkaConfigProvider;
-import com.svedentsov.kafka.enums.ContentType;
+import com.svedentsov.kafka.enums.TopicType;
 import com.svedentsov.kafka.factory.ConsumerFactoryDefault;
 import com.svedentsov.kafka.factory.KafkaServiceFactory;
 import com.svedentsov.kafka.factory.ProducerFactoryDefault;
@@ -28,33 +28,30 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-import static com.svedentsov.kafka.config.KafkaListenerConfig.EnvConfig.testing;
+import static com.svedentsov.kafka.config.KafkaConfigListener.EnvConfig.testing;
 import static com.svedentsov.kafka.utils.ValidationUtils.requireNonBlank;
 import static java.util.Objects.requireNonNull;
 
 /**
  * Главный класс-фасад для выполнения операций с Kafka в рамках автоматизированных тестов.
- * <p>
- * Предоставляет текучий (fluent) API для настройки, отправки и получения сообщений.
+ * <p>Предоставляет текучий (fluent) API для настройки, отправки и получения сообщений.
  * Каждый экземпляр {@code KafkaExecutor} является изолированной сессией, управляющей
  * собственными менеджерами и сервисами, что предотвращает конфликты при параллельном
  * выполнении тестов.
- * <p>
- * Класс реализует {@link AutoCloseable}, что позволяет использовать его в блоке
+ * <p>Класс реализует {@link AutoCloseable}, что позволяет использовать его в блоке
  * try-with-resources для автоматического освобождения ресурсов.
- * <p>
- * <b>Пример использования:</b>
+ * <p><b>Пример использования:</b>
  * <pre>{@code
  * try (KafkaExecutor executor = new KafkaExecutor()) {
  * // Отправка сообщения
- * executor.setProducerType(ContentType.STRING_FORMAT)
+ * executor.setProducerType(TopicType.STRING)
  * .setTopic("my-topic")
  * .setRecordKey("my-key")
  * .setRecordBody("Hello, Kafka!")
  * .sendRecord();
  *
  * // Получение и валидация
- * List<String> messages = executor.setConsumerType(ContentType.STRING_FORMAT)
+ * List<String> messages = executor.setConsumerType(TopicType.STRING)
  * .setTopic("my-topic")
  * .startListening()
  * // ... подождать получения сообщений ...
@@ -74,7 +71,7 @@ public class KafkaExecutor implements AutoCloseable {
     private KafkaProducerService producer;
     private KafkaConsumerService consumer;
     private final Record record = new Record();
-    private Duration pollTimeout = Duration.ofMillis(1000);
+    private Duration pollTimeout = Duration.ofMillis(100);
 
     /**
      * Создает экземпляр с конфигурацией по умолчанию.
@@ -107,10 +104,10 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Устанавливает тип продюсера. Этот метод должен быть вызван перед отправкой сообщений.
      *
-     * @param type Тип контента (например, {@link ContentType#STRING_FORMAT}).
+     * @param type Тип контента (например, {@link TopicType#STRING}).
      * @return текущий экземпляр {@code KafkaExecutor} для построения цепочки вызовов.
      */
-    public KafkaExecutor setProducerType(ContentType type) {
+    public KafkaExecutor setProducerType(TopicType type) {
         requireNonNull(type, "ContentType для продюсера не может быть null");
         this.producer = serviceFactory.createProducer(type);
         return this;
@@ -120,10 +117,10 @@ public class KafkaExecutor implements AutoCloseable {
      * Устанавливает тип консьюмера. При вызове создается соответствующий сервис,
      * которому передаются менеджеры, принадлежащие этому экземпляру KafkaExecutor.
      *
-     * @param type Тип контента (например, {@link ContentType#AVRO_FORMAT}).
+     * @param type Тип контента (например, {@link TopicType#AVRO}).
      * @return текущий экземпляр {@code KafkaExecutor} для построения цепочки вызовов.
      */
-    public KafkaExecutor setConsumerType(ContentType type) {
+    public KafkaExecutor setConsumerType(TopicType type) {
         requireNonNull(type, "ContentType для консьюмера не может быть null");
         this.consumer = serviceFactory.createConsumer(type, this.listenerManager, this.recordsManager);
         return this;

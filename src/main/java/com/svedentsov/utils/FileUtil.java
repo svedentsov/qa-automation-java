@@ -11,11 +11,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Утилитарный класс для работы с файлами.
@@ -161,7 +161,7 @@ public class FileUtil {
      * @throws UncheckedIOException если возникает ошибка ввода-вывода
      */
     public static String readFileFormatted(String pathToResource) {
-        var file = new File(Objects.requireNonNull(FileUtil.class.getClassLoader().getResource(pathToResource)).getFile());
+        var file = new File(requireNonNull(FileUtil.class.getClassLoader().getResource(pathToResource)).getFile());
         Path path = Paths.get(file.getAbsolutePath());
         try (Stream<String> lines = Files.lines(path, UTF_8)) {
             return lines.collect(Collectors.joining("\n"));

@@ -9,10 +9,11 @@ import org.hamcrest.Matcher;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Утилитный класс для проверки различных свойств сущности: равенство, null, принадлежность к списку, тип, сравнения и т.д.
@@ -765,7 +766,7 @@ public class PropertyAssertions {
      * @throws IllegalArgumentException если matcher == null
      */
     public static <T> PropertyCondition<T> propertyMatches(Matcher<? super T> matcher) {
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return value -> Assertions.assertThat(value)
                 .as("Значение должно соответствовать условию %s", matcher)
                 .is(new HamcrestCondition<>(matcher));
@@ -780,7 +781,7 @@ public class PropertyAssertions {
      * @throws IllegalArgumentException если matcher == null
      */
     public static <T> PropertyCondition<T> propertyDoesNotMatch(Matcher<? super T> matcher) {
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return value -> Assertions.assertThat(value)
                 .as("Значение не должно соответствовать условию %s", matcher)
                 .isNot(new HamcrestCondition<>(matcher));

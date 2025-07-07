@@ -16,8 +16,9 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.regex.Pattern;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Класс для утверждений, связанных с телом ответа.
@@ -43,7 +44,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если text равно null
      */
     public static BodyCondition bodyContains(String text) {
-        Objects.requireNonNull(text, "text не может быть null");
+        requireNonNull(text, "text не может быть null");
         return response -> {
             String body = response.getBody().asString();
             Assertions.assertThat(body)
@@ -60,7 +61,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если text равно null
      */
     public static BodyCondition bodyContainsIgnoringCase(String text) {
-        Objects.requireNonNull(text, "text не может быть null");
+        requireNonNull(text, "text не может быть null");
         return response -> {
             String body = response.getBody().asString();
             Assertions.assertThat(body)
@@ -77,7 +78,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если pattern равно null
      */
     public static BodyCondition bodyMatchesPattern(Pattern pattern) {
-        Objects.requireNonNull(pattern, "pattern не может быть null");
+        requireNonNull(pattern, "pattern не может быть null");
         return response -> {
             String body = response.getBody().asString();
             Assertions.assertThat(body)
@@ -94,7 +95,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если pattern равно null
      */
     public static BodyCondition bodyDoesNotMatchPattern(Pattern pattern) {
-        Objects.requireNonNull(pattern, "pattern не может быть null");
+        requireNonNull(pattern, "pattern не может быть null");
         return response -> {
             String body = response.getBody().asString();
             Assertions.assertThat(body)
@@ -111,7 +112,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если regex равно null
      */
     public static BodyCondition bodyContainsRegex(String regex) {
-        Objects.requireNonNull(regex, "regex не может быть null");
+        requireNonNull(regex, "regex не может быть null");
         Pattern pattern = Pattern.compile("(?s).*" + regex + ".*");
         return response -> {
             String body = response.getBody().asString();
@@ -129,7 +130,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если regex равно null
      */
     public static BodyCondition bodyDoesNotContainRegex(String regex) {
-        Objects.requireNonNull(regex, "regex не может быть null");
+        requireNonNull(regex, "regex не может быть null");
         Pattern pattern = Pattern.compile("(?s).*" + regex + ".*");
         return response -> {
             String body = response.getBody().asString();
@@ -216,8 +217,8 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath или expectedValue равно null
      */
     public static BodyCondition bodyJsonPathEquals(String jsonPath, Object expectedValue) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
-        Objects.requireNonNull(expectedValue, "expectedValue не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(expectedValue, "expectedValue не может быть null");
         return response -> {
             Object actualValue = response.getBody().path(jsonPath);
             Assertions.assertThat(actualValue)
@@ -235,8 +236,8 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath или matcher равно null
      */
     public static BodyCondition bodyJsonPathMatches(String jsonPath, Matcher<?> matcher) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             Object actualValue = response.getBody().path(jsonPath);
             Assertions.assertThat(actualValue)
@@ -254,8 +255,8 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath или matcher равно null
      */
     public static BodyCondition bodyJsonPathDoesNotMatch(String jsonPath, Matcher<?> matcher) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             Object actualValue = response.getBody().path(jsonPath);
             Assertions.assertThat(actualValue)
@@ -272,7 +273,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если clazz равно null
      */
     public static BodyCondition bodyCanDeserializeTo(Class<?> clazz) {
-        Objects.requireNonNull(clazz, "clazz не может быть null");
+        requireNonNull(clazz, "clazz не может быть null");
         return response -> {
             String body = response.getBody().asString();
             try {
@@ -291,7 +292,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если schemaFile равно null или не существует
      */
     public static BodyCondition bodyMatchesJsonSchema(File schemaFile) {
-        Objects.requireNonNull(schemaFile, "schemaFile не может быть null");
+        requireNonNull(schemaFile, "schemaFile не может быть null");
         if (!schemaFile.exists()) {
             throw new IllegalArgumentException("schemaFile должен существовать");
         }
@@ -315,7 +316,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если matcher равно null
      */
     public static BodyCondition bodySize(Matcher<Integer> matcher) {
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             int size = response.getBody().asByteArray().length;
             Assertions.assertThat(size)
@@ -389,7 +390,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если suffix равно null
      */
     public static BodyCondition bodyEndsWith(String suffix) {
-        Objects.requireNonNull(suffix, "suffix не может быть null");
+        requireNonNull(suffix, "suffix не может быть null");
         return response -> {
             String body = response.getBody().asString();
             Assertions.assertThat(body)
@@ -406,7 +407,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если prefix равно null
      */
     public static BodyCondition bodyStartsWith(String prefix) {
-        Objects.requireNonNull(prefix, "prefix не может быть null");
+        requireNonNull(prefix, "prefix не может быть null");
         return response -> {
             String body = response.getBody().asString();
             Assertions.assertThat(body)
@@ -423,7 +424,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если strings равно null
      */
     public static BodyCondition bodyContainsAll(List<String> strings) {
-        Objects.requireNonNull(strings, "strings не могут быть null");
+        requireNonNull(strings, "strings не могут быть null");
         return response -> {
             String body = response.getBody().asString();
             for (String text : strings) {
@@ -442,7 +443,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если strings равно null
      */
     public static BodyCondition bodyContainsAny(List<String> strings) {
-        Objects.requireNonNull(strings, "strings не могут быть null");
+        requireNonNull(strings, "strings не могут быть null");
         return response -> {
             String body = response.getBody().asString();
             boolean found = false;
@@ -481,7 +482,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если text равно null
      */
     public static BodyCondition bodyContainsExact(String text) {
-        Objects.requireNonNull(text, "text не может быть null");
+        requireNonNull(text, "text не может быть null");
         return response -> {
             String body = response.getBody().asString();
             Assertions.assertThat(body)
@@ -498,7 +499,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если text равно null
      */
     public static BodyCondition bodyDoesNotContain(String text) {
-        Objects.requireNonNull(text, "text не может быть null");
+        requireNonNull(text, "text не может быть null");
         return response -> {
             String body = response.getBody().asString();
             Assertions.assertThat(body)
@@ -614,7 +615,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null
      */
     public static BodyCondition bodyHasJsonField(String jsonPath) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         return response -> {
             Object value = response.getBody().path(jsonPath);
             Assertions.assertThat(value)
@@ -632,7 +633,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null или expectedSize отрицателен
      */
     public static BodyCondition bodyJsonPathListSize(String jsonPath, int expectedSize) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         if (expectedSize < 0) {
             throw new IllegalArgumentException("expectedSize не может быть отрицательным");
         }
@@ -653,7 +654,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null или minSize отрицателен
      */
     public static BodyCondition bodyJsonPathListSizeGreaterThan(String jsonPath, int minSize) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         if (minSize < 0) {
             throw new IllegalArgumentException("minSize не может быть отрицательным");
         }
@@ -674,7 +675,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null или maxSize отрицателен
      */
     public static BodyCondition bodyJsonPathListSizeLessThan(String jsonPath, int maxSize) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         if (maxSize < 0) {
             throw new IllegalArgumentException("maxSize не может быть отрицательным");
         }
@@ -695,8 +696,8 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath или keys равно null
      */
     public static BodyCondition bodyJsonPathObjectHasKeys(String jsonPath, List<String> keys) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
-        Objects.requireNonNull(keys, "keys не могут быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(keys, "keys не могут быть null");
         return response -> {
             Map<String, Object> map = response.getBody().path(jsonPath);
             Assertions.assertThat(map.keySet())
@@ -714,7 +715,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null или expectedSize отрицателен
      */
     public static BodyCondition bodyJsonPathListIsUniqueAndSize(String jsonPath, int expectedSize) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         if (expectedSize < 0) {
             throw new IllegalArgumentException("expectedSize не может быть отрицательным");
         }
@@ -739,8 +740,8 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath или predicate равно null
      */
     public static BodyCondition bodyJsonPathSatisfies(String jsonPath, java.util.function.Predicate<Object> predicate) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
-        Objects.requireNonNull(predicate, "predicate не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(predicate, "predicate не может быть null");
         return response -> {
             Object value = response.getBody().path(jsonPath);
             Assertions.assertThat(value)
@@ -762,7 +763,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null
      */
     public static BodyCondition bodyJsonPathNumberGreaterThan(String jsonPath, double minValue) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         return response -> {
             Double value = response.getBody().path(jsonPath);
             Assertions.assertThat(value)
@@ -780,7 +781,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null
      */
     public static BodyCondition bodyJsonPathNumberLessThan(String jsonPath, double maxValue) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         return response -> {
             Double value = response.getBody().path(jsonPath);
             Assertions.assertThat(value)
@@ -797,7 +798,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null
      */
     public static BodyCondition bodyJsonPathArrayHasUniqueValues(String jsonPath) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         return response -> {
             List<?> list = response.getBody().path(jsonPath);
             long uniqueCount = list.stream().distinct().count();
@@ -815,7 +816,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null
      */
     public static BodyCondition bodyContainsValidUrl(String jsonPath) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         return response -> {
             String url = response.getBody().path(jsonPath);
             try {
@@ -835,8 +836,8 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath или dateFormat равно null
      */
     public static BodyCondition bodyContainsValidDate(String jsonPath, String dateFormat) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
-        Objects.requireNonNull(dateFormat, "dateFormat не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(dateFormat, "dateFormat не может быть null");
         return response -> {
             String dateStr = response.getBody().path(jsonPath);
             try {
@@ -856,7 +857,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null
      */
     public static BodyCondition bodyContainsValidEmail(String jsonPath) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         String emailRegex = "^[A-Za-z0-9+_.-]+@(.+)$";
         Pattern pattern = Pattern.compile(emailRegex);
         return response -> {
@@ -875,7 +876,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath равно null
      */
     public static BodyCondition bodyContainsValidBase64(String jsonPath) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
         return response -> {
             String base64 = response.getBody().path(jsonPath);
             try {
@@ -895,8 +896,8 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath или tagName равно null
      */
     public static BodyCondition bodyContainsHtmlTag(String jsonPath, String tagName) {
-        Objects.requireNonNull(jsonPath, "jsonPath не может быть null");
-        Objects.requireNonNull(tagName, "tagName не может быть null");
+        requireNonNull(jsonPath, "jsonPath не может быть null");
+        requireNonNull(tagName, "tagName не может быть null");
         String regex = String.format("<%s\\b[^>]*>.*?</%s>", Pattern.quote(tagName), Pattern.quote(tagName));
         Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
         return response -> {
@@ -914,7 +915,7 @@ public class BodyAssertions {
      * @throws IllegalArgumentException если jsonPath или keys равно null
      */
     public static BodyCondition bodyContainsFieldsWithValues(Map<String, Object> fieldValues) {
-        Objects.requireNonNull(fieldValues, "fieldValues не могут быть null");
+        requireNonNull(fieldValues, "fieldValues не могут быть null");
         return response -> {
             for (Entry<String, Object> entry : fieldValues.entrySet()) {
                 String jsonPath = entry.getKey();

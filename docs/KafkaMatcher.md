@@ -243,11 +243,11 @@ shouldHave(startsWithCustom("custom_"));
 @Test
 public void testKafkaMessage() {
     new KafkaSteps()
-        .setProducerType(ContentType.STRING_FORMAT)
+        .setProducerType(TopicType.STRING)
         .sendRecord("test-topic", "Hello World", "user_123");
     
     new KafkaSteps()
-        .setConsumerType(ContentType.STRING_FORMAT)
+        .setConsumerType(TopicType.STRING)
         .startListening("test-topic")
         .checkRecordsPresence("test-topic")
         .validateRecords(new KafkaSteps().getAllRecords("test-topic"))
@@ -282,12 +282,12 @@ Schema avroSchema = new Schema.Parser().parse("{\n" +
     "}");
 
 new KafkaSteps()
-    .setProducerType(ContentType.AVRO_FORMAT)
+    .setProducerType(TopicType.AVRO)
     .setAvroSchema(avroSchema)
     .sendRecord("avro-topic", /* Avro Record */);
 
 new KafkaSteps()
-    .setConsumerType(ContentType.AVRO_FORMAT)
+    .setConsumerType(TopicType.AVRO)
     .startListening("avro-topic")
     .checkRecordsPresence("avro-topic")
     .validateRecords(new KafkaSteps().getAllRecords("avro-topic"))
@@ -303,11 +303,11 @@ new KafkaSteps()
 
 ```java
 new KafkaSteps()
-    .setProducerType(ContentType.STRING_FORMAT)
+    .setProducerType(TopicType.STRING)
     .sendRecordWithHeader("string-topic", "Test Message", "source", "unit-test");
 
 new KafkaSteps()
-    .setConsumerType(ContentType.STRING_FORMAT)
+    .setConsumerType(TopicType.STRING)
     .startListening("string-topic")
     .checkRecordsPresence("string-topic")
     .validateRecords(new KafkaSteps().getAllRecords("string-topic"))
@@ -324,13 +324,13 @@ new KafkaSteps()
 
 ```java
 new KafkaSteps()
-    .setProducerType(ContentType.STRING_FORMAT)
+    .setProducerType(TopicType.STRING)
     .sendRecord("unique-topic", "First Message", "user_1")
     .sendRecord("unique-topic", "Second Message", "user_2")
     .sendRecord("unique-topic", "Third Message", "user_3");
 
 new KafkaSteps()
-    .setConsumerType(ContentType.STRING_FORMAT)
+    .setConsumerType(TopicType.STRING)
     .startListening("unique-topic")
     .checkRecordsPresence("unique-topic")
     .validateRecords(new KafkaSteps().getAllRecords("unique-topic"))

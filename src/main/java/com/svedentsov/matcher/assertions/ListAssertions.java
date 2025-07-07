@@ -9,6 +9,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static java.util.Objects.requireNonNull;
+
 /**
  * Утилитный класс для создания и комбинирования условий проверки коллекций сущностей.
  */
@@ -596,7 +598,7 @@ public class ListAssertions {
      * @throws NullPointerException если список равен null
      */
     private static <T> void requireList(List<T> list) {
-        Objects.requireNonNull(list, "Список сущностей не должен быть null");
+        requireNonNull(list, "Список сущностей не должен быть null");
     }
 
     /**

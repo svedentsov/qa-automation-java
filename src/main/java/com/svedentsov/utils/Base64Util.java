@@ -4,7 +4,8 @@ import lombok.experimental.UtilityClass;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Утилитарный класс для работы с кодированием и декодированием в формате Base64.
@@ -20,7 +21,7 @@ public class Base64Util {
      * @throws NullPointerException если value == null
      */
     public static String encode(final String value) {
-        Objects.requireNonNull(value, "value must not be null");
+        requireNonNull(value, "value must not be null");
         return Base64.getEncoder().encodeToString(value.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -33,7 +34,7 @@ public class Base64Util {
      * @throws IllegalArgumentException если value невалидна как Base64
      */
     public static String decode(final String value) {
-        Objects.requireNonNull(value, "value must not be null");
+        requireNonNull(value, "value must not be null");
         byte[] decodedValue = Base64.getDecoder().decode(value);
         return new String(decodedValue, StandardCharsets.UTF_8);
     }
@@ -48,9 +49,9 @@ public class Base64Util {
      * @throws NullPointerException если любой из аргументов == null
      */
     public static String encodeAuthToken(final String accountId, final String publicKey, final String signature) {
-        Objects.requireNonNull(accountId, "accountId must not be null");
-        Objects.requireNonNull(publicKey, "publicKey must not be null");
-        Objects.requireNonNull(signature, "signature must not be null");
+        requireNonNull(accountId, "accountId must not be null");
+        requireNonNull(publicKey, "publicKey must not be null");
+        requireNonNull(signature, "signature must not be null");
         String input = String.format("%s|%s|%s", accountId, publicKey, signature);
         return Base64.getEncoder().encodeToString(input.getBytes(StandardCharsets.UTF_8));
     }

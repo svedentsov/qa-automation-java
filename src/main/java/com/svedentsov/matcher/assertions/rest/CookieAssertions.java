@@ -9,8 +9,9 @@ import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
 
 import java.util.Date;
-import java.util.Objects;
 import java.util.regex.Pattern;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Класс для утверждений, связанных с куки в ответе.
@@ -34,8 +35,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или expectedValue равно null
      */
     public static CookieCondition cookieEquals(String cookieName, String expectedValue) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(expectedValue, "expectedValue не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(expectedValue, "expectedValue не может быть null");
         return response -> {
             String actualValue = response.getCookie(cookieName);
             Assertions.assertThat(actualValue)
@@ -52,7 +53,7 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName равно null
      */
     public static CookieCondition cookieExists(String cookieName) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
         return response -> {
             boolean exists = response.getCookies().containsKey(cookieName);
             Assertions.assertThat(exists)
@@ -70,8 +71,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или matcher равно null
      */
     public static CookieCondition cookieMatches(String cookieName, Matcher<?> matcher) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             String actualValue = response.getCookie(cookieName);
             Assertions.assertThat(actualValue)
@@ -89,8 +90,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или prefix равно null
      */
     public static CookieCondition cookieStartsWith(String cookieName, String prefix) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(prefix, "prefix не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(prefix, "prefix не может быть null");
         return response -> {
             String actualValue = response.getCookie(cookieName);
             Assertions.assertThat(actualValue)
@@ -108,8 +109,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или suffix равно null
      */
     public static CookieCondition cookieEndsWith(String cookieName, String suffix) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(suffix, "suffix не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(suffix, "suffix не может быть null");
         return response -> {
             String actualValue = response.getCookie(cookieName);
             Assertions.assertThat(actualValue)
@@ -127,8 +128,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или domain равно null
      */
     public static CookieCondition cookieDomainEquals(String cookieName, String domain) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(domain, "domain не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(domain, "domain не может быть null");
         return response -> {
             Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
@@ -150,8 +151,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или path равно null
      */
     public static CookieCondition cookiePathEquals(String cookieName, String path) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(path, "path не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(path, "path не может быть null");
         return response -> {
             Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
@@ -173,8 +174,8 @@ public class CookieAssertions {
      * @regex регулярное выражение
      */
     public static CookieCondition cookieValueMatchesPattern(String cookieName, String regex) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(regex, "regex не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(regex, "regex не может быть null");
         return response -> {
             String actualValue = response.getCookie(cookieName);
             Assertions.assertThat(actualValue)
@@ -191,7 +192,7 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName равно null
      */
     public static CookieCondition cookieValueNotEmpty(String cookieName) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
         return response -> {
             String actualValue = response.getCookie(cookieName);
             Assertions.assertThat(actualValue)
@@ -210,9 +211,9 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName, domain или path равно null
      */
     public static CookieCondition cookieDomainAndPathEquals(String cookieName, String domain, String path) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(domain, "domain не может быть null");
-        Objects.requireNonNull(path, "path не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(domain, "domain не может быть null");
+        requireNonNull(path, "path не может быть null");
         return response -> {
             Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
@@ -238,8 +239,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или expirationDate равно null
      */
     public static CookieCondition cookieExpiresAt(String cookieName, Date expirationDate) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(expirationDate, "expirationDate не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(expirationDate, "expirationDate не может быть null");
         return response -> {
             Cookie detailedCookie = response.getDetailedCookie(cookieName);
             if (detailedCookie == null) {
@@ -261,8 +262,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или attributeName равно null
      */
     public static CookieCondition cookieDoesNotHaveAttribute(String cookieName, String attributeName) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(attributeName, "attributeName не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(attributeName, "attributeName не может быть null");
         String attrNameLower = attributeName.toLowerCase();
         return response -> {
             Cookie detailedCookie = response.getDetailedCookie(cookieName);
@@ -295,8 +296,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или expectedName равно null
      */
     public static CookieCondition cookieNameEquals(String cookieName, String expectedName) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(expectedName, "expectedName не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(expectedName, "expectedName не может быть null");
         return response -> {
             Cookie detailedCookie = response.getDetailedCookie(cookieName);
             Assertions.assertThat(detailedCookie)
@@ -318,8 +319,8 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или pattern равно null
      */
     public static CookieCondition cookieValueMatchesPattern(String cookieName, Pattern pattern) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
-        Objects.requireNonNull(pattern, "pattern не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(pattern, "pattern не может быть null");
         return response -> {
             String actualValue = response.getCookie(cookieName);
             Assertions.assertThat(actualValue)
@@ -338,7 +339,7 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName равно null или minSize > maxSize
      */
     public static CookieCondition cookieValueSizeBetween(String cookieName, int minSize, int maxSize) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
         if (minSize < 0 || maxSize < 0) {
             throw new IllegalArgumentException("minSize и maxSize не могут быть отрицательными");
         }
@@ -363,7 +364,7 @@ public class CookieAssertions {
      * @throws IllegalArgumentException если cookieName или exactSize отрицателен
      */
     public static CookieCondition cookieValueSizeEquals(String cookieName, int exactSize) {
-        Objects.requireNonNull(cookieName, "cookieName не может быть null");
+        requireNonNull(cookieName, "cookieName не может быть null");
         if (exactSize < 0) {
             throw new IllegalArgumentException("exactSize не может быть отрицательным");
         }
