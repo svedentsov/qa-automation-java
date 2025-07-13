@@ -25,8 +25,8 @@ public class KafkaConsumerServiceString implements KafkaConsumerService {
     /**
      * Создает новый экземпляр {@code KafkaConsumerServiceString}.
      *
-     * @param listenerManager Менеджер слушателей Kafka. Не может быть null.
-     * @param recordsManager  Менеджер для хранения и доступа к полученным записям. Не может быть null.
+     * @param listenerManager Менеджер слушателей Kafka.
+     * @param recordsManager  Менеджер для хранения и доступа к полученным записям.
      */
     public KafkaConsumerServiceString(KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
         this.listenerManager = requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");

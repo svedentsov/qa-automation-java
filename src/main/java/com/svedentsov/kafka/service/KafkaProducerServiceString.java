@@ -22,8 +22,7 @@ public class KafkaProducerServiceString extends KafkaProducerServiceAbstract<Str
 
     /**
      * {@inheritDoc}
-     * <p>
-     * Дополнительно проверяет, что строковое значение в записи не является {@code null}.
+     * <p>Дополнительно проверяет, что строковое значение в записи не является {@code null}.
      */
     @Override
     protected void validateRecord(Record record) {
@@ -33,8 +32,7 @@ public class KafkaProducerServiceString extends KafkaProducerServiceAbstract<Str
 
     /**
      * {@inheritDoc}
-     * <p>
-     * Возвращает строковое значение из записи.
+     * <p>Возвращает строковое значение из записи.
      */
     @Override
     protected String getValueFromRecord(Record record) {

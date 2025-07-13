@@ -16,7 +16,7 @@ public interface RecordProcessor<V> {
      * Реализации этого метода должны содержать логику по обработке,
      * сохранению или анализу полученных сообщений.
      *
-     * @param records Пачка записей для обработки. Не может быть null.
+     * @param records Пачка записей для обработки.
      */
     void processRecords(ConsumerRecords<String, V> records);
 }

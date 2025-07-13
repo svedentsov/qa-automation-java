@@ -1,6 +1,6 @@
 package com.svedentsov.steps.common;
 
-import com.svedentsov.kafka.enums.ContentType;
+import com.svedentsov.kafka.enums.TopicType;
 import com.svedentsov.kafka.helper.KafkaExecutor;
 import com.svedentsov.matcher.Condition;
 import io.qameta.allure.Step;
@@ -34,20 +34,20 @@ public class KafkaSteps {
     /**
      * Создает экземпляр шагов, используя предоставленный исполнитель.
      *
-     * @param kafkaExecutor сконфигурированный экземпляр {@link KafkaExecutor}, не может быть {@code null}.
+     * @param kafkaExecutor сконфигурированный экземпляр {@link KafkaExecutor}.
      */
     public KafkaSteps(KafkaExecutor kafkaExecutor) {
         this.kafkaExecutor = requireNonNull(kafkaExecutor, "KafkaExecutor не может быть null.");
     }
 
     @Step("Установить продюсер с типом контента '{producerType}'")
-    public KafkaSteps setProducerType(ContentType producerType) {
+    public KafkaSteps setProducerType(TopicType producerType) {
         kafkaExecutor.setProducerType(producerType);
         return this;
     }
 
     @Step("Установить консьюмер с типом контента '{consumerType}'")
-    public KafkaSteps setConsumerType(ContentType consumerType) {
+    public KafkaSteps setConsumerType(TopicType consumerType) {
         kafkaExecutor.setConsumerType(consumerType);
         return this;
     }

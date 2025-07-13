@@ -5,13 +5,15 @@ import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Утилитный класс для загрузки значений записей из файлов.
  */
 @Slf4j
 public class RecordLoader {
+
     /**
      * Загружает значение записи из указанного файла.
      *
@@ -21,7 +23,7 @@ public class RecordLoader {
      * @throws RuntimeException     если произошла ошибка ввода-вывода при загрузке файла.
      */
     public static String loadRecordValue(String file) {
-        Objects.requireNonNull(file, "Файл не может быть null");
+        requireNonNull(file, "Файл не может быть null");
         try {
             log.info("Значение записи загружено из файла: {}", file);
             return new String(Files.readAllBytes(Paths.get(file)));

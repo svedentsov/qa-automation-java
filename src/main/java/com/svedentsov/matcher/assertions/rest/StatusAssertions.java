@@ -9,7 +9,8 @@ import org.hamcrest.Matcher;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Класс для утверждений, связанных с кодом состояния ответа.
@@ -144,7 +145,7 @@ public class StatusAssertions {
      * @throws IllegalArgumentException если expectedLine равно null
      */
     public static StatusCondition statusLineEquals(String expectedLine) {
-        Objects.requireNonNull(expectedLine, "expectedLine не может быть null");
+        requireNonNull(expectedLine, "expectedLine не может быть null");
         return response -> {
             String actualLine = response.getStatusLine();
             Assertions.assertThat(actualLine)
@@ -161,7 +162,7 @@ public class StatusAssertions {
      * @throws IllegalArgumentException если substring равно null
      */
     public static StatusCondition statusLineContains(String substring) {
-        Objects.requireNonNull(substring, "substring не может быть null");
+        requireNonNull(substring, "substring не может быть null");
         return response -> {
             String actualLine = response.getStatusLine();
             Assertions.assertThat(actualLine)
@@ -178,7 +179,7 @@ public class StatusAssertions {
      * @throws IllegalArgumentException если substring равно null
      */
     public static StatusCondition statusLineDoesNotContain(String substring) {
-        Objects.requireNonNull(substring, "substring не может быть null");
+        requireNonNull(substring, "substring не может быть null");
         return response -> {
             String actualLine = response.getStatusLine();
             Assertions.assertThat(actualLine)
@@ -234,7 +235,7 @@ public class StatusAssertions {
      * @throws IllegalArgumentException если matcher равно null
      */
     public static StatusCondition statusCodeMatches(Matcher<Integer> matcher) {
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             int actualCode = response.getStatusCode();
             Assertions.assertThat(actualCode)
@@ -251,7 +252,7 @@ public class StatusAssertions {
      * @throws IllegalArgumentException если matcher равно null
      */
     public static StatusCondition statusLineMatches(Matcher<String> matcher) {
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             String actualLine = response.getStatusLine();
             Assertions.assertThat(actualLine)

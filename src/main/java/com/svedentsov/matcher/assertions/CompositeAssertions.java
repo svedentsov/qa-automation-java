@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static java.util.Objects.*;
+
 /**
  * Утилитный класс для композиционных (логических) операций над проверками: AND, OR, NOT, и др.
  */
@@ -166,12 +168,12 @@ public class CompositeAssertions {
      * Проверяет массив условий на null, пустоту и наличие null-элементов.
      */
     private static <T> void validateConditions(Condition<T>[] conditions, String operationName) {
-        Objects.requireNonNull(conditions, () -> operationName + ": массив условий не может быть null");
+        requireNonNull(conditions, () -> operationName + ": массив условий не может быть null");
         if (conditions.length == 0) {
             throw new IllegalArgumentException(operationName + ": требует хотя бы одного условия");
         }
         Stream.of(conditions).forEach(cond ->
-                Objects.requireNonNull(cond, operationName + ": элемент массива условий не может быть null")
+                requireNonNull(cond, operationName + ": элемент массива условий не может быть null")
         );
     }
 
@@ -249,7 +251,7 @@ public class CompositeAssertions {
         final AssertionError error; // null, если проверка успешна
 
         ConditionResult(Condition<?> condition, AssertionError error) {
-            this.condition = Objects.requireNonNull(condition);
+            this.condition = requireNonNull(condition);
             this.error = error;
         }
 

@@ -21,8 +21,8 @@ public class PropertyMatcher {
      * создаст {@code Condition<Pet>}, который сначала извлекает имя питомца (строку),
      * а затем проверяет его с помощью условия {@code equalTo("Rex")}.
      *
-     * @param getter    функция, которая по объекту {@code T} возвращает поле {@code R}. Не может быть null.
-     * @param condition любое условие для типа {@code R} ({@code Condition<R>}). Не может быть null.
+     * @param getter    функция, которая по объекту {@code T} возвращает поле {@code R}.
+     * @param condition любое условие для типа {@code R} ({@code Condition<R>}).
      * @param <T>       тип "верхнего" объекта, свойство которого проверяется.
      * @param <R>       тип свойства, к которому применяется условие {@code condition}.
      * @return {@code Condition<T>}, который валидирует поле {@code R} внутри {@code T}.

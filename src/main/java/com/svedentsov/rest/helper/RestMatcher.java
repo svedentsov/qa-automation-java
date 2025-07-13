@@ -201,8 +201,8 @@ public class RestMatcher {
      * извлекаемого из {@link Response}. Этот метод является базовым для многих других
      * {@code body(...)} методов.
      *
-     * @param getter    функция для извлечения значения из ответа. Не может быть null.
-     * @param condition условие для проверки извлечённого значения. Не может быть null.
+     * @param getter    функция для извлечения значения из ответа.
+     * @param condition условие для проверки извлечённого значения.
      * @param <R>       тип проверяемого значения.
      * @return {@link BodyCondition} для проверки.
      * @throws NullPointerException если getter или condition равен null (покрывается Lombok @NonNull).

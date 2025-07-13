@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.factory;
 
-import com.svedentsov.kafka.enums.ContentType;
+import com.svedentsov.kafka.enums.TopicType;
 import com.svedentsov.kafka.helper.KafkaListenerManager;
 import com.svedentsov.kafka.helper.KafkaRecordsManager;
 import com.svedentsov.kafka.service.*;
@@ -29,11 +29,11 @@ public class KafkaServiceFactory {
      * @param type Тип контента (STRING или AVRO).
      * @return Экземпляр {@link KafkaProducerService}.
      */
-    public KafkaProducerService createProducer(ContentType type) {
+    public KafkaProducerService createProducer(TopicType type) {
         requireNonNull(type, "ContentType для Producer не может быть null");
         return switch (type) {
-            case STRING_FORMAT -> new KafkaProducerServiceString(producerFactory.createStringProducer());
-            case AVRO_FORMAT -> new KafkaProducerServiceAvro(producerFactory.createAvroProducer());
+            case STRING -> new KafkaProducerServiceString(producerFactory.createStringProducer());
+            case AVRO -> new KafkaProducerServiceAvro(producerFactory.createAvroProducer());
         };
     }
 
@@ -45,13 +45,13 @@ public class KafkaServiceFactory {
      * @param recordsManager  Менеджер для хранения полученных записей.
      * @return Экземпляр {@link KafkaConsumerService}.
      */
-    public KafkaConsumerService createConsumer(ContentType type, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
+    public KafkaConsumerService createConsumer(TopicType type, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
         requireNonNull(type, "ContentType для Consumer не может быть null");
         requireNonNull(listenerManager, "KafkaListenerManager не может быть null");
         requireNonNull(recordsManager, "KafkaRecordsManager не может быть null");
         return switch (type) {
-            case STRING_FORMAT -> new KafkaConsumerServiceString(listenerManager, recordsManager);
-            case AVRO_FORMAT -> new KafkaConsumerServiceAvro(listenerManager, recordsManager);
+            case STRING -> new KafkaConsumerServiceString(listenerManager, recordsManager);
+            case AVRO -> new KafkaConsumerServiceAvro(listenerManager, recordsManager);
         };
     }
 }

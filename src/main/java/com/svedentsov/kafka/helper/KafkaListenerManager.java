@@ -1,6 +1,6 @@
 package com.svedentsov.kafka.helper;
 
-import com.svedentsov.kafka.config.KafkaListenerConfig;
+import com.svedentsov.kafka.config.KafkaConfigListener;
 import com.svedentsov.kafka.enums.StartStrategyType;
 import com.svedentsov.kafka.exception.KafkaListenerException.LifecycleException;
 import com.svedentsov.kafka.factory.ConsumerFactory;
@@ -33,7 +33,7 @@ public class KafkaListenerManager implements AutoCloseable {
 
     private final ConcurrentMap<String, KafkaTopicListener<?>> listeners = new ConcurrentHashMap<>();
     private final AtomicBoolean shutdownInitiated = new AtomicBoolean(false);
-    private final KafkaListenerConfig config;
+    private final KafkaConfigListener config;
     private final ConsumerFactory consumerFactory;
     private final KafkaRecordsManager recordsManager;
     private final ExecutorService executorService;
@@ -41,11 +41,11 @@ public class KafkaListenerManager implements AutoCloseable {
     /**
      * Создает новый экземпляр менеджера слушателей.
      *
-     * @param config          Общая конфигурация для всех слушателей. Не может быть null.
-     * @param consumerFactory Фабрика для создания консьюмеров. Не может быть null.
-     * @param recordsManager  Менеджер для хранения полученных записей. Не может быть null.
+     * @param config          Общая конфигурация для всех слушателей.
+     * @param consumerFactory Фабрика для создания консьюмеров.
+     * @param recordsManager  Менеджер для хранения полученных записей.
      */
-    public KafkaListenerManager(KafkaListenerConfig config, ConsumerFactory consumerFactory, KafkaRecordsManager recordsManager) {
+    public KafkaListenerManager(KafkaConfigListener config, ConsumerFactory consumerFactory, KafkaRecordsManager recordsManager) {
         this.config = requireNonNull(config, "KafkaListenerConfig не может быть null");
         this.consumerFactory = requireNonNull(consumerFactory, "ConsumerFactory не может быть null");
         this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null");
@@ -60,7 +60,7 @@ public class KafkaListenerManager implements AutoCloseable {
      * @param topic           Имя топика. Не может быть пустым или null.
      * @param pollTimeout     Максимальное время блокировки в методе poll().
      * @param isAvro          {@code true}, если топик содержит сообщения в формате Avro, иначе {@code false}.
-     * @param strategyOptions Объект, содержащий тип стратегии и её параметры. Не может быть null.
+     * @param strategyOptions Объект, содержащий тип стратегии и её параметры.
      * @return {@link CompletableFuture}, который завершается, когда слушатель успешно создан и запущен.
      */
     public CompletableFuture<Void> startListeningAsync(String topic, Duration pollTimeout, boolean isAvro, StartStrategyOptions strategyOptions) {

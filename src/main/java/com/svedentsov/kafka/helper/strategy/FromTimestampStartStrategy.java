@@ -28,7 +28,7 @@ public class FromTimestampStartStrategy implements ConsumerStartStrategy {
      * Создает новый экземпляр стратегии на основе временной метки.
      *
      * @param lookBackDuration Продолжительность, на которую нужно "оглянуться" назад от текущего времени,
-     *                         чтобы определить целевую временную метку для поиска смещения. Не может быть null.
+     *                         чтобы определить целевую временную метку для поиска смещения.
      */
     public FromTimestampStartStrategy(Duration lookBackDuration) {
         this.lookBackDuration = requireNonNull(lookBackDuration, "lookBackDuration не может быть null для FromTimestampStartStrategy.");

@@ -8,7 +8,8 @@ import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
 
 import java.time.Duration;
-import java.util.Objects;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Класс для утверждений, связанных с временем ответа.
@@ -31,7 +32,7 @@ public class TimeAssertions {
      * @throws IllegalArgumentException если {@code maxDuration} равно {@code null}
      */
     public static TimeCondition responseTimeLessThan(Duration maxDuration) {
-        Objects.requireNonNull(maxDuration, "maxDuration не может быть null");
+        requireNonNull(maxDuration, "maxDuration не может быть null");
         return response -> {
             long time = response.getTime();
             Assertions.assertThat(time)
@@ -48,7 +49,7 @@ public class TimeAssertions {
      * @throws IllegalArgumentException если {@code matcher} равно {@code null}
      */
     public static TimeCondition responseTimeMatches(Matcher<Long> matcher) {
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             long time = response.getTime();
             Assertions.assertThat(time)
@@ -65,7 +66,7 @@ public class TimeAssertions {
      * @throws IllegalArgumentException если {@code minDuration} равно {@code null}
      */
     public static TimeCondition responseTimeGreaterThan(Duration minDuration) {
-        Objects.requireNonNull(minDuration, "minDuration не может быть null");
+        requireNonNull(minDuration, "minDuration не может быть null");
         return response -> {
             long time = response.getTime();
             Assertions.assertThat(time)
@@ -84,8 +85,8 @@ public class TimeAssertions {
      *                                  или {@code minDuration} превышает {@code maxDuration}
      */
     public static TimeCondition responseTimeBetween(Duration minDuration, Duration maxDuration) {
-        Objects.requireNonNull(minDuration, "minDuration не может быть null");
-        Objects.requireNonNull(maxDuration, "maxDuration не может быть null");
+        requireNonNull(minDuration, "minDuration не может быть null");
+        requireNonNull(maxDuration, "maxDuration не может быть null");
         if (minDuration.toMillis() > maxDuration.toMillis()) {
             throw new IllegalArgumentException("minDuration не может быть больше maxDuration");
         }
@@ -106,7 +107,7 @@ public class TimeAssertions {
      * @throws IllegalArgumentException если {@code minDuration} равно {@code null}
      */
     public static TimeCondition responseTimeGreaterThanExclusive(Duration minDuration) {
-        Objects.requireNonNull(minDuration, "minDuration не может быть null");
+        requireNonNull(minDuration, "minDuration не может быть null");
         return response -> {
             long time = response.getTime();
             Assertions.assertThat(time)
@@ -123,7 +124,7 @@ public class TimeAssertions {
      * @throws IllegalArgumentException если {@code maxDuration} равно {@code null}
      */
     public static TimeCondition responseTimeLessThanExclusive(Duration maxDuration) {
-        Objects.requireNonNull(maxDuration, "maxDuration не может быть null");
+        requireNonNull(maxDuration, "maxDuration не может быть null");
         return response -> {
             long time = response.getTime();
             Assertions.assertThat(time)
@@ -219,8 +220,8 @@ public class TimeAssertions {
      *                                  или {@code tolerance} отрицательна
      */
     public static TimeCondition responseTimeWithinTolerance(Duration expectedDuration, Duration tolerance) {
-        Objects.requireNonNull(expectedDuration, "expectedDuration не может быть null");
-        Objects.requireNonNull(tolerance, "tolerance не может быть null");
+        requireNonNull(expectedDuration, "expectedDuration не может быть null");
+        requireNonNull(tolerance, "tolerance не может быть null");
         if (tolerance.isNegative()) {
             throw new IllegalArgumentException("tolerance не может быть отрицательным");
         }
@@ -240,7 +241,7 @@ public class TimeAssertions {
      *                                  или {@code deviation} отрицательно
      */
     public static TimeCondition responseTimeDeviationExceeds(Duration expectedDuration, long deviation) {
-        Objects.requireNonNull(expectedDuration, "expectedDuration не может быть null");
+        requireNonNull(expectedDuration, "expectedDuration не может быть null");
         if (deviation < 0) {
             throw new IllegalArgumentException("deviation не может быть отрицательным");
         }

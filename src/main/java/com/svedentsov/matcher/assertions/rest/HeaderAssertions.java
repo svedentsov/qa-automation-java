@@ -9,8 +9,9 @@ import org.assertj.core.api.HamcrestCondition;
 import org.hamcrest.Matcher;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.regex.Pattern;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Класс для утверждений, связанных с заголовками ответа.
@@ -34,8 +35,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или expectedValue равно null
      */
     public static HeaderCondition headerEquals(String headerName, String expectedValue) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(expectedValue, "expectedValue не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(expectedValue, "expectedValue не может быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             Assertions.assertThat(actualValue)
@@ -53,8 +54,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или substring равно null
      */
     public static HeaderCondition headerContains(String headerName, String substring) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(substring, "substring не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(substring, "substring не может быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             Assertions.assertThat(actualValue)
@@ -71,7 +72,7 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName равно null
      */
     public static HeaderCondition headerExists(String headerName) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
         return response -> {
             boolean exists = response.getHeaders().hasHeaderWithName(headerName);
             Assertions.assertThat(exists)
@@ -88,7 +89,7 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName равно null
      */
     public static HeaderCondition headerAbsent(String headerName) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
         return response -> {
             boolean exists = response.getHeaders().hasHeaderWithName(headerName);
             Assertions.assertThat(exists)
@@ -106,8 +107,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или matcher равно null
      */
     public static HeaderCondition headerMatches(String headerName, Pattern matcher) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             Assertions.assertThat(actualValue)
@@ -124,7 +125,7 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если contentType равно null
      */
     public static HeaderCondition contentType(ContentType contentType) {
-        Objects.requireNonNull(contentType, "contentType не может быть null");
+        requireNonNull(contentType, "contentType не может быть null");
         return response -> {
             String actualContentType = response.getContentType();
             Assertions.assertThat(actualContentType)
@@ -141,7 +142,7 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если expectedEncoding равно null
      */
     public static HeaderCondition contentEncodingEquals(String expectedEncoding) {
-        Objects.requireNonNull(expectedEncoding, "expectedEncoding не может быть null");
+        requireNonNull(expectedEncoding, "expectedEncoding не может быть null");
         return response -> {
             String actualEncoding = response.getHeader("Content-Encoding");
             Assertions.assertThat(actualEncoding)
@@ -186,8 +187,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или prefix равно null
      */
     public static HeaderCondition headerStartsWith(String headerName, String prefix) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(prefix, "prefix не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(prefix, "prefix не может быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             Assertions.assertThat(actualValue)
@@ -205,8 +206,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или suffix равно null
      */
     public static HeaderCondition headerEndsWith(String headerName, String suffix) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(suffix, "suffix не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(suffix, "suffix не может быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             Assertions.assertThat(actualValue)
@@ -223,7 +224,7 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName равно null
      */
     public static HeaderCondition headerValueNotEmpty(String headerName) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             Assertions.assertThat(actualValue)
@@ -241,8 +242,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или regex равно null
      */
     public static HeaderCondition headerValueMatchesRegex(String headerName, String regex) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(regex, "regex не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(regex, "regex не может быть null");
         Pattern pattern = Pattern.compile(regex);
         return response -> {
             String actualValue = response.getHeader(headerName);
@@ -261,8 +262,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или expectedValue равно null
      */
     public static HeaderCondition headerEqualsIgnoringCase(String headerName, String expectedValue) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(expectedValue, "expectedValue не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(expectedValue, "expectedValue не может быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             Assertions.assertThat(actualValue)
@@ -280,8 +281,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или matcher равно null
      */
     public static HeaderCondition headerValueLengthMatches(String headerName, Matcher<Integer> matcher) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             int length = actualValue != null ? actualValue.length() : 0;
@@ -300,8 +301,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или substrings равно null
      */
     public static HeaderCondition headerContainsAll(String headerName, List<String> substrings) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(substrings, "substrings не могут быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(substrings, "substrings не могут быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             for (String substring : substrings) {
@@ -321,8 +322,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или substrings равно null
      */
     public static HeaderCondition headerContainsAny(String headerName, List<String> substrings) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(substrings, "substrings не могут быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(substrings, "substrings не могут быть null");
         return response -> {
             String actualValue = response.getHeader(headerName);
             boolean found = false;
@@ -347,8 +348,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или matcher равно null
      */
     public static HeaderCondition contentTypeMatches(String headerName, Matcher<String> matcher) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             String actualContentType = response.getHeader(headerName);
             Assertions.assertThat(actualContentType)
@@ -366,7 +367,7 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName равно null
      */
     public static HeaderCondition headerValueCountEquals(String headerName, int expectedCount) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
         if (expectedCount < 0) {
             throw new IllegalArgumentException("expectedCount не может быть отрицательным");
         }
@@ -387,8 +388,8 @@ public class HeaderAssertions {
      * @throws IllegalArgumentException если headerName или matcher равно null
      */
     public static HeaderCondition headerValueCountMatches(String headerName, Matcher<Integer> matcher) {
-        Objects.requireNonNull(headerName, "headerName не может быть null");
-        Objects.requireNonNull(matcher, "matcher не может быть null");
+        requireNonNull(headerName, "headerName не может быть null");
+        requireNonNull(matcher, "matcher не может быть null");
         return response -> {
             List<String> actualValues = response.getHeaders().getValues(headerName);
             int count = 0;

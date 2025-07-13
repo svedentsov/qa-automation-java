@@ -30,7 +30,7 @@ public class ProducerFactoryDefault implements ProducerFactory {
     /**
      * Создает экземпляр ProducerFactoryDefault с указанным провайдером конфигураций.
      *
-     * @param configProvider провайдер конфигураций Kafka, не может быть null.
+     * @param configProvider провайдер конфигураций Kafka.
      */
     public ProducerFactoryDefault(KafkaConfigProvider configProvider) {
         this.configProvider = requireNonNull(configProvider, "DefaultKafkaConfigProvider не может быть null.");
