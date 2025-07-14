@@ -5,7 +5,9 @@ import com.svedentsov.kafka.config.KafkaConfigProvider;
 import com.svedentsov.kafka.enums.TopicType;
 import com.svedentsov.kafka.factory.ConsumerFactoryDefault;
 import com.svedentsov.kafka.factory.KafkaServiceFactory;
+import com.svedentsov.kafka.factory.ProducerFactory;
 import com.svedentsov.kafka.factory.ProducerFactoryDefault;
+import com.svedentsov.kafka.helper.strategy.StartStrategyOptions;
 import com.svedentsov.kafka.model.Record;
 import com.svedentsov.kafka.service.KafkaConsumerService;
 import com.svedentsov.kafka.service.KafkaProducerService;
@@ -20,8 +22,10 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.header.Header;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -36,13 +40,17 @@ import static java.util.Objects.requireNonNull;
  * Главный класс-фасад для выполнения операций с Kafka в рамках автоматизированных тестов.
  * <p>Предоставляет текучий (fluent) API для настройки, отправки и получения сообщений.
  * Каждый экземпляр {@code KafkaExecutor} является изолированной сессией, управляющей
- * собственными менеджерами и сервисами, что предотвращает конфликты при параллельном
+ * собственными фабриками и менеджерами, что предотвращает конфликты при параллельном
  * выполнении тестов.
+ * <p><b>Важно:</b> Экземпляр этого класса является stateful (хранит состояние) и не потокобезопасен.
+ * Рекомендуется создавать новый экземпляр для каждого тестового сценария.
  * <p>Класс реализует {@link AutoCloseable}, что позволяет использовать его в блоке
- * try-with-resources для автоматического освобождения ресурсов.
+ * try-with-resources для автоматического и гарантированного освобождения всех ресурсов,
+ * включая продюсеров, консьюмеров и пулы потоков.
+ *
  * <p><b>Пример использования:</b>
  * <pre>{@code
- * try (KafkaExecutor executor = new KafkaExecutor()) {
+ * try (KafkaExecutor executor = KafkaExecutor.createDefault()) {
  * // Отправка сообщения
  * executor.setProducerType(TopicType.STRING)
  * .setTopic("my-topic")
@@ -50,65 +58,75 @@ import static java.util.Objects.requireNonNull;
  * .setRecordBody("Hello, Kafka!")
  * .sendRecord();
  *
- * // Получение и валидация
- * List<String> messages = executor.setConsumerType(TopicType.STRING)
+ * // Запуск прослушивания
+ * executor.setConsumerType(TopicType.STRING)
  * .setTopic("my-topic")
- * .startListening()
- * // ... подождать получения сообщений ...
- * .stopListening()
- * .getRecordsAsList(String.class);
+ * .startListening();
  *
- * assertThat(messages).contains("Hello, Kafka!");
+ * // Ожидание и получение записи
+ * ConsumerRecord<String, String> received = executor.awaitRecord(key("my-key"), Duration.ofSeconds(10));
+ * assertThat(received.value()).isEqualTo("Hello, Kafka!");
+ *
+ * // Остановка прослушивания
+ * executor.stopListening();
+ * } catch (Exception e) {
+ * // обработка исключений
  * }
  * }</pre>
  */
 @Slf4j
 public class KafkaExecutor implements AutoCloseable {
 
+    private final ProducerFactory producerFactory;
     private final KafkaServiceFactory serviceFactory;
     private final KafkaListenerManager listenerManager;
     private final KafkaRecordsManager recordsManager;
     private KafkaProducerService producer;
     private KafkaConsumerService consumer;
     private final Record record = new Record();
-    private Duration pollTimeout = Duration.ofMillis(100);
-
-    /**
-     * Создает экземпляр с конфигурацией по умолчанию.
-     */
-    public KafkaExecutor() {
-        KafkaConfig kafkaConfig = ConfigFactory.create(KafkaConfig.class, System.getProperties());
-        KafkaConfigProvider configProvider = new KafkaConfigProvider(kafkaConfig);
-        ProducerFactoryDefault producerFactory = new ProducerFactoryDefault(configProvider);
-        ConsumerFactoryDefault consumerFactory = new ConsumerFactoryDefault(configProvider);
-
-        this.serviceFactory = new KafkaServiceFactory(producerFactory);
-        this.recordsManager = new KafkaRecordsManager();
-        this.listenerManager = new KafkaListenerManager(testing(), consumerFactory, this.recordsManager);
-    }
+    private Duration pollTimeout = Duration.ofMillis(200);
 
     /**
      * Создает экземпляр KafkaExecutor с предоставленными зависимостями.
-     * Используется для тестирования самого KafkaExecutor.
+     * Это основной конструктор, поощряющий использование Dependency Injection.
      *
-     * @param serviceFactory  фабрика для создания Kafka-сервисов.
-     * @param listenerManager менеджер для управления жизненным циклом слушателей.
-     * @param recordsManager  менеджер для хранения полученных записей.
+     * @param producerFactory Фабрика для создания Kafka-продюсеров.
+     * @param serviceFactory  Фабрика для создания Kafka-сервисов (продюсер/консьюмер).
+     * @param listenerManager Менеджер для управления жизненным циклом фоновых слушателей.
+     * @param recordsManager  Менеджер для хранения и доступа к полученным записям.
      */
-    public KafkaExecutor(KafkaServiceFactory serviceFactory, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
+    public KafkaExecutor(ProducerFactory producerFactory, KafkaServiceFactory serviceFactory, KafkaListenerManager listenerManager, KafkaRecordsManager recordsManager) {
+        this.producerFactory = requireNonNull(producerFactory, "ProducerFactory не может быть null.");
         this.serviceFactory = requireNonNull(serviceFactory, "KafkaServiceFactory не может быть null.");
         this.listenerManager = requireNonNull(listenerManager, "KafkaListenerManager не может быть null.");
         this.recordsManager = requireNonNull(recordsManager, "KafkaRecordsManager не может быть null.");
     }
 
     /**
+     * Статический метод-фабрика для создания экземпляра KafkaExecutor с конфигурацией по умолчанию.
+     * Упрощает создание объекта в тестах, скрывая внутреннюю инициализацию зависимостей.
+     *
+     * @return Новый экземпляр {@code KafkaExecutor}.
+     */
+    public static KafkaExecutor createDefault() {
+        KafkaConfig kafkaConfig = ConfigFactory.create(KafkaConfig.class, System.getProperties());
+        KafkaConfigProvider configProvider = new KafkaConfigProvider(kafkaConfig);
+        ProducerFactoryDefault producerFactory = new ProducerFactoryDefault(configProvider);
+        ConsumerFactoryDefault consumerFactory = new ConsumerFactoryDefault(configProvider);
+        KafkaRecordsManager recordsManager = new KafkaRecordsManager();
+        KafkaListenerManager listenerManager = new KafkaListenerManager(testing(), consumerFactory, recordsManager);
+        KafkaServiceFactory serviceFactory = new KafkaServiceFactory(producerFactory);
+        return new KafkaExecutor(producerFactory, serviceFactory, listenerManager, recordsManager);
+    }
+
+    /**
      * Устанавливает тип продюсера. Этот метод должен быть вызван перед отправкой сообщений.
      *
      * @param type Тип контента (например, {@link TopicType#STRING}).
-     * @return текущий экземпляр {@code KafkaExecutor} для построения цепочки вызовов.
+     * @return Текущий экземпляр {@code KafkaExecutor} для построения цепочки вызовов.
      */
     public KafkaExecutor setProducerType(TopicType type) {
-        requireNonNull(type, "ContentType для продюсера не может быть null");
+        requireNonNull(type, "Тип для продюсера не может быть null");
         this.producer = serviceFactory.createProducer(type);
         return this;
     }
@@ -118,10 +136,10 @@ public class KafkaExecutor implements AutoCloseable {
      * которому передаются менеджеры, принадлежащие этому экземпляру KafkaExecutor.
      *
      * @param type Тип контента (например, {@link TopicType#AVRO}).
-     * @return текущий экземпляр {@code KafkaExecutor} для построения цепочки вызовов.
+     * @return Текущий экземпляр {@code KafkaExecutor} для построения цепочки вызовов.
      */
     public KafkaExecutor setConsumerType(TopicType type) {
-        requireNonNull(type, "ContentType для консьюмера не может быть null");
+        requireNonNull(type, "Тип для консьюмера не может быть null");
         this.consumer = serviceFactory.createConsumer(type, this.listenerManager, this.recordsManager);
         return this;
     }
@@ -129,11 +147,11 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Устанавливает тайм-аут для операции получения записей (poll).
      *
-     * @param millis тайм-аут в миллисекундах. Должен быть неотрицательным.
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @param millis Тайм-аут в миллисекундах. Должен быть неотрицательным.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      * @throws IllegalArgumentException если {@code millis} отрицательный.
      */
-    public KafkaExecutor setTimeout(long millis) {
+    public KafkaExecutor setPollTimeout(long millis) {
         if (millis < 0) throw new IllegalArgumentException("Таймаут не может быть отрицательным.");
         this.pollTimeout = Duration.ofMillis(millis);
         return this;
@@ -142,8 +160,8 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Устанавливает имя топика для последующих операций.
      *
-     * @param topicName имя топика, не может быть {@code null} или пустым.
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @param topicName Имя топика. Не может быть {@code null} или пустым.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      */
     public KafkaExecutor setTopic(String topicName) {
         requireNonBlank(topicName, "Имя топика не может быть null или пустым.");
@@ -154,8 +172,8 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Устанавливает номер партиции для отправки записи.
      *
-     * @param partition номер партиции.
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @param partition Номер партиции.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      */
     public KafkaExecutor setPartition(int partition) {
         this.record.setPartition(partition);
@@ -165,8 +183,8 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Устанавливает ключ для отправляемой записи.
      *
-     * @param key ключ записи.
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @param key Ключ записи.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      */
     public KafkaExecutor setRecordKey(String key) {
         this.record.setKey(key);
@@ -176,9 +194,9 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Добавляет один заголовок к отправляемой записи.
      *
-     * @param name  имя заголовка, не может быть пустым.
-     * @param value значение заголовка.
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @param name  Имя заголовка, не может быть пустым.
+     * @param value Значение заголовка.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      */
     public KafkaExecutor setRecordHeader(String name, Object value) {
         requireNonBlank(name, "Имя заголовка не может быть null или пустым.");
@@ -189,8 +207,8 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Устанавливает заголовки для отправляемой записи.
      *
-     * @param headers список заголовков Kafka.
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @param headers Список заголовков Kafka.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      */
     public KafkaExecutor setRecordHeaders(List<Header> headers) {
         requireNonNull(headers, "Список заголовков не может быть null.");
@@ -202,7 +220,7 @@ public class KafkaExecutor implements AutoCloseable {
      * Устанавливает Avro-схему для отправляемой записи.
      *
      * @param schema Avro-схема.
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      */
     public KafkaExecutor setAvroSchema(Schema schema) {
         requireNonNull(schema, "Avro схема не может быть null.");
@@ -213,8 +231,8 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Устанавливает тело (value) для отправляемой записи.
      *
-     * @param value значение: {@link String} или Avro-объект (например, {@code GenericRecord}).
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @param value Значение: {@link String} или Avro-объект (например, {@code GenericRecord}).
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      */
     public KafkaExecutor setRecordBody(Object value) {
         if (value instanceof String) {
@@ -228,19 +246,19 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Загружает тело записи из файла или ресурса.
      *
-     * @param source путь к файлу или ресурсу.
-     * @return текущий экземпляр {@code KafkaExecutor}.
+     * @param filePath Путь к файлу.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
      */
-    public KafkaExecutor loadRecordBody(String source) {
-        this.record.setValue(RecordLoader.loadRecordValue(source));
+    public KafkaExecutor loadRecordBodyFromFile(String filePath) {
+        this.record.setValue(RecordLoader.loadRecordValue(filePath));
         return this;
     }
 
     /**
      * Синхронно отправляет сконфигурированную запись в Kafka.
      *
-     * @return текущий экземпляр {@code KafkaExecutor}.
-     * @throws IllegalStateException если продюсер или топик не настроены.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     * @throws IllegalStateException Если продюсер или топик не настроены.
      */
     public KafkaExecutor sendRecord() {
         validateProducerAndTopic();
@@ -251,13 +269,25 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Асинхронно отправляет сконфигурированную запись в Kafka.
      *
-     * @return текущий экземпляр {@code KafkaExecutor}.
-     * @throws IllegalStateException если продюсер или топик не настроены.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     * @throws IllegalStateException Если продюсер или топик не настроены.
      */
     public KafkaExecutor sendRecordAsync() {
         validateProducerAndTopic();
         log.info("Асинхронная отправка записи в топик '{}': {}", record.getTopic(), record);
         producer.sendRecordAsync(record);
+        return this;
+    }
+
+    /**
+     * Синхронно отправляет коллекцию записей.
+     *
+     * @param records Коллекция объектов {@link Record} для отправки.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     */
+    public KafkaExecutor sendRecords(Collection<Record> records) {
+        validateProducerAndTopic();
+        records.forEach(producer::sendRecord);
         return this;
     }
 
@@ -287,8 +317,8 @@ public class KafkaExecutor implements AutoCloseable {
      * Запускает прослушивание записей из Kafka для текущего топика в фоновом режиме.
      * Прослушивание будет продолжаться до явного вызова {@link #stopListening()}.
      *
-     * @return текущий экземпляр KafkaExecutor для цепочки вызовов.
-     * @throws IllegalStateException если консьюмер не установлен или топик не задан.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     * @throws IllegalStateException Если консьюмер не установлен или топик не задан.
      */
     public KafkaExecutor startListening() {
         validateConsumerAndTopic();
@@ -299,8 +329,20 @@ public class KafkaExecutor implements AutoCloseable {
     /**
      * Останавливает прослушивание топика.
      *
-     * @return текущий экземпляр {@code KafkaExecutor}.
-     * @throws IllegalStateException если консьюмер или топик не настроены.
+     * @param strategyOptions Опции, определяющие, с какого места начать чтение (например, с начала, с конца, с определенного времени).
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     */
+    public KafkaExecutor startListening(StartStrategyOptions strategyOptions) {
+        validateConsumerAndTopic();
+        consumer.startListening(record.getTopic(), pollTimeout, strategyOptions);
+        return this;
+    }
+
+    /**
+     * Останавливает прослушивание топика. Если слушатель не был запущен, ничего не делает.
+     *
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     * @throws IllegalStateException Если консьюмер или топик не настроены.
      */
     public KafkaExecutor stopListening() {
         validateConsumerAndTopic();
@@ -319,10 +361,60 @@ public class KafkaExecutor implements AutoCloseable {
     }
 
     /**
-     * Возвращает все полученные записи для текущего топика.
+     * Ожидает появления хотя бы одной записи, удовлетворяющей условию, в течение заданного времени.
      *
-     * @return список записей {@code ConsumerRecord<String, String>}.
-     * @throws IllegalStateException если консьюмер или топик не настроены.
+     * @param condition Условие для проверки (например, {@code key("my-key")}).
+     * @param timeout   Максимальное время ожидания.
+     * @return Первая найденная {@link ConsumerRecord}.
+     * @throws TimeoutException Если запись не найдена за указанное время.
+     */
+    public ConsumerRecord<String, String> awaitRecord(Condition condition, Duration timeout) throws TimeoutException {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (System.currentTimeMillis() < deadline) {
+            ConsumerRecord<String, String> record = getRecordByCondition(condition);
+            if (record != null) {
+                return record;
+            }
+            try {
+                Thread.sleep(200); // Интервал опроса
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Ожидание записи было прервано", e);
+            }
+        }
+        throw new TimeoutException("Не удалось дождаться записи, удовлетворяющей условию, за " + timeout.toSeconds() + " секунд.");
+    }
+
+    /**
+     * Ожидает получения минимально необходимого количества записей в течение заданного времени.
+     *
+     * @param minCount Минимальное количество записей, которое нужно получить.
+     * @param timeout  Максимальное время ожидания.
+     * @return Список полученных записей.
+     * @throws TimeoutException Если не удалось собрать нужное количество записей за указанное время.
+     */
+    public List<ConsumerRecord<String, String>> awaitRecords(int minCount, Duration timeout) throws TimeoutException {
+        long deadline = System.currentTimeMillis() + timeout.toMillis();
+        while (System.currentTimeMillis() < deadline) {
+            List<ConsumerRecord<String, String>> records = getAllRecords();
+            if (records.size() >= minCount) {
+                return records;
+            }
+            try {
+                Thread.sleep(200);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Ожидание записей было прервано", e);
+            }
+        }
+        throw new TimeoutException("Не удалось дождаться " + minCount + " записей за " + timeout.toSeconds() + " секунд.");
+    }
+
+    /**
+     * Возвращает все полученные записи для текущего топика, которые хранятся в менеджере.
+     *
+     * @return Список записей {@code ConsumerRecord<String, String>}.
+     * @throws IllegalStateException Если консьюмер или топик не настроены.
      */
     public List<ConsumerRecord<String, String>> getAllRecords() {
         validateConsumerAndTopic();
@@ -330,7 +422,7 @@ public class KafkaExecutor implements AutoCloseable {
     }
 
     /**
-     * Возвращает все полученные записи для указанного топика в их "сыром" виде.
+     * Возвращает "сырые" записи для указанного топика.
      *
      * @param topic Имя топика.
      * @return Список записей {@code ConsumerRecord<?, ?>}.
@@ -341,7 +433,7 @@ public class KafkaExecutor implements AutoCloseable {
     }
 
     /**
-     * Возвращает отфильтрованный список записей по ключу.
+     * Возвращает записи, отфильтрованные по ключу.
      *
      * @param key Ключ для фильтрации.
      * @return Список отфильтрованных записей.
@@ -351,7 +443,7 @@ public class KafkaExecutor implements AutoCloseable {
     }
 
     /**
-     * Возвращает отфильтрованный список записей по заголовку.
+     * Возвращает записи, отфильтрованные по значению заголовка.
      *
      * @param headerKey   Ключ заголовка.
      * @param headerValue Значение заголовка.
@@ -362,7 +454,7 @@ public class KafkaExecutor implements AutoCloseable {
     }
 
     /**
-     * Находит первую запись, удовлетворяющую условию.
+     * Находит первую запись, удовлетворяющую условию, среди уже полученных.
      *
      * @param condition Условие для проверки.
      * @return {@link ConsumerRecord} или {@code null}, если запись не найдена.
@@ -372,7 +464,7 @@ public class KafkaExecutor implements AutoCloseable {
     }
 
     /**
-     * Находит все записи, удовлетворяющие условию.
+     * Находит все записи, удовлетворяющие условию, среди уже полученных.
      *
      * @param condition Условие для проверки.
      * @return Список отфильтрованных записей.
@@ -476,13 +568,37 @@ public class KafkaExecutor implements AutoCloseable {
      * Выполняет проверку полученных сообщений с помощью набора условий.
      *
      * @param conditions Набор условий для валидации.
-     * @return текущий экземпляр {@code KafkaExecutor}.
-     * @throws AssertionError если проверка не пройдена.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     * @throws AssertionError Если проверка не пройдена.
      */
     public KafkaExecutor shouldHave(Condition... conditions) {
         validateConsumerAndTopic();
         List<ConsumerRecord<String, String>> records = getAllRecords();
         EntityValidator.of(records).shouldHave(conditions);
+        return this;
+    }
+
+    /**
+     * Очищает все записи, полученные из всех топиков. Полезно для изоляции тестов.
+     *
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     */
+    public KafkaExecutor clearReceivedRecords() {
+        log.info("Очистка всех полученных записей.");
+        this.recordsManager.clearAllRecords();
+        return this;
+    }
+
+    /**
+     * Очищает записи, полученные из конкретного топика.
+     *
+     * @param topic Имя топика, записи которого нужно очистить.
+     * @return Текущий экземпляр {@code KafkaExecutor}.
+     */
+    public KafkaExecutor clearReceivedRecords(String topic) {
+        requireNonBlank(topic, "Имя топика для очистки не может быть пустым.");
+        log.info("Очистка полученных записей для топика '{}'.", topic);
+        this.recordsManager.clearRecords(topic);
         return this;
     }
 
@@ -533,15 +649,32 @@ public class KafkaExecutor implements AutoCloseable {
     }
 
     /**
-     * Закрывает все активные слушатели и очищает ресурсы, связанные с {@link KafkaListenerManager}.
-     * Этот метод вызывается автоматически при использовании try-with-resources или может быть вызван явно.
+     * Освобождает все занятые ресурсы. Гарантированно останавливает фоновые слушатели
+     * и закрывает соединения с Kafka (продюсеры). Этот метод должен вызываться всегда
+     * после завершения работы с экземпляром, предпочтительно с использованием try-with-resources.
      */
     @Override
     public void close() {
-        if (this.listenerManager != null) {
-            log.info("Завершение работы KafkaExecutor: инициирована остановка KafkaListenerManager.");
-            this.listenerManager.shutdown();
-            log.info("KafkaListenerManager успешно остановлен.");
+        log.info("Завершение работы KafkaExecutor: начало освобождения ресурсов...");
+        try {
+            if (this.listenerManager != null) {
+                log.debug("Остановка KafkaListenerManager...");
+                this.listenerManager.shutdown();
+                log.info("KafkaListenerManager успешно остановлен.");
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при остановке KafkaListenerManager.", e);
         }
+
+        try {
+            if (this.producerFactory != null) {
+                log.debug("Закрытие ProducerFactory...");
+                this.producerFactory.close();
+                log.info("ProducerFactory успешно закрыта.");
+            }
+        } catch (Exception e) {
+            log.error("Ошибка при закрытии ProducerFactory.", e);
+        }
+        log.info("Все ресурсы KafkaExecutor были освобождены.");
     }
 }

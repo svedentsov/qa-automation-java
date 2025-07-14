@@ -28,7 +28,7 @@ public class KafkaSteps {
     private final KafkaExecutor kafkaExecutor;
 
     public KafkaSteps() {
-        this.kafkaExecutor = new KafkaExecutor();
+        this.kafkaExecutor = KafkaExecutor.createDefault();
     }
 
     /**
@@ -53,8 +53,8 @@ public class KafkaSteps {
     }
 
     @Step("Установить таймаут ожидания сообщений: '{millis}' мс")
-    public KafkaSteps setTimeout(long millis) {
-        kafkaExecutor.setTimeout(millis);
+    public KafkaSteps setPollTimeout(long millis) {
+        kafkaExecutor.setPollTimeout(millis);
         return this;
     }
 
@@ -65,8 +65,8 @@ public class KafkaSteps {
     }
 
     @Step("Загрузить тело записи из источника '{source}'")
-    public KafkaSteps loadRecordBody(String source) {
-        kafkaExecutor.loadRecordBody(source);
+    public KafkaSteps loadRecordBodyFromFile(String source) {
+        kafkaExecutor.loadRecordBodyFromFile(source);
         return this;
     }
 
