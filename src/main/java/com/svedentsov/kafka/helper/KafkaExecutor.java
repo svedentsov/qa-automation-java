@@ -109,13 +109,13 @@ public class KafkaExecutor implements AutoCloseable {
      * @return Новый экземпляр {@code KafkaExecutor}.
      */
     public static KafkaExecutor createDefault() {
-        KafkaConfig kafkaConfig = ConfigFactory.create(KafkaConfig.class, System.getProperties());
-        KafkaConfigProvider configProvider = new KafkaConfigProvider(kafkaConfig);
-        ProducerFactoryDefault producerFactory = new ProducerFactoryDefault(configProvider);
-        ConsumerFactoryDefault consumerFactory = new ConsumerFactoryDefault(configProvider);
-        KafkaRecordsManager recordsManager = new KafkaRecordsManager();
-        KafkaListenerManager listenerManager = new KafkaListenerManager(testing(), consumerFactory, recordsManager);
-        KafkaServiceFactory serviceFactory = new KafkaServiceFactory(producerFactory);
+        var kafkaConfig = ConfigFactory.create(KafkaConfig.class, System.getProperties());
+        var configProvider = new KafkaConfigProvider(kafkaConfig);
+        var producerFactory = new ProducerFactoryDefault(configProvider);
+        var consumerFactory = new ConsumerFactoryDefault(configProvider);
+        var recordsManager = new KafkaRecordsManager();
+        var listenerManager = new KafkaListenerManager(testing(), consumerFactory, recordsManager);
+        var serviceFactory = new KafkaServiceFactory(producerFactory);
         return new KafkaExecutor(producerFactory, serviceFactory, listenerManager, recordsManager);
     }
 
