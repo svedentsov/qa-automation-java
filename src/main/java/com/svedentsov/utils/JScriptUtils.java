@@ -40,7 +40,7 @@ public class JScriptUtils {
      */
     public static String getScript(String fileWithPath) {
         try {
-            return FileUtil.readFile(fileWithPath);
+            return FileUtil.readStringFromClasspath(fileWithPath);
         } catch (UncheckedIOException e) {
             throw new IllegalArgumentException("Не удалось найти файл скрипта", e);
         }

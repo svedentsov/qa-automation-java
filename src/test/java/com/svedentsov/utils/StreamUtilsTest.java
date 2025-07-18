@@ -12,7 +12,7 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-@DisplayName("Утилиты для работы со Stream API (StreamUtils)")
+@DisplayName("Утилиты для работы со Stream API")
 class StreamUtilsTest {
 
     @Nested

@@ -24,7 +24,7 @@ public class DurationConverter implements Converter<Duration> {
      */
     @Override
     public Duration convert(Method method, String text) {
-        int numericPart = StrUtil.getNumberFromStr(text);
+        int numericPart = StrUtil.getNumber(text);
 
         return StreamUtils.getFirstInOptional(DurationTags.values(), tag -> text.endsWith(tag.strValue))
                 .map(tag -> Duration.of(numericPart, tag.chronoUnitValue))

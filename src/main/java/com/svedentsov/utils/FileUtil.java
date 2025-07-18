@@ -1,194 +1,219 @@
 package com.svedentsov.utils;
 
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 import java.util.stream.Stream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Objects.requireNonNull;
-
 /**
- * Утилитарный класс для работы с файлами.
+ * Утилитарный класс для выполнения файловых операций.
+ * <p>Класс построен на основе современного API {@code java.nio.file} для обеспечения
+ * высокой производительности и надежной обработки ошибок. Все исключения типа
+ * {@link IOException} перехватываются и выбрасываются как {@link UncheckedIOException}.
  */
 @Slf4j
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@UtilityClass
 public class FileUtil {
 
     /**
-     * Читает содержимое файла по указанному пути.
+     * Читает все содержимое файла в строку, используя кодировку UTF-8.
      *
-     * @param filePath путь к файлу
-     * @return содержимое файла в виде строки
-     * @throws UncheckedIOException если возникает ошибка ввода-вывода
+     * @param path Путь к файлу. Не может быть {@code null}.
+     * @return Содержимое файла в виде строки.
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
      */
-    public static String readFile(String filePath) {
+    public static String readString(final Path path) {
+        return readString(path, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Читает все содержимое файла в строку, используя указанную кодировку.
+     *
+     * @param path    Путь к файлу. Не может быть {@code null}.
+     * @param charset Кодировка, используемая для чтения файла.
+     * @return Содержимое файла в виде строки.
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
+     */
+    public static String readString(final Path path, final Charset charset) {
+        Objects.requireNonNull(path, "Путь к файлу не может быть null");
         try {
-            return _readFile(filePath);
+            return Files.readString(path, charset);
         } catch (IOException e) {
-            throw new UncheckedIOException("Произошла ошибка при чтении файла " + filePath, e);
+            log.error("Ошибка чтения файла '{}': {}", path, e.getMessage());
+            throw new UncheckedIOException("Ошибка чтения файла: " + path, e);
         }
     }
 
     /**
-     * Читает содержимое файла по указанному пути.
+     * Читает все строки из файла в список, используя кодировку UTF-8.
      *
-     * @param path путь к файлу
-     * @return содержимое файла в виде строки
-     * @throws UncheckedIOException если возникает ошибка ввода-вывода
+     * @param path Путь к файлу. Не может быть {@code null}.
+     * @return Список строк из файла.
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
      */
-    public static String readFile(Path path) {
+    public static List<String> readLines(final Path path) {
+        return readLines(path, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Читает все строки из файла в список, используя указанную кодировку.
+     *
+     * @param path    Путь к файлу. Не может быть {@code null}.
+     * @param charset Кодировка, используемая для чтения файла.
+     * @return Список строк из файла.
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
+     */
+    public static List<String> readLines(final Path path, final Charset charset) {
+        Objects.requireNonNull(path, "Путь к файлу не может быть null");
         try {
-            return Files.readString(path, UTF_8);
+            return Files.readAllLines(path, charset);
         } catch (IOException e) {
-            throw new UncheckedIOException("Произошла ошибка при чтении файла " + path, e);
+            log.error("Ошибка чтения строк из файла '{}': {}", path, e.getMessage());
+            throw new UncheckedIOException("Ошибка чтения строк из файла: " + path, e);
         }
     }
 
     /**
-     * Читает содержимое файла из входного потока.
+     * Читает все байты из файла.
      *
-     * @param is входной поток данных
-     * @return содержимое файла в виде строки
-     * @throws UncheckedIOException если возникает ошибка ввода-вывода
+     * @param path Путь к файлу. Не может быть {@code null}.
+     * @return Массив байтов с содержимым файла.
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
      */
-    public static String readFile(InputStream is) {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(is, UTF_8))) {
-            StringBuilder sb = new StringBuilder();
-            String line;
-            while ((line = br.readLine()) != null) {
-                sb.append(line).append("\n");
+    public static byte[] readBytes(final Path path) {
+        Objects.requireNonNull(path, "Путь к файлу не может быть null");
+        try {
+            return Files.readAllBytes(path);
+        } catch (IOException e) {
+            log.error("Ошибка чтения байтов из файла '{}': {}", path, e.getMessage());
+            throw new UncheckedIOException("Ошибка чтения байтов из файла: " + path, e);
+        }
+    }
+
+    /**
+     * Читает строковый ресурс из classpath (например, из {@code src/main/resources}).
+     *
+     * @param resourceName Имя ресурса (например, "sql/my-query.sql"). Не может быть {@code null}.
+     * @return Содержимое ресурса в виде строки.
+     * @throws UncheckedIOException     если ресурс не найден или произошла ошибка чтения.
+     * @throws IllegalArgumentException если имя ресурса некорректно.
+     */
+    public static String readStringFromClasspath(final String resourceName) {
+        Objects.requireNonNull(resourceName, "Имя ресурса не может быть null");
+        try {
+            URL resourceUrl = FileUtil.class.getClassLoader().getResource(resourceName);
+            if (resourceUrl == null) {
+                throw new IOException("Ресурс не найден в classpath: " + resourceName);
             }
-            return sb.toString();
+            return readString(Paths.get(resourceUrl.toURI()));
         } catch (IOException e) {
-            throw new UncheckedIOException("Произошла ошибка при чтении из InputStream", e);
+            log.error("Ошибка чтения ресурса '{}' из classpath: {}", resourceName, e.getMessage());
+            throw new UncheckedIOException(e);
+        } catch (URISyntaxException e) {
+            log.error("Некорректный синтаксис URI для ресурса '{}': {}", resourceName, e.getMessage());
+            throw new IllegalArgumentException("Некорректный синтаксис URI для ресурса", e);
         }
     }
 
     /**
-     * Записывает текст в файл.
+     * Записывает строку в файл, используя кодировку UTF-8. Если файл существует, он будет перезаписан.
      *
-     * @param file файл для записи
-     * @param text текст для записи
+     * @param path    Путь к файлу. Не может быть {@code null}.
+     * @param content Строка для записи. Не может быть {@code null}.
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
      */
-    public static void writeToFile(File file, String text) {
+    public static void writeString(final Path path, final CharSequence content) {
+        writeString(path, content, StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Записывает строку в файл, используя указанную кодировку.
+     *
+     * @param path      Путь к файлу. Не может быть {@code null}.
+     * @param content   Строка для записи. Не может быть {@code null}.
+     * @param charset   Кодировка для записи.
+     * @param options   Опции открытия файла (например, {@code StandardOpenOption.APPEND}).
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
+     */
+    public static void writeString(final Path path, final CharSequence content, final Charset charset, final OpenOption... options) {
+        Objects.requireNonNull(path, "Путь к файлу не может быть null");
+        Objects.requireNonNull(content, "Содержимое для записи не может быть null");
         try {
-            Files.writeString(file.toPath(), text, UTF_8);
+            // Убедимся, что родительские директории существуют
+            Files.createDirectories(path.getParent());
+            Files.writeString(path, content, charset, options);
         } catch (IOException e) {
-            log.warn("Произошла ошибка при записи в файл " + file.getName(), e);
+            log.error("Ошибка записи в файл '{}': {}", path, e.getMessage());
+            throw new UncheckedIOException("Ошибка записи в файл: " + path, e);
         }
     }
 
     /**
-     * Создает файл.
+     * Записывает массив байтов в файл. Если файл существует, он будет перезаписан.
      *
-     * @param file файл для создания
-     * @return true, если файл был успешно создан; false, если файл уже существует
-     * @throws UncheckedIOException если возникает ошибка ввода-вывода при создании файла
+     * @param path    Путь к файлу. Не может быть {@code null}.
+     * @param bytes   Массив байтов для записи. Не может быть {@code null}.
+     * @param options Опции открытия файла.
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
      */
-    public static boolean createFile(File file) {
-        try {
-            return file.createNewFile();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Произошла ошибка при создании файла " + file.getName(), e);
-        }
-    }
-
-    /**
-     * Создает или заменяет файл вместе с деревом каталогов.
-     *
-     * @param path путь к файлу
-     * @throws UncheckedIOException если возникает ошибка ввода-вывода при создании файла
-     */
-    public static void createReplaceFileWithDirTree(Path path) {
+    public static void writeBytes(final Path path, final byte[] bytes, final OpenOption... options) {
+        Objects.requireNonNull(path, "Путь к файлу не может быть null");
+        Objects.requireNonNull(bytes, "Массив байтов для записи не может быть null");
         try {
             Files.createDirectories(path.getParent());
-            Files.deleteIfExists(path);
-            Files.createFile(path);
+            Files.write(path, bytes, options);
         } catch (IOException e) {
-            throw new UncheckedIOException("Произошла ошибка при создании файла " + path.toFile().getName(), e);
+            log.error("Ошибка записи байтов в файл '{}': {}", path, e.getMessage());
+            throw new UncheckedIOException("Ошибка записи байтов в файл: " + path, e);
         }
     }
 
     /**
-     * Создает или заменяет файлы вместе с деревом каталогов.
+     * Удаляет файл, если он существует.
      *
-     * @param files список файлов
+     * @param path Путь к файлу.
+     * @return {@code true}, если файл был удален, иначе {@code false}.
+     * @throws UncheckedIOException если происходит ошибка ввода-вывода.
      */
-    public static void createReplaceFileWithDirTree(List<File> files) {
-        files.forEach(file -> createReplaceFileWithDirTree(file.toPath()));
-    }
-
-    /**
-     * Читает содержимое CSV-файла по указанному пути.
-     *
-     * @param filePath путь к CSV-файлу
-     * @return список строк из CSV-файла (без строк, содержащих комментарии)
-     * @throws UncheckedIOException если возникает ошибка ввода-вывода
-     */
-    public static List<String> readCsvFile(String filePath) {
-        List<String> content = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(filePath, Charset.defaultCharset()))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (!line.contains("//")) {
-                    content.add(String.join(StrUtil.COMMA, line));
-                }
-            }
-            if (content.isEmpty()) {
-                throw new IllegalStateException("Файл пуст!");
-            }
+    public static boolean deleteFile(final Path path) {
+        try {
+            return Files.deleteIfExists(path);
         } catch (IOException e) {
-            throw new UncheckedIOException("Произошла ошибка при чтении файла " + filePath, e);
+            log.error("Ошибка удаления файла '{}': {}", path, e.getMessage());
+            throw new UncheckedIOException("Ошибка удаления файла: " + path, e);
         }
-        return content;
     }
 
     /**
-     * Читает содержимое файла по указанному пути и возвращает его в виде строки.
+     * Рекурсивно удаляет директорию со всем ее содержимым.
      *
-     * @param pathToResource путь к ресурсу
-     * @return содержимое файла в виде строки
-     * @throws UncheckedIOException если возникает ошибка ввода-вывода
+     * @param dirPath Путь к директории для удаления.
+     * @throws UncheckedIOException если директория не существует или происходит ошибка ввода-вывода.
      */
-    public static String readFileFormatted(String pathToResource) {
-        var file = new File(requireNonNull(FileUtil.class.getClassLoader().getResource(pathToResource)).getFile());
-        Path path = Paths.get(file.getAbsolutePath());
-        try (Stream<String> lines = Files.lines(path, UTF_8)) {
-            return lines.collect(Collectors.joining("\n"));
+    public static void deleteDirectory(final Path dirPath) {
+        Objects.requireNonNull(dirPath, "Путь к директории не может быть null");
+        if (!Files.isDirectory(dirPath)) {
+            log.warn("Попытка удалить не директорию: {}", dirPath);
+            return;
+        }
+        try (Stream<Path> walk = Files.walk(dirPath)) {
+            walk.sorted(Comparator.reverseOrder())
+                    .forEach(FileUtil::deleteFile);
         } catch (IOException e) {
-            throw new UncheckedIOException("Произошла ошибка при чтении файла " + path, e);
+            log.error("Ошибка при рекурсивном удалении директории '{}': {}", dirPath, e.getMessage());
+            throw new UncheckedIOException("Ошибка удаления директории: " + dirPath, e);
         }
-    }
-
-    /**
-     * Читает содержимое файла по указанному пути и возвращает его в виде строки.
-     * Приватный метод для реализации чтения файла с использованием FileReader и BufferedReader.
-     *
-     * @param filePath путь к файлу
-     * @return содержимое файла в виде строки
-     * @throws IOException если возникает ошибка ввода-вывода
-     */
-    private static String _readFile(String filePath) throws IOException {
-        StringBuilder stringBuilder = new StringBuilder();
-
-        try (Reader reader = new FileReader(new File(filePath), UTF_8);
-             BufferedReader buffered = new BufferedReader(reader)) {
-
-            String line;
-            while ((line = buffered.readLine()) != null) {
-                stringBuilder.append(line);
-            }
-        }
-        return stringBuilder.toString();
     }
 }

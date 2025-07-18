@@ -88,6 +88,8 @@ dependencies { // Зависимости проекта
     // Lombok
     compileOnly "org.projectlombok:lombok:${lombokVersion}"
     annotationProcessor "org.projectlombok:lombok:${lombokVersion}"
+    testCompileOnly "org.projectlombok:lombok:${lombokVersion}"
+    testAnnotationProcessor "org.projectlombok:lombok:${lombokVersion}"
 
     // Веб-тестирование
     implementation "com.codeborne:selenide:${selenideVersion}"
