@@ -13,13 +13,15 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Утилитный класс для создания различных условий, применяемых к списку записей Kafka.
+ * Утилитный класс для создания различных условий (проверок), применяемых к списку записей Kafka.
+ * Предоставляет статические методы-фабрики для удобного формирования цепочек проверок.
  */
 @UtilityClass
 public class RecordAssertions {
 
     /**
-     * Функциональный интерфейс для условий, проверяющих список записей целиком.
+     * Функциональный интерфейс для условий, проверяющих список записей Kafka целиком.
+     * Является частным случаем общего интерфейса {@link Condition}.
      */
     @FunctionalInterface
     public interface RecordCondition extends Condition<List<ConsumerRecord<String, String>>> {
@@ -27,66 +29,82 @@ public class RecordAssertions {
 
     /**
      * Проверяет, что в списке есть хотя бы одна запись.
+     *
+     * @return {@link RecordCondition} для проверки непустого списка.
      */
     public static RecordCondition recordExists() {
         return records -> Assertions.assertThat(records)
-                .as("Должна быть хотя бы одна запись")
+                .as("Ожидалось, что в топике будет хотя бы одна запись, но список пуст")
                 .isNotEmpty();
     }
 
     /**
-     * Проверяет, что количество записей равно указанному значению.
+     * Проверяет, что количество записей в списке равно указанному значению.
+     *
+     * @param count Ожидаемое количество записей.
+     * @return {@link RecordCondition} для проверки точного количества записей.
      */
     public static RecordCondition recordCountEqual(int count) {
         return records -> Assertions.assertThat(records)
-                .as("Количество записей должно быть равно %d", count)
+                .as("Ожидалось, что количество записей будет равно %d", count)
                 .hasSize(count);
     }
 
     /**
-     * Проверяет, что количество записей больше указанного значения.
+     * Проверяет, что количество записей в списке больше указанного значения.
+     *
+     * @param count Значение, которое количество записей должно превышать.
+     * @return {@link RecordCondition} для проверки, что записей больше, чем {@code count}.
      */
     public static RecordCondition recordCountGreater(int count) {
         return records -> Assertions.assertThat(records)
-                .as("Количество записей должно быть больше %d", count)
+                .as("Ожидалось, что количество записей будет больше %d", count)
                 .hasSizeGreaterThan(count);
     }
 
     /**
-     * Проверяет, что количество записей меньше указанного значения.
+     * Проверяет, что количество записей в списке меньше указанного значения.
+     *
+     * @param count Значение, меньше которого должно быть количество записей.
+     * @return {@link RecordCondition} для проверки, что записей меньше, чем {@code count}.
      */
     public static RecordCondition recordCountLess(int count) {
         return records -> Assertions.assertThat(records)
-                .as("Количество записей должно быть меньше %d", count)
+                .as("Ожидалось, что количество записей будет меньше %d", count)
                 .hasSizeLessThan(count);
     }
 
     /**
      * Проверяет, что все ключи в списке записей уникальны.
+     *
+     * @return {@link RecordCondition} для проверки уникальности ключей.
      */
     public static RecordCondition recordAllKeysUnique() {
         return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все ключи записей будут уникальными")
                 .extracting(ConsumerRecord::key)
-                .as("Все ключи записей должны быть уникальными")
                 .doesNotHaveDuplicates();
     }
 
     /**
      * Проверяет, что все значения в списке записей уникальны.
+     *
+     * @return {@link RecordCondition} для проверки уникальности значений.
      */
     public static RecordCondition recordAllValuesUnique() {
         return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все значения записей будут уникальными")
                 .extracting(ConsumerRecord::value)
-                .as("Все значения записей должны быть уникальными")
                 .doesNotHaveDuplicates();
     }
 
     /**
-     * Проверяет, что записи упорядочены по заданному полю.
+     * Проверяет, что записи в списке упорядочены по извлекаемому полю.
      *
-     * @param fieldExtractor функция извлечения поля
-     * @param ascending      true, если по возрастанию, false, если по убыванию
-     * @param <T>            тип значения поля для сравнения
+     * @param fieldExtractor Функция для извлечения поля из {@link ConsumerRecord}, по которому будет производиться сортировка.
+     * @param ascending      {@code true} для проверки порядка по возрастанию, {@code false} — по убыванию.
+     * @param <T>            Тип извлекаемого поля, должен реализовывать {@link Comparable}.
+     * @return {@link RecordCondition} для проверки порядка записей.
      */
     public static <T extends Comparable<T>> RecordCondition recordRecordsOrdered(Function<ConsumerRecord<String, String>, T> fieldExtractor, boolean ascending) {
         return records -> {
@@ -98,266 +116,210 @@ public class RecordAssertions {
             String orderDescription = ascending ? "возрастанию" : "убыванию";
 
             Assertions.assertThat(extracted)
-                    .as("Записи должны быть упорядочены по " + orderDescription)
+                    .as("Ожидалось, что записи будут упорядочены по %s", orderDescription)
                     .isSortedAccordingTo(comparator);
         };
     }
 
     /**
-     * Проверяет, что существует запись с указанным ключом.
+     * Проверяет, что в списке существует запись с указанным ключом.
      *
-     * @param key ключ для поиска
-     * @return условие для одной записи
+     * @param key Ключ для поиска.
+     * @return {@link RecordCondition} для проверки наличия записи с ключом.
      */
     public static RecordCondition recordKeysExists(String key) {
-        return records -> {
-            boolean found = records.stream().anyMatch(r -> Objects.equals(r.key(), key));
-            Assertions.assertThat(found)
-                    .as("Должна существовать запись с ключом %s", key)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось наличие записи с ключом '%s'", key)
+                .extracting(ConsumerRecord::key)
+                .contains(key);
     }
 
     /**
-     * Проверяет, что ни в одной записи не встречается указанный ключ.
+     * Проверяет, что в списке отсутствует запись с указанным ключом.
      *
-     * @param key ключ для проверки отсутствия
-     * @return условие для одной записи
+     * @param key Ключ, которого не должно быть в списке.
+     * @return {@link RecordCondition} для проверки отсутствия записи с ключом.
      */
     public static RecordCondition recordKeysNotExists(String key) {
-        return records -> {
-            boolean found = records.stream().anyMatch(r -> Objects.equals(r.key(), key));
-            Assertions.assertThat(found)
-                    .as("Не должно существовать записи с ключом %s", key)
-                    .isFalse();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось отсутствие записи с ключом '%s'", key)
+                .extracting(ConsumerRecord::key)
+                .doesNotContain(key);
     }
 
     /**
-     * Проверяет, что существует запись с указанным значением.
+     * Проверяет, что в списке существует запись с указанным значением.
      *
-     * @param value значение для поиска
-     * @return условие для одной записи
+     * @param value Значение для поиска.
+     * @return {@link RecordCondition} для проверки наличия записи со значением.
      */
     public static RecordCondition recordValuesExists(String value) {
-        return records -> {
-            boolean found = records.stream().anyMatch(r -> Objects.equals(r.value(), value));
-            Assertions.assertThat(found)
-                    .as("Должна существовать запись со значением %s", value)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось наличие записи со значением '%s'", value)
+                .extracting(ConsumerRecord::value)
+                .contains(value);
     }
 
     /**
-     * Проверяет, что ни в одной записи не встречается указанное значение.
+     * Проверяет, что в списке отсутствует запись с указанным значением.
      *
-     * @param value значение для проверки отсутствия
-     * @return условие для одной записи
+     * @param value Значение, которого не должно быть в списке.
+     * @return {@link RecordCondition} для проверки отсутствия записи со значением.
      */
     public static RecordCondition recordValuesNotExists(String value) {
-        return records -> {
-            boolean found = records.stream().anyMatch(r -> Objects.equals(r.value(), value));
-            Assertions.assertThat(found)
-                    .as("Не должно существовать записи со значением %s", value)
-                    .isFalse();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось отсутствие записи со значением '%s'", value)
+                .extracting(ConsumerRecord::value)
+                .doesNotContain(value);
     }
 
     /**
-     * Проверяет, что хотя бы один ключ содержит указанную подстроку.
+     * Проверяет, что хотя бы один ключ в списке записей содержит указанную подстроку.
      *
-     * @param substring подстрока для поиска
-     * @return условие для одной записи
+     * @param substring Подстрока для поиска в ключах.
+     * @return {@link RecordCondition} для проверки содержания подстроки в ключах.
      */
     public static RecordCondition recordAnyKeyContains(String substring) {
-        return records -> {
-            boolean found = records.stream()
-                    .map(ConsumerRecord::key)
-                    .filter(Objects::nonNull)
-                    .anyMatch(k -> k.contains(substring));
-            Assertions.assertThat(found)
-                    .as("Хотя бы один ключ должен содержать %s", substring)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что хотя бы один ключ содержит '%s'", substring)
+                .anyMatch(r -> r.key() != null && r.key().contains(substring));
     }
 
     /**
-     * Проверяет, что хотя бы одно значение содержит указанную подстроку.
+     * Проверяет, что хотя бы одно значение в списке записей содержит указанную подстроку.
      *
-     * @param substring подстрока для поиска
-     * @return условие для одной записи
+     * @param substring Подстрока для поиска в значениях.
+     * @return {@link RecordCondition} для проверки содержания подстроки в значениях.
      */
     public static RecordCondition recordAnyValueContains(String substring) {
-        return records -> {
-            boolean found = records.stream()
-                    .map(ConsumerRecord::value)
-                    .filter(Objects::nonNull)
-                    .anyMatch(v -> v.contains(substring));
-            Assertions.assertThat(found)
-                    .as("Хотя бы одно значение должно содержать %s", substring)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что хотя бы одно значение содержит '%s'", substring)
+                .anyMatch(r -> r.value() != null && r.value().contains(substring));
     }
 
     /**
-     * Проверяет, что все ключи соответствуют заданному регулярному выражению.
+     * Проверяет, что все ключи записей в списке соответствуют заданному регулярному выражению.
      *
-     * @param regex регулярное выражение
-     * @return условие для одной записи
+     * @param regex Регулярное выражение для проверки ключей.
+     * @return {@link RecordCondition} для проверки соответствия ключей регулярному выражению.
      */
     public static RecordCondition recordAllKeysMatchRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
-        return records -> {
-            boolean allMatch = records.stream()
-                    .map(ConsumerRecord::key)
-                    .filter(Objects::nonNull)
-                    .allMatch(k -> pattern.matcher(k).matches());
-            Assertions.assertThat(allMatch)
-                    .as("Все ключи должны соответствовать рег. выражению %s", regex)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все ключи соответствуют регулярному выражению '%s'", regex)
+                .allMatch(r -> r.key() != null && pattern.matcher(r.key()).matches());
     }
 
     /**
-     * Проверяет, что все значения соответствуют заданному регулярному выражению.
+     * Проверяет, что все значения записей в списке соответствуют заданному регулярному выражению.
      *
-     * @param regex регулярное выражение
-     * @return условие для одной записи
+     * @param regex Регулярное выражение для проверки значений.
+     * @return {@link RecordCondition} для проверки соответствия значений регулярному выражению.
      */
     public static RecordCondition recordAllValuesMatchRegex(String regex) {
         Pattern pattern = Pattern.compile(regex);
-        return records -> {
-            boolean allMatch = records.stream()
-                    .map(ConsumerRecord::value)
-                    .filter(Objects::nonNull)
-                    .allMatch(v -> pattern.matcher(v).matches());
-            Assertions.assertThat(allMatch)
-                    .as("Все значения должны соответствовать рег. выражению %s", regex)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все значения соответствуют регулярному выражению '%s'", regex)
+                .allMatch(r -> r.value() != null && pattern.matcher(r.value()).matches());
     }
 
     /**
-     * Проверяет, что все записи принадлежат указанной партиции.
+     * Проверяет, что все записи в списке принадлежат указанной партиции.
      *
-     * @param partition номер партиции
-     * @return условие для одной записи
+     * @param partition Номер партиции.
+     * @return {@link RecordCondition} для проверки номера партиции.
      */
     public static RecordCondition recordPartitionsAllEqual(int partition) {
-        return records -> {
-            boolean allEqual = records.stream().allMatch(r -> r.partition() == partition);
-            Assertions.assertThat(allEqual)
-                    .as("Все записи должны принадлежать партиции %d", partition)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все записи принадлежат партиции %d", partition)
+                .allMatch(r -> r.partition() == partition);
     }
 
     /**
-     * Проверяет, что все записи имеют партицию в указанном диапазоне.
+     * Проверяет, что номера партиций всех записей находятся в указанном диапазоне (включительно).
      *
-     * @param startInclusive начало диапазона (включительно)
-     * @param endInclusive   конец диапазона (включительно)
-     * @return условие для одной записи
+     * @param startInclusive Начало диапазона.
+     * @param endInclusive   Конец диапазона.
+     * @return {@link RecordCondition} для проверки диапазона партиций.
      */
     public static RecordCondition recordPartitionsAllInRange(int startInclusive, int endInclusive) {
-        return records -> {
-            boolean allInRange = records.stream()
-                    .allMatch(r -> r.partition() >= startInclusive && r.partition() <= endInclusive);
-            Assertions.assertThat(allInRange)
-                    .as("Все партиции должны быть в диапазоне [%d, %d]", startInclusive, endInclusive)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все партиции находятся в диапазоне [%d, %d]", startInclusive, endInclusive)
+                .allSatisfy(r -> Assertions.assertThat(r.partition()).isBetween(startInclusive, endInclusive));
     }
 
     /**
-     * Проверяет, что все смещения (offset) больше указанного значения.
+     * Проверяет, что смещения (offset) всех записей больше указанного значения.
      *
-     * @param offset пороговое значение
-     * @return условие для одной записи
+     * @param offset Пороговое значение смещения.
+     * @return {@link RecordCondition} для проверки смещений.
      */
     public static RecordCondition recordOffsetsAllGreaterThan(long offset) {
-        return records -> {
-            boolean allGreater = records.stream().allMatch(r -> r.offset() > offset);
-            Assertions.assertThat(allGreater)
-                    .as("Все смещения должны быть больше %d", offset)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все смещения (offset) будут больше %d", offset)
+                .allMatch(r -> r.offset() > offset);
     }
 
     /**
-     * Проверяет, что все смещения (offset) меньше указанного значения.
+     * Проверяет, что смещения (offset) всех записей меньше указанного значения.
      *
-     * @param offset пороговое значение
-     * @return условие для одной записи
+     * @param offset Пороговое значение смещения.
+     * @return {@link RecordCondition} для проверки смещений.
      */
     public static RecordCondition recordOffsetsAllLessThan(long offset) {
-        return records -> {
-            boolean allLess = records.stream().allMatch(r -> r.offset() < offset);
-            Assertions.assertThat(allLess)
-                    .as("Все смещения должны быть меньше %d", offset)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все смещения (offset) будут меньше %d", offset)
+                .allMatch(r -> r.offset() < offset);
     }
 
     /**
-     * Проверяет, что все смещения (offset) находятся в указанном диапазоне.
+     * Проверяет, что смещения (offset) всех записей находятся в указанном диапазоне (включительно).
      *
-     * @param startInclusive начало диапазона (включительно)
-     * @param endInclusive   конец диапазона (включительно)
-     * @return условие для одной записи
+     * @param startInclusive Начало диапазона.
+     * @param endInclusive   Конец диапазона.
+     * @return {@link RecordCondition} для проверки диапазона смещений.
      */
     public static RecordCondition recordOffsetsAllInRange(long startInclusive, long endInclusive) {
-        return records -> {
-            boolean allInRange = records.stream()
-                    .allMatch(r -> r.offset() >= startInclusive && r.offset() <= endInclusive);
-            Assertions.assertThat(allInRange)
-                    .as("Все смещения должны быть в диапазоне [%d, %d]", startInclusive, endInclusive)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все смещения находятся в диапазоне [%d, %d]", startInclusive, endInclusive)
+                .allSatisfy(r -> Assertions.assertThat(r.offset()).isBetween(startInclusive, endInclusive));
     }
 
     /**
-     * Проверяет, что все записи принадлежат указанному топику.
+     * Проверяет, что все записи в списке принадлежат указанному топику.
      *
-     * @param topic имя топика
-     * @return условие для одной записи
+     * @param topic Имя топика.
+     * @return {@link RecordCondition} для проверки имени топика.
      */
     public static RecordCondition recordTopicsAllEqual(String topic) {
-        return records -> {
-            boolean allEqual = records.stream().allMatch(r -> Objects.equals(r.topic(), topic));
-            Assertions.assertThat(allEqual)
-                    .as("Все записи должны принадлежать топику %s", topic)
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все записи принадлежат топику '%s'", topic)
+                .allMatch(r -> Objects.equals(r.topic(), topic));
     }
 
     /**
-     * Проверяет, что в списке записей все ключи не пусты.
+     * Проверяет, что все ключи в списке записей не являются пустыми строками.
+     * Записи с ключом {@code null} игнорируются.
+     *
+     * @return {@link RecordCondition} для проверки непустых ключей.
      */
     public static RecordCondition recordAllKeysNotEmpty() {
-        return records -> {
-            boolean allNonEmpty = records.stream()
-                    .map(ConsumerRecord::key)
-                    .filter(Objects::nonNull)
-                    .allMatch(k -> !k.isEmpty());
-            Assertions.assertThat(allNonEmpty)
-                    .as("Все ключи должны быть непустыми")
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все ключи будут непустыми")
+                .filteredOn(r -> r.key() != null)
+                .allMatch(r -> !r.key().isEmpty());
     }
 
     /**
-     * Проверяет, что в списке записей все значения не пусты.
+     * Проверяет, что все значения в списке записей не являются пустыми строками.
+     * Записи со значением {@code null} игнорируются.
+     *
+     * @return {@link RecordCondition} для проверки непустых значений.
      */
     public static RecordCondition recordAllValuesNotEmpty() {
-        return records -> {
-            boolean allNonEmpty = records.stream()
-                    .map(ConsumerRecord::value)
-                    .filter(Objects::nonNull)
-                    .allMatch(v -> !v.isEmpty());
-            Assertions.assertThat(allNonEmpty)
-                    .as("Все значения должны быть непустыми")
-                    .isTrue();
-        };
+        return records -> Assertions.assertThat(records)
+                .as("Ожидалось, что все значения будут непустыми")
+                .filteredOn(r -> r.value() != null)
+                .allMatch(r -> !r.value().isEmpty());
     }
 }
