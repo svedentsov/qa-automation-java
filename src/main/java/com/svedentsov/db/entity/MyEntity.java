@@ -1,10 +1,11 @@
 package com.svedentsov.db.entity;
 
+import jakarta.persistence.*;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
-import javax.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -15,21 +16,28 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Сущность MyEntity для демонстрации валидации различных типов данных.
- * Использует Lombok для автоматической генерации boilerplate кода.
+ * Демонстрационная сущность для валидации различных типов данных в тестах.
+ * <p>
+ * Этот класс намеренно содержит большое количество полей разных типов для покрытия
+ * максимального числа тестовых сценариев. В реальных проектах такие "божественные"
+ * объекты являются антипаттерном.
+ * </p>
  */
-@Data // Генерирует геттеры, сеттеры, toString, equals, hashCode
-@Accessors(fluent = true) // Позволяет использовать fluent-сеттеры (e.g., entity.name("value"))
-@NoArgsConstructor // Генерирует конструктор без аргументов, необходимый для JPA
-@Entity // Помечает класс как JPA-сущность
-@Table(name = "my_entity") // Указывает имя таблицы в базе данных
-@NamedQueries({@NamedQuery(name = "MyEntity.findByStatus", query = "FROM MyEntity WHERE status = :status")})
+@Data
+@Accessors(fluent = true)
+@NoArgsConstructor
+@EqualsAndHashCode(callSuper = false, exclude = {"scores", "roles", "roleEntities", "tags", "sortedList", "uniqueRoles", "attributes", "emptyMap"})
+@Entity
+@Table(name = "my_entity")
+@NamedQueries({
+        @NamedQuery(name = "MyEntity.findByStatus", query = "FROM MyEntity WHERE status = :status")
+})
 public class MyEntity {
 
     /**
      * Уникальный идентификатор сущности.
      */
-    @Id // Помечает поле как первичный ключ
+    @Id
     private String id;
 
     /**
@@ -310,81 +318,78 @@ public class MyEntity {
     /**
      * Список числовых значений (например, очки), для проверок предикатов на коллекциях.
      */
-    @ElementCollection // Помечает коллекцию базовых типов или встраиваемых объектов
+    @ElementCollection
     private List<Integer> scores;
 
     /**
-     * Момент времени создания записи (Instant).
-     * Используется для общих проверок Instant.
+     * Момент времени создания записи ({@link Instant}). Используется для общих проверок Instant.
      */
     private Instant createdAt;
+
+    /**
+     * Время открытия ({@link LocalTime}).
+     */
     private LocalTime openingTime;
 
     /**
-     * Момент времени последнего обновления записи (Instant).
-     * Используется для общих проверок Instant.
+     * Момент времени последнего обновления записи ({@link Instant}).
      */
     private Instant updatedAt;
 
     /**
-     * Момент времени последнего входа пользователя (Instant).
-     * Используется для общих проверок Instant.
+     * Момент времени последнего входа пользователя ({@link Instant}).
      */
     private Instant lastLogin;
 
     /**
-     * Момент времени будущего события (Instant).
-     * Используется для общих проверок Instant.
+     * Момент времени будущего события ({@link Instant}).
      */
     private Instant futureEventTime;
 
     /**
-     * Дата и время создания сущности (LocalDateTime).
-     * Используется для проверок LocalDateTime.
+     * Дата и время создания сущности ({@link LocalDateTime}).
      */
-    private LocalDateTime creationDate; // Переименовано для ясности и соответствия примеру
+    private LocalDateTime creationDate;
 
     /**
-     * Дата и время создания сущности (LocalDateTime).
-     * Используется для проверок LocalDateTime.
+     * Дата и время создания сущности ({@link LocalDateTime}).
      */
     private LocalDateTime localDateTimeCreated;
+
+    /**
+     * Дата события ({@link LocalDate}).
+     */
     private LocalDate eventDate;
 
     /**
-     * Дата и время последнего обновления сущности (LocalDateTime).
-     * Используется для проверок LocalDateTime.
+     * Дата и время последнего обновления сущности ({@link LocalDateTime}).
      */
     private LocalDateTime localDateTimeUpdated;
 
     /**
-     * Дата и время начала события (LocalDateTime).
-     * Используется для проверок LocalDateTime.
+     * Дата и время начала события ({@link LocalDateTime}).
      */
     private LocalDateTime localDateTimeEventStart;
 
     /**
-     * Дата и время окончания события (LocalDateTime).
-     * Используется для проверок LocalDateTime.
+     * Дата и время окончания события ({@link LocalDateTime}).
      */
     private LocalDateTime localDateTimeEventEnd;
 
     /**
-     * Конкретная дата и время для тестовых сценариев (LocalDateTime).
-     * Используется для проверок LocalDateTime.
+     * Конкретная дата и время для тестовых сценариев ({@link LocalDateTime}).
      */
     private LocalDateTime localDateTimeSpecific;
 
     /**
-     * Дата и время в високосном году для проверки високосного года (LocalDateTime).
-     * Используется для проверок LocalDateTime.
+     * Дата и время в високосном году для проверки високосного года ({@link LocalDateTime}).
      */
     private LocalDateTime localDateTimeLeapYear;
 
     /**
      * Вложенный объект с адресом.
      */
-    @Embedded // Встраивает поля класса Address в таблицу MyEntity
+    @Embedded
     private Address address;
 
     /**
@@ -418,7 +423,7 @@ public class MyEntity {
     private List<String> uniqueRoles;
 
     /**
-     * Карта строковых атрибутов для проверок методов, работающих с Map.
+     * Карта строковых атрибутов для проверок методов, работающих с {@link Map}.
      */
     @ElementCollection
     @CollectionTable(name = "my_entity_attributes", joinColumns = @JoinColumn(name = "entity_id"))
@@ -436,13 +441,14 @@ public class MyEntity {
     private Map<String, String> emptyMap;
 
     /**
-     * Дополнительное поле с Optional.
+     * Дополнительное поле с {@link Optional}.
      *
-     * @deprecated Поля с Optional не являются стандартной практикой для JPA-сущностей,
-     * так как JPA не имеет прямой поддержки для Optional.
+     * @deprecated Поля с {@code Optional} не являются стандартной практикой для JPA-сущностей
+     * и могут вызывать проблемы с некоторыми JPA-провайдерами.
+     * JPA не имеет прямой поддержки для этого типа.
      * Используется здесь исключительно для демонстрации в рамках тестов.
      */
-    @Transient // Указывает JPA игнорировать это поле
-    @Deprecated // Отмечает поле как устаревшее
+    @Transient
+    @Deprecated(since = "1.0", forRemoval = true)
     private Optional<String> middleNameOptional;
 }

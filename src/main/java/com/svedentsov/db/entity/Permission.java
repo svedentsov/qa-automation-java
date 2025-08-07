@@ -1,9 +1,9 @@
 package com.svedentsov.db.entity;
 
+import jakarta.persistence.Embeddable;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import javax.persistence.Embeddable;
 
 /**
  * Встраиваемая сущность Permission - «уровень поглубже».

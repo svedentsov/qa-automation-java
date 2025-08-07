@@ -1,12 +1,12 @@
 package com.svedentsov.db.entity;
 
+import jakarta.persistence.Embeddable;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import javax.persistence.Embeddable;
-
 /**
  * Встраиваемый класс для хранения адреса.
+ * Используется как компонент в других сущностях, таких как {@link MyEntity}.
  */
 @Data
 @Accessors(fluent = true)
