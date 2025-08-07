@@ -17,9 +17,17 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
+import static com.svedentsov.matcher.PropertyMatcher.value;
+import static com.svedentsov.matcher.assertions.ListAssertions.listCountEqual;
+import static com.svedentsov.matcher.assertions.ListAssertions.listIsNotEmpty;
+import static com.svedentsov.matcher.assertions.PropertyAssertions.propertyEqualsTo;
+import static com.svedentsov.matcher.assertions.StringAssertions.contains;
+
+
 /**
  * Класс-демонстрация для всех возможностей обновленного класса {@link DbExecutor}.
- * Каждый метод представляет собой пример использования определенной функциональности.
+ * Каждый метод представляет собой пример использования определенной функциональности:
+ * от базовых CRUD-операций до сложных транзакционных сценариев и встроенной валидации.
  */
 @Slf4j
 public class DbSteps {
@@ -103,7 +111,7 @@ public class DbSteps {
         entities.forEach(entity -> log.info("Получена сущность (Named Query): {}", entity));
     }
 
-    @Step("Демонстрация получения одиночного и скалярного результата")
+    @Step("Демонстрация получения одиночного, опционального и скалярного результата")
     public void demonstrateSingleAndScalarResultQuery() {
         DbExecutor<MyEntity> dbExecutor = DbExecutor.create(sessionFactory, MyEntity.class);
 
@@ -120,14 +128,62 @@ public class DbSteps {
         foundEntity.ifPresent(e -> log.info("Найден Optional результат: {}", e));
 
         // Получение скалярного результата (COUNT)
-
         Optional<Long> count = dbExecutor.clear()
                 .setHqlQuery("SELECT COUNT(*) FROM MyEntity WHERE name = :name")
                 .addParameter("name", uniqueName)
                 .getScalarResult(Long.class);
         count.ifPresent(c -> log.info("Скалярный результат (COUNT): {}", c));
 
+        // Демонстрация exists()
+        boolean exists = dbExecutor.clear()
+                .setHqlQuery("FROM MyEntity WHERE name = :name")
+                .addParameter("name", uniqueName)
+                .exists();
+        log.info("Проверка существования (exists()): {}", exists);
+
         dbExecutor.clear().delete(singleEntity);
+    }
+
+    @Step("Демонстрация встроенной валидации с shouldHave и shouldHaveList")
+    public void demonstrateChainedValidation() {
+        DbExecutor<MyEntity> dbExecutor = DbExecutor.create(sessionFactory, MyEntity.class);
+        String validationStatus = "VALIDATION_TEST";
+        List<MyEntity> testEntities = new ArrayList<>();
+        // Подготовка данных
+        for (int i = 0; i < 3; i++) {
+            MyEntity entity = new MyEntity()
+                    .id(UUID.randomUUID().toString())
+                    .name("Validation Entity " + i)
+                    .status(validationStatus);
+            testEntities.add(entity);
+        }
+        dbExecutor.executeBatchOperation(testEntities);
+        log.info("Подготовлены 3 сущности для теста валидации.");
+
+        // Выполняем запрос и сразу же применяем проверки
+        dbExecutor.clear()
+                .setHqlQuery("FROM MyEntity WHERE status = :status")
+                .addParameter("status", validationStatus)
+                .getResultList(); // Запрос выполнен, результат сохранен в dbExecutor
+
+        log.info("Выполняем цепочку проверок на полученном результате...");
+        dbExecutor
+                .shouldHaveList(
+                        listIsNotEmpty(),
+                        listCountEqual(3)
+                )
+                .shouldHave(
+                        value(MyEntity::status, propertyEqualsTo(validationStatus)),
+                        value(MyEntity::name, contains("Validation Entity"))
+                );
+
+        log.info("Все проверки для цепочки валидации успешно пройдены.");
+
+        // Очистка
+        dbExecutor.clear().executeInTransaction(session ->
+                testEntities.forEach(session::remove)
+        );
+        log.info("Тестовые данные для валидации удалены.");
     }
 
     @Step("Демонстрация выполнения пакетной операции")
@@ -258,28 +314,30 @@ public class DbSteps {
 
         dbExecutor.executeInTransaction(session -> {
             log.info("Начало сложной транзакции...");
-            MyEntity entity1 = session.get(MyEntity.class, "some-known-id");
+            // Пытаемся найти существующую сущность (может не найтись, это нормально для демо)
+            MyEntity entity1 = session.createQuery("FROM MyEntity", MyEntity.class).setMaxResults(1).uniqueResult();
             if (entity1 != null) {
                 entity1.status("PROCESSED_IN_COMPLEX_TX");
                 session.merge(entity1);
-                log.info("Сущность 1 обновлена.");
+                log.info("Сущность {} обновлена.", entity1.id());
             }
 
             MyEntity newEntity = new MyEntity().id(UUID.randomUUID().toString()).name("Created in complex TX");
             session.persist(newEntity);
-            log.info("Сущность 2 создана.");
+            log.info("Сущность {} создана.", newEntity.id());
             log.info("Завершение сложной транзакции.");
         });
     }
 
     /**
      * Закрывает {@link SessionFactory} для корректного освобождения ресурсов.
-     * Этот метод следует вызывать в конце тестового набора (например, в {@code @AfterAll}).
+     * <p><b>Важно:</b> Этот метод является демонстрационным. В реальном проекте
+     * управление жизненным циклом {@code SessionFactory} должно быть централизовано
+     * и вызываться при завершении всего тестового набора (например, в методе,
+     * аннотированном {@code @AfterAll}).</p>
      */
-    @Step("Завершение работы и закрытие SessionFactory")
+    @Step("Завершение работы и закрытие SessionFactory (демонстрация)")
     public void shutdown() {
-        // В реальном проекте закрытие SessionFactory должно управляться централизованно,
-        // например, через хук завершения работы приложения или тестового фреймворка.
         // SessionFactoryProvider.shutdown();
         log.info("Вызов shutdown() для демонстрации. В реальных тестах управляется централизованно.");
     }

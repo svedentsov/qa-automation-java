@@ -1,7 +1,6 @@
 package com.svedentsov.matcher;
 
 import com.svedentsov.kafka.helper.KafkaMatcher;
-import com.svedentsov.matcher.assertions.rest.BodyAssertions.BodyCondition;
 import com.svedentsov.rest.helper.RestMatcher;
 import io.restassured.response.Response;
 import lombok.NonNull;
@@ -19,7 +18,7 @@ import java.util.function.Function;
  *
  * <p><b>Пример использования:</b></p>
  * <pre>{@code
- * import static com.svedentsov.matcher.utils.MatcherAliases.*;
+ * import static com.svedentsov.matcher.MatcherAliases.*;
  *
  * public class MyTest {
  *     @Test
@@ -68,7 +67,7 @@ public class MatcherAliases {
      * @throws NullPointerException если {@code getter} или {@code condition} равны null
      * @see RestMatcher#value(Function, Condition)
      */
-    public static <R> BodyCondition restValue(
+    public static <R> Condition<Response> restValue(
             @NonNull Function<? super Response, ? extends R> getter,
             @NonNull Condition<? super R> condition) {
         return RestMatcher.value(getter, condition);

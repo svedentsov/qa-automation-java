@@ -1,10 +1,13 @@
 package com.svedentsov.db.helper;
 
 import com.svedentsov.db.exception.DataAccessException;
+import com.svedentsov.matcher.Condition;
+import com.svedentsov.matcher.EntityValidator;
 import io.qameta.allure.Step;
 import jakarta.persistence.*;
 import jakarta.persistence.NonUniqueResultException;
 import jakarta.persistence.PessimisticLockException;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.*;
 import org.hibernate.exception.LockAcquisitionException;
@@ -36,12 +39,13 @@ import static java.util.Objects.requireNonNull;
  * <pre>{@code
  * DbExecutor<User> userExecutor = DbExecutor.create(sessionFactory, User.class);
  *
- * // Поиск пользователей по статусу с сортировкой
- * List<User> activeUsers = userExecutor
+ * // Поиск пользователей по статусу с сортировкой и последующей проверкой
+ * userExecutor
  *     .setHqlQuery("FROM User WHERE status = :status ORDER BY registrationDate DESC")
  *     .addParameter("status", "ACTIVE")
  *     .setMaxResults(10)
  *     .getResultList();
+ * userExecutor.shouldHave(user -> assertThat(user.isActive()).isTrue());
  *
  * // Обновление в одной транзакции с ретраями
  * userExecutor.clear()
@@ -69,7 +73,7 @@ public final class DbExecutor<T> {
     private final Map<String, Object> parameters = new HashMap<>();
     private final Map<String, Object> hints = new HashMap<>();
     private final List<String> joinFetchPaths = new ArrayList<>();
-
+    private List<T> lastResult;
     private String hqlQuery;
     private String sqlQuery;
     private String namedQuery;
@@ -119,6 +123,7 @@ public final class DbExecutor<T> {
         hqlQuery = null;
         sqlQuery = null;
         namedQuery = null;
+        lastResult = null;
         parameters.clear();
         hints.clear();
         joinFetchPaths.clear();
@@ -434,8 +439,10 @@ public final class DbExecutor<T> {
             if (entity != null) {
                 applyOptionsToEntity(session, entity);
                 log.info("Сущность с ID '{}' успешно получена.", id);
+                this.lastResult = List.of(entity);
             } else {
                 log.info("Сущность с ID '{}' не найдена.", id);
+                this.lastResult = Collections.emptyList();
             }
             return Optional.ofNullable(entity);
         });
@@ -478,10 +485,11 @@ public final class DbExecutor<T> {
      */
     @Step("Получение списка сущностей")
     public List<T> getResultList() {
-        if (hqlQuery != null) return executeHqlQuery();
-        if (sqlQuery != null) return executeSqlQuery();
-        if (namedQuery != null) return executeNamedQuery();
-        throw new IllegalStateException("Тип запроса (HQL, SQL или Named Query) не был задан. Невозможно выполнить getResultList().");
+        if (hqlQuery != null) this.lastResult = executeHqlQuery();
+        else if (sqlQuery != null) this.lastResult = executeSqlQuery();
+        else if (namedQuery != null) this.lastResult = executeNamedQuery();
+        else throw new IllegalStateException("Тип запроса (HQL, SQL или Named Query) не был задан. Невозможно выполнить getResultList().");
+        return this.lastResult;
     }
 
     /**
@@ -615,6 +623,42 @@ public final class DbExecutor<T> {
             log.info("HQL (update/delete) выполнен, затронуто {} записей", affectedRows);
             return affectedRows;
         });
+    }
+
+    // Методы валидации
+
+    /**
+     * Применяет набор условий ко всей коллекции объектов, полученной в результате последнего запроса.
+     * Все условия объединяются логическим "И".
+     *
+     * @param conditions условия, которые должны быть выполнены для коллекции
+     * @return текущий экземпляр DbExecutor для цепочки вызовов
+     * @throws IllegalStateException если проверка вызвана до выполнения запроса
+     */
+    @Step("Проверка списка результатов на соответствие условиям")
+    public DbExecutor<T> shouldHaveList(@NonNull Condition<List<T>>... conditions) {
+        if (this.lastResult == null) {
+            throw new IllegalStateException("Необходимо сначала выполнить запрос (например, getResultList()), а затем вызывать проверку.");
+        }
+        EntityValidator.of(this.lastResult).shouldHaveList(conditions);
+        return this;
+    }
+
+    /**
+     * Применяет набор условий к каждому объекту в коллекции, полученной в результате последнего запроса.
+     * Все условия объединяются логическим "И".
+     *
+     * @param conditions условия, которые должны быть выполнены
+     * @return текущий экземпляр DbExecutor для цепочки вызовов
+     * @throws IllegalStateException если проверка вызвана до выполнения запроса
+     */
+    @Step("Проверка каждого элемента в списке результатов на соответствие условиям")
+    public DbExecutor<T> shouldHave(@NonNull Condition<T>... conditions) {
+        if (this.lastResult == null) {
+            throw new IllegalStateException("Необходимо сначала выполнить запрос (например, getResultList()), а затем вызывать проверку.");
+        }
+        EntityValidator.of(this.lastResult).shouldHave(conditions);
+        return this;
     }
 
     // Асинхронные операции и управление транзакциями
