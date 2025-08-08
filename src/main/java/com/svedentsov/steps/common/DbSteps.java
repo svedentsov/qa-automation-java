@@ -144,48 +144,6 @@ public class DbSteps {
         dbExecutor.clear().delete(singleEntity);
     }
 
-    @Step("Демонстрация встроенной валидации с shouldHave и shouldHaveList")
-    public void demonstrateChainedValidation() {
-        DbExecutor<MyEntity> dbExecutor = DbExecutor.create(sessionFactory, MyEntity.class);
-        String validationStatus = "VALIDATION_TEST";
-        List<MyEntity> testEntities = new ArrayList<>();
-        // Подготовка данных
-        for (int i = 0; i < 3; i++) {
-            MyEntity entity = new MyEntity()
-                    .id(UUID.randomUUID().toString())
-                    .name("Validation Entity " + i)
-                    .status(validationStatus);
-            testEntities.add(entity);
-        }
-        dbExecutor.executeBatchOperation(testEntities);
-        log.info("Подготовлены 3 сущности для теста валидации.");
-
-        // Выполняем запрос и сразу же применяем проверки
-        dbExecutor.clear()
-                .setHqlQuery("FROM MyEntity WHERE status = :status")
-                .addParameter("status", validationStatus)
-                .getResultList(); // Запрос выполнен, результат сохранен в dbExecutor
-
-        log.info("Выполняем цепочку проверок на полученном результате...");
-        dbExecutor
-                .shouldHaveList(
-                        listIsNotEmpty(),
-                        listCountEqual(3)
-                )
-                .shouldHave(
-                        value(MyEntity::status, propertyEqualsTo(validationStatus)),
-                        value(MyEntity::name, contains("Validation Entity"))
-                );
-
-        log.info("Все проверки для цепочки валидации успешно пройдены.");
-
-        // Очистка
-        dbExecutor.clear().executeInTransaction(session ->
-                testEntities.forEach(session::remove)
-        );
-        log.info("Тестовые данные для валидации удалены.");
-    }
-
     @Step("Демонстрация выполнения пакетной операции")
     public void demonstrateBatchOperation() {
         DbExecutor<MyEntity> dbExecutor = DbExecutor.create(sessionFactory, MyEntity.class);

@@ -6,7 +6,6 @@ package com.svedentsov.db.exception;
  * чтобы скрыть детали реализации от вышестоящих слоев приложения.
  */
 public class DataAccessException extends RuntimeException {
-
     /**
      * Конструктор исключения DataAccessException.
      *
